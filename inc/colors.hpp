@@ -13,6 +13,12 @@
 #include <cmath>
 #include <sys/socket.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <sys/epoll.h>
 #include <netinet/in.h>
+#include <fcntl.h>
+#include <signal.h>
+#include <poll.h>
+#include <arpa/inet.h>
 
 #endif
