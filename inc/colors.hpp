@@ -20,5 +20,9 @@
 #include <signal.h>
 #include <poll.h>
 #include <arpa/inet.h>
+#include <sstream>
+#include <map>
+#include <set>
+
 
 #endif

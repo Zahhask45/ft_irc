@@ -27,7 +27,9 @@ OBJ_DIR		=	./obj/
 INCLUDE		=	-I ./inc/
 
 SRCS		=	main.cpp \
-				server.cpp
+				server.cpp \
+				client.cpp \
+				Channel.cpp
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRCS))
 OBJS		=	$(SRCS:.cpp=.o)
