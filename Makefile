@@ -28,7 +28,7 @@ INCLUDE		=	-I ./inc/
 
 SRCS		=	main.cpp \
 				server.cpp \
-				client.cpp \
+				Client.cpp \
 				Channel.cpp
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRCS))

@@ -16,11 +16,12 @@ int main(int argc, char **argv){
     sigaction(SIGINT, &sa, NULL);
 
 	server serv(6667, "banana123");
-	client clients;
+	Client clients;
 
 	serv.binding();
 	serv.loop();
-
+	std::string command;
+	command = "NICK";
 	(void)argv;
 	(void)argc;
 	

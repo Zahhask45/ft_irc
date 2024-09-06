@@ -4,7 +4,7 @@
 #include "colors.hpp"
 #include "Channel.hpp"
 
-class client;
+class Client;
 class channel;
 
 class server
@@ -15,7 +15,7 @@ private:
 	std::string _pass;
 	struct sockaddr_in _addr;
 	std::map<std::string, Channel *> channels;
-	std::map<int, client > clients;
+	std::map<int, Client > clients;
 	// std::vector<std::string> user;
 
 	//! DONT KNOW WHERE TO PUT THIS YET
@@ -33,7 +33,7 @@ public:
 
 	void binding();
 	void loop();
-	void handleCommands(client client, const std::string &command);
+	void handleCommands(Client &client, const std::string &command);
 	void createChannel(const std::string &channelName, Channel &channel);
 	
 	void setUsers(std::string userName);
@@ -44,6 +44,6 @@ public:
 };
 
 
-#include "client.hpp"
+#include "Client.hpp"
 
 #endif

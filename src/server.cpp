@@ -2,6 +2,10 @@
 
 server::server(){}
 
+void print_client(int client_fd, std::string str){
+	send(client_fd, str.c_str(), str.size(), 0);
+}
+
 server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1){
 	//! DONT KNOW WHERE TO PUT THIS
 	_epoll_fd = epoll_create1(0);
@@ -41,6 +45,7 @@ void server::binding(){
 }
 
 void server::loop(){
+	Client newClient;
 	while(true){
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
 		//TODO: ERROR MESSAGE HERE
@@ -55,14 +60,10 @@ void server::loop(){
 				std::cout << "Fase 2\n";
 				int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
 				
-				client newClient;
 				newClient.set_socket(newsocket);
 				newClient.set_addr(client_addr);
 				newClient.set_user_info(_buffer);
 				//TODO: PUT ERROR MESSAGE HERE
-/* 				std::cout << newClient.get_name() << "\n";
-				std::cout << newClient.get_pass() << "\n"; 
-				std::cout << newClient.get_nick() << "\n";  */
 
 				_eve.events = EPOLLIN;
 				_eve.data.fd = newClient.get_socket();
@@ -87,13 +88,11 @@ void server::loop(){
 					std::string command(_buffer);
 					
 					// Aqui você pode adicionar os dados do usuário ao objeto client
-                    client newClient;
 					newClient.set_client_fd(_events->data.fd);
                     newClient.set_user_info(_buffer);
-                    std::cout << newClient.get_name() << "\n";
-                    std::cout << newClient.get_pass() << "\n"; 
-                    std::cout << newClient.get_nick() << "\n"; 
-
+                    // std::cout << newClient.get_name() << "\n";
+                    // std::cout << newClient.get_pass() << "\n"; 
+                    // std::cout << newClient.get_nick() << "\n"; 
 					handleCommands(newClient, command);
 				}
 			}
@@ -101,17 +100,37 @@ void server::loop(){
 	}
 }
 
-void server::handleCommands(client client, const std::string &command){
+void server::handleCommands(Client &client_usr, const std::string &command){
 	std::istringstream iss(command);
 	std::string cmd;
 	iss >> cmd;
-	
+	if (cmd == "auth" || cmd == "AUTH"){
+		std::cout << "PASS SERVER: " << _pass << std::endl;
+		std::cout << "GET PASS: " << client_usr.get_pass() << std::endl;
+		std::string pass = client_usr.get_pass();
+		for(size_t i = 0; pass[i] != '\0'; i++){
+			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;}
+		std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
+		if (strcmp(pass.c_str(), _pass.c_str()) == 0){
+			print_client(client_usr.get_client_fd(), "User is Authenticated\n");
+			client_usr.set_auth(true);
+			return ;
+		}
+		else{
+			print_client(client_usr.get_client_fd(), "User is not Authenticated\n");
+			return ;
+		}
+
+	}
 	if (cmd == "join" || cmd == "JOIN"){
+		if (client_usr.get_auth() == false){
+			print_client(client_usr.get_client_fd(), "Need to Auth the user\n");
+			return ;
+		}
 		std::string channelName;
 		iss >> channelName;
 		if (channelName.empty()){
-			std::string response = "Error: Channel name is required.\n";
-			send(client.get_client_fd(), response.c_str(), response.size(), 0);
+			print_client(client_usr.get_client_fd(), "Channel name is empty\n");
 			return ;
 		}
 		Channel *channel = new Channel();
@@ -119,9 +138,8 @@ void server::handleCommands(client client, const std::string &command){
 		if (channel == NULL){
 			createChannel(channelName, *channel);
 			//! ERROR HERE NOT client_fd, NEED TO CREATE A USER FOR THE client_fd
-            channel->addUser(client);
-			std::string response = "Channel created and user added\n";
-			send(client.get_client_fd(), response.c_str(), response.size(), 0);
+            channel->addUser(client_usr);
+			print_client(client_usr.get_client_fd(), "Channel created and user added\n");
 		}
 		/* else{
 			//TODO: CHANGE THIS
