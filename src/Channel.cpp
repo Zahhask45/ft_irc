@@ -18,21 +18,25 @@ Channel &Channel::operator=(const Channel &origin) {
 	return *this;
 }
 
-void Channel::addUser(int user){
-	if (users.find(user) == users.end())
-    	users.insert(user);
+void Channel::addUser(client client){
+	std::map< std::string, std::pair<std::string,std::string> >::iterator it = users.find(client.get_name());
+	if (it == users.end()){
+    	std::pair<std::string, std::pair<std::string, std::string> > user_info(client.get_name(), std::make_pair(client.get_nick(), client.get_pass()));
+		users.insert(user_info);
+	}
 }
 
-void Channel::removeUser(int user){
-    users.erase(user);
+void Channel::removeUser(std::string user_name){
+	if (users.find(user_name) != users.end())
+		users.erase(user_name);
 }
 
 std::string const &Channel::getName(void) const {return name;}
-std::set<int> const &Channel::getUsers(void) const {return users;}
 
 //TODO: CHANGE THIS
-int Channel::getUser(int user_fd){
-	if (users.find(user_fd) != users.end())
-		return user_fd;
-	return 0;
+std::string Channel::getUser(std::string const user) const{
+	std::map< std::string, std::pair<std::string,std::string> >::const_iterator it = users.find(user);
+	if (it != users.end())
+        return it->first;
+    return std::string();
 }

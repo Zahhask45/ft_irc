@@ -2,7 +2,6 @@
 #define SERVER_HPP
 
 #include "colors.hpp"
-#include "client.hpp"
 #include "Channel.hpp"
 
 class client;
@@ -33,8 +32,8 @@ public:
 	~server();
 
 	void binding();
-	void loop(client &clients);
-	void handleCommands(int user_fd, const std::string &command);
+	void loop();
+	void handleCommands(client client, const std::string &command);
 	void createChannel(const std::string &channelName, Channel &channel);
 	
 	void setUsers(std::string userName);
@@ -45,5 +44,6 @@ public:
 };
 
 
+#include "client.hpp"
 
 #endif

@@ -2,13 +2,14 @@
 #define CHANNEL_HPP
 
 #include "colors.hpp"
+class client;
 
 class Channel
 {
 private:
     std::string name;
 	//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
-    std::set<int> users;
+    std::map< std::string, std::pair<std::string,std::string> > users;
     //TODO: BANNED USERS
 public:
     Channel();
@@ -17,11 +18,13 @@ public:
 	Channel &operator=(const Channel &orign);
     ~Channel();
 
-    void addUser(int userFd);
-    void removeUser(int userFd);
+    void addUser(client client);
+    void removeUser(std::string user);
     std::string const &getName(void) const;
     std::set<int> const &getUsers(void) const;
-	int getUser(int user_fd);
+	std::string getUser(std::string const user) const;
 };
+
+#include "client.hpp"
 
 #endif
