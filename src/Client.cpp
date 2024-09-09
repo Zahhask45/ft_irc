@@ -89,7 +89,7 @@ void Client::set_user_info(char buffer[]){
 	    // Extrair a informação do apelido e armazená-la no vetor
 		std::string line = bufferStr.substr(pos);
 		pos = line.find(" ");
-		std::string nick = line.substr(pos + 1, line.find(' ', pos + 1) - pos - 1);
+		std::string nick = line.substr(pos + 1, line.find('\n', pos + 1) - pos - 1 - 1);
 	    _nick = nick;
 	}
 }
