@@ -34,7 +34,7 @@ public:
 	void binding();
 	void loop();
 	void handleCommands(Client &client, const std::string &command);
-	void createChannel(const std::string &channelName, Channel &channel);
+	void createChannel(const std::string &channelName);
 	
 	void setUsers(std::string userName);
 

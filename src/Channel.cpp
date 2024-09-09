@@ -19,22 +19,21 @@ Channel &Channel::operator=(const Channel &origin) {
 }
 
 void Channel::addUser(Client &client){
-	//std::map<int , std::string>::iterator it = users.find(client.get_client_fd());
-	/* if (it == users.end()){
-	} */
-		/* std::cout << client.get_client_fd() << std::endl;
-    	std::pair<int, std::string> user_info(client.get_client_fd(), client.get_nick()); */
-if (this->users.find(client.get_client_fd()) == this->users.end())
-	{
-		this->users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
-	}
-	//users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
+	if (this->users.find(client.get_client_fd()) == this->users.end())
+		{
+			this->users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
+		}
 }
 
 void Channel::removeUser(std::string user_name){
-	(void)user_name;
-	/* if (users.find(user_name) != users.end())
-		users.erase(user_name); */
+	std::map<int, Client *>::iterator it = users.begin();
+	while (it != users.end()){
+		if (it->second->get_nick() == user_name){
+			users.erase(it);
+			break;
+		}
+		it++;
+	}
 }
 
 std::string const &Channel::getName(void) const {return name;}
@@ -46,3 +45,12 @@ std::string Channel::getUser(std::string const user) const{
         return it->first;
     return std::string();
 } */
+
+void Channel::setName(std::string name) {this->name = name;}
+
+void Channel::setUser(int id, Client *client) {
+    std::map<int, Client *>::iterator it = users.find(id);
+    if (it == users.end()) {
+        users.insert(std::make_pair(id, client));
+    }
+}

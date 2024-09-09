@@ -133,13 +133,19 @@ void server::handleCommands(Client &client_usr, const std::string &command){
 			print_client(client_usr.get_client_fd(), "Channel name is empty\n");
 			return ;
 		}
-		Channel *channel = new Channel();
+		Channel *channel;
 		channel = getChannel(channelName);
 		if (channel == NULL){
-			createChannel(channelName, *channel);
-			//! ERROR HERE NOT client_fd, NEED TO CREATE A USER FOR THE client_fd
-            channel->addUser(client_usr);
-			print_client(client_usr.get_client_fd(), "Channel created and user added\n");
+            createChannel(channelName);
+            channels[channelName]->addUser(client_usr);
+            std::string creationMessage = ":" + client_usr.get_nick() + "!" + client_usr.get_name() + "@" + client_usr.get_host() + " JOIN :" + channelName + "\r\n";
+			std::cout << creationMessage << std::endl;
+            print_client(client_usr.get_client_fd(), creationMessage);
+            print_client(client_usr.get_client_fd(), "Channel " + channelName + " created and user added.\n");
+
+            // Send topic message
+            std::string topicMessage = ":server 332 " + client_usr.get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+            print_client(client_usr.get_client_fd(), topicMessage);
 		}
 		/* else{
 			//TODO: CHANGE THIS
@@ -163,9 +169,10 @@ void server::handleCommands(Client &client_usr, const std::string &command){
 	}	
 }
 
-void server::createChannel(const std::string &channelName, Channel &channel){
+void server::createChannel(const std::string &channelName){
 	if (channels.find(channelName) == channels.end()){
-		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
+		Channel *channel = new Channel(channelName);
+		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
 	}
 }
 

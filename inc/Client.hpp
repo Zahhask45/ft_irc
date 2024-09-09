@@ -31,6 +31,7 @@ public:
 	std::string const &get_pass() const;
 	std::string const &get_nick() const;
 	bool const &get_auth() const;
+	std::string get_host() const;
 
 	void set_socket(int value);
 	void set_addr(struct sockaddr_in value);

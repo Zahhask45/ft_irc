@@ -22,6 +22,10 @@ int const &Client::get_client_fd() const{
 	return _client_fd;
 }
 
+std::string Client::get_host() const {
+    return std::string(inet_ntoa(_client_addr.sin_addr));
+}
+
 std::string const &Client::get_name() const{
 	return _name;
 }

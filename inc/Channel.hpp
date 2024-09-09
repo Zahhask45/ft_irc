@@ -23,6 +23,9 @@ public:
     std::string const &getName(void) const;
     std::set<int> const &getUsers(void) const;
 	std::string getUser(std::string const user) const;
+    void setName(std::string name);
+    void setUser(int id, Client *client);
+    
 };
 
 #include "Client.hpp"
