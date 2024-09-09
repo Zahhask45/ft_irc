@@ -1,8 +1,8 @@
 #include "Channel.hpp"
 
-Channel::Channel(): name(), users(){}
+Channel::Channel(): _name(), users(){}
 
-Channel::Channel(const std::string name): name(name), users(){}
+Channel::Channel(const std::string name): _name(name), users(){}
 
 Channel::Channel(const Channel &cp){
     *this = cp;
@@ -12,7 +12,7 @@ Channel::~Channel(){}
 
 Channel &Channel::operator=(const Channel &origin) {
 	if (this != &origin) {
-		name = origin.name;
+		_name = origin._name;
 		users = origin.users;
 	}
 	return *this;
@@ -37,7 +37,13 @@ void Channel::removeUser(std::string user_name){
 		users.erase(user_name); */
 }
 
-std::string const &Channel::getName(void) const {return name;}
+std::string const &Channel::getName(void) const {return _name;}
+
+
+void Channel::setName(std::string name){
+	_name = name;
+}
+
 
 /* //TODO: CHANGE THIS
 std::string Channel::getUser(std::string const user) const{

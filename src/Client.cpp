@@ -37,7 +37,7 @@ void Client::set_socket(int value){
 	_socket = value;
 }
 
-void Client::set_addr(struct sockaddr_in value){
+void Client::set_addr(struct sockaddr_storage value){
 	_client_addr = value;
 }
 
@@ -89,3 +89,12 @@ void Client::set_user_info(char buffer[]){
 	    _nick = nick;
 	}
 }
+
+void Client::addChannel(const std::string &channelName, Channel &channel){
+	if (channels.find(channelName) == channels.end()){
+		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
+	}
+}
+
+
+

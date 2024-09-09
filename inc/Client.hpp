@@ -18,7 +18,8 @@ private:
 	bool _auth;
 
 	int _socket;
-	struct sockaddr_in _client_addr;
+	struct sockaddr_storage _client_addr;
+	std::map<std::string, Channel *> channels;
 
 public:
 	Client();
@@ -33,10 +34,13 @@ public:
 	bool const &get_auth() const;
 
 	void set_socket(int value);
-	void set_addr(struct sockaddr_in value);
+	void set_addr(struct sockaddr_storage value);
 	void set_client_fd(int fd);
 	void set_user_info(char buffer[]);
 	void set_auth(bool value);
+
+	void addChannel(const std::string &channelName, Channel &channel);
+
 };
 
 
