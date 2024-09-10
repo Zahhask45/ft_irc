@@ -25,10 +25,11 @@ private:
 	char _buffer[1024];
 
 
+	Server(Server &cp);
+	Server &operator=(Server &cp);
 public:
 	Server();
 	Server(int port, std::string pass);
-	Server(Server &cp);
 	~Server();
 
 	void binding();

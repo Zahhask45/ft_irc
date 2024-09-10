@@ -4,6 +4,7 @@ Server::Server(){}
 
 void print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
+	std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
 }
 
 Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1){
@@ -112,12 +113,13 @@ void Server::handleCommands(Client &client_usr, const std::string &command){
 			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;} */
 		std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
 		if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-			print_client(client_usr.get_client_fd(), "User is Authenticated\n");
+			print_client(client_usr.get_client_fd(), ":server 371 " + client_usr.get_nick() +": User is Authenticated\n");
 			client_usr.set_auth(true);
 			return ;
 		}
 		else{
-			print_client(client_usr.get_client_fd(), "User is not Authenticated\n");
+			print_client(client_usr.get_client_fd(), ":server 464 " + client_usr.get_nick() + " :Password incorrect\n");
+			print_client(client_usr.get_client_fd(), ":server 451 " + client_usr.get_nick() + " :You have not registered\n");
 			return ;
 		}
 

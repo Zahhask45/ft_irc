@@ -11,11 +11,12 @@ private:
 	//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
     std::map<int , Client *> users;
     //TODO: BANNED USERS
+    
+    Channel(const Channel &cp);
+	Channel &operator=(const Channel &orign);
 public:
     Channel();
-    Channel(const Channel &cp);
     Channel(const std::string name);
-	Channel &operator=(const Channel &orign);
     ~Channel();
 
     void addUser(Client &client);

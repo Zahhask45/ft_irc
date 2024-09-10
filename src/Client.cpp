@@ -4,9 +4,9 @@ Client::Client(): _client_fd(), _name(), _nick() {
 	_auth = false;
 }
 
-Client::Client(Client &cp){
-	*this = cp;
-}
+// Client::Client(Client &cp){
+// 	*this = cp;
+// }
 
 Client::~Client(){}
 

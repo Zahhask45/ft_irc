@@ -18,9 +18,10 @@ private:
 	int _socket;
 	struct sockaddr_in _client_addr;
 
+	Client(Client &cp);
+	Client &operator=(Client &cp);
 public:
 	Client();
-	Client(Client &cp);
 	~Client();
 	
 	int const &get_socket() const;
