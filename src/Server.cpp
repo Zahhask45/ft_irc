@@ -1,12 +1,12 @@
-#include "server.hpp"
+#include "Server.hpp"
 
-server::server(){}
+Server::Server(){}
 
 void print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
 }
 
-server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1){
+Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1){
 	//! DONT KNOW WHERE TO PUT THIS
 	_epoll_fd = epoll_create1(0);
 	if (_epoll_fd == -1) {
@@ -20,13 +20,13 @@ server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1){
 	setsockopt(_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 }
 
-server::~server() {}
+Server::~Server() {}
 
-int const &server::get_socket() const{
+int const &Server::get_socket() const{
 	return _socket_Server;
 }
 
-void server::binding(){
+void Server::binding(){
 	_addr.sin_family = AF_INET;
 	_addr.sin_addr.s_addr = INADDR_ANY;
 	_addr.sin_port = htons(_port);
@@ -44,7 +44,7 @@ void server::binding(){
 	}
 }
 
-void server::loop(){
+void Server::loop(){
 	Client newClient;
 	while(true){
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
@@ -100,7 +100,7 @@ void server::loop(){
 	}
 }
 
-void server::handleCommands(Client &client_usr, const std::string &command){
+void Server::handleCommands(Client &client_usr, const std::string &command){
 	std::istringstream iss(command);
 	std::string cmd;
 	iss >> cmd;
@@ -108,8 +108,8 @@ void server::handleCommands(Client &client_usr, const std::string &command){
 		std::cout << "PASS SERVER: " << _pass << std::endl;
 		std::cout << "GET PASS: " << client_usr.get_pass() << std::endl;
 		std::string pass = client_usr.get_pass();
-		for(size_t i = 0; pass[i] != '\0'; i++){
-			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;}
+		/* for(size_t i = 0; pass[i] != '\0'; i++){
+			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;} */
 		std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
 		if (strcmp(pass.c_str(), _pass.c_str()) == 0){
 			print_client(client_usr.get_client_fd(), "User is Authenticated\n");
@@ -138,7 +138,7 @@ void server::handleCommands(Client &client_usr, const std::string &command){
 		if (channel == NULL){
             createChannel(channelName);
             channels[channelName]->addUser(client_usr);
-            std::string creationMessage = ":" + client_usr.get_nick() + "!" + client_usr.get_name() + "@" + client_usr.get_host() + " JOIN :" + channelName + "\r\n";
+            std::string creationMessage = ":" + client_usr.get_nick() + "!" + client_usr.get_name() + "@" + client_usr.get_host() + " JOIN :#" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
             print_client(client_usr.get_client_fd(), creationMessage);
             print_client(client_usr.get_client_fd(), "Channel " + channelName + " created and user added.\n");
@@ -169,26 +169,26 @@ void server::handleCommands(Client &client_usr, const std::string &command){
 	}	
 }
 
-void server::createChannel(const std::string &channelName){
+void Server::createChannel(const std::string &channelName){
 	if (channels.find(channelName) == channels.end()){
 		Channel *channel = new Channel(channelName);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
 	}
 }
 
-Channel *server::getChannel(const std::string name)  {
+Channel *Server::getChannel(const std::string name)  {
 	if (channels.find(name) != channels.end())
 		return channels[name];
 	return NULL;
 }
 
 /* 
-void server::setUsers(std::string userName){
+void Server::setUsers(std::string userName){
 	std::vector<std::string>::iterator it = user.  
 	if (user.(userName) == user.end())
     	user.insert(user);
 }
 
-std::string const &server::getUser()const{
+std::string const &Server::getUser()const{
 
 } */

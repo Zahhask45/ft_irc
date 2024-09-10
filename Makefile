@@ -19,7 +19,7 @@ CXX_WARNINGS 		= -Wall -Wextra -Werror
 CXX_RESTRICTION 	= -std=c++98 -pedantic
 CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
-DEBUG				=	-g -fsanitize=address
+DEBUG				= -g -fsanitize=address
 
 NAME		=	ircserv
 
@@ -30,7 +30,7 @@ DEPS_DIR	=	./deps/
 INCLUDE		=	-I ./inc/
 
 SRCS		=	main.cpp \
-				server.cpp \
+				Server.cpp \
 				Client.cpp \
 				Channel.cpp
 
@@ -72,6 +72,7 @@ fclean: clean
 re: fclean all
 
 debug: CXXFLAGS += $(DEBUG)
+# debug: re
 debug: $(NAME)
 
 .SILENT:

@@ -9,8 +9,8 @@
       "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "/home/mamaral-/Documents/42Cursus/Github/42Porto-lvl_5_ft_irc/",
-      "program": "/home/mamaral-/Documents/42Cursus/Github/42Porto-lvl_5_ft_irc/ircserv",
+      "cwd": "${workspaceFolder}/",
+      "program": "${workspaceFolder}/ircserv",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
