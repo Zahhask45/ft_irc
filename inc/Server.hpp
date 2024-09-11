@@ -15,15 +15,15 @@ private:
 	std::string _pass;
 	struct sockaddr_in _addr;
 	std::map<std::string, Channel *> channels;
-	std::map<int, Client > clients;
+	std::map<int, Client *> clients;
 	// std::vector<std::string> user;
 
 	//! DONT KNOW WHERE TO PUT THIS YET
 	struct epoll_event _eve, _events[10];
 	int _epoll_fd;
 	int _nfds;
+	int _cur_online;
 	char _buffer[1024];
-
 
 	Server(Server &cp);
 	Server &operator=(Server &cp);
@@ -34,7 +34,7 @@ public:
 
 	void binding();
 	void loop();
-	void handleCommands(Client &client, const std::string &command);
+	void handleCommands(int fd, const std::string &command);
 	void createChannel(const std::string &channelName);
 	
 	void setUsers(std::string userName);
@@ -42,6 +42,10 @@ public:
 	std::string const &getUser()const;
 	int const &get_socket() const;
 	Channel *getChannel(const std::string name);
+	Client &getClient(int fd);
+	void funct_NewClient();
+	void funct_NotNewClient(int i);
+	std::string extract_value(const std::string& line, const std::string& key);
 };
 
 #include "Client.hpp"
