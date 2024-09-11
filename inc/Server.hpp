@@ -5,9 +5,9 @@
 #include "Channel.hpp"
 
 class Client;
-class channel;
+class Channel;
 
-class server
+class Server
 {
 private:
 	int _socket_Server;
@@ -25,11 +25,12 @@ private:
 	char _buffer[1024];
 
 
+	Server(Server &cp);
+	Server &operator=(Server &cp);
 public:
-	server();
-	server(int port, std::string pass);
-	server(server &cp);
-	~server();
+	Server();
+	Server(int port, std::string pass);
+	~Server();
 
 	void binding();
 	void loop();
@@ -42,7 +43,6 @@ public:
 	int const &get_socket() const;
 	Channel *getChannel(const std::string name);
 };
-
 
 #include "Client.hpp"
 

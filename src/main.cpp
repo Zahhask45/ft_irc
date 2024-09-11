@@ -1,5 +1,5 @@
 #include "colors.hpp"
-#include "server.hpp"
+#include "Server.hpp"
 
 fd_set active;
 
@@ -15,7 +15,7 @@ int main(int argc, char **argv){
     sa.sa_flags = SA_RESTART;
     sigaction(SIGINT, &sa, NULL);
 
-	server serv(6667, "banana123");
+	Server serv(6667, "banana123");
 	Client clients;
 
 	serv.binding();

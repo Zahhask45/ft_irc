@@ -4,7 +4,6 @@ server::server(){}
 
 void print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
-	std::cout << str << std::endl;
 }
 
 server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1){
@@ -64,10 +63,6 @@ void server::loop(){
 				newClient.set_socket(newsocket);
 				newClient.set_addr(client_addr);
 				newClient.set_user_info(_buffer);
-				// Aqui você pode adicionar os dados do usuário ao objeto client
-                //std::cout << newClient.get_name() << "\n";
-                //std::cout << newClient.get_pass() << "\n"; 
-                //std::cout << newClient.get_nick() << "\n"; 
 				//TODO: PUT ERROR MESSAGE HERE
 
 				_eve.events = EPOLLIN;
@@ -81,8 +76,6 @@ void server::loop(){
 			else{
 				std::cout << "Fase 3\n";
 				int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
-					newClient.set_client_fd(_events->data.fd);
-                    newClient.set_user_info(_buffer); 
 				if (bytes_received <= 0){
 					close (_events[i].data.fd);
 					if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
@@ -94,6 +87,12 @@ void server::loop(){
 					std::cout << "Received: " << _buffer << std::endl;
 					std::string command(_buffer);
 					
+					// Aqui você pode adicionar os dados do usuário ao objeto client
+					newClient.set_client_fd(_events->data.fd);
+                    newClient.set_user_info(_buffer);
+                    // std::cout << newClient.get_name() << "\n";
+                    // std::cout << newClient.get_pass() << "\n"; 
+                    // std::cout << newClient.get_nick() << "\n"; 
 					handleCommands(newClient, command);
 				}
 			}
@@ -109,9 +108,9 @@ void server::handleCommands(Client &client_usr, const std::string &command){
 		std::cout << "PASS SERVER: " << _pass << std::endl;
 		std::cout << "GET PASS: " << client_usr.get_pass() << std::endl;
 		std::string pass = client_usr.get_pass();
-/* 		for(size_t i = 0; pass[i] != '\0'; i++){
-			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;} */
-		//std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
+		for(size_t i = 0; pass[i] != '\0'; i++){
+			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;}
+		std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
 		if (strcmp(pass.c_str(), _pass.c_str()) == 0){
 			print_client(client_usr.get_client_fd(), "User is Authenticated\n");
 			client_usr.set_auth(true);
@@ -141,22 +140,12 @@ void server::handleCommands(Client &client_usr, const std::string &command){
             channels[channelName]->addUser(client_usr);
             std::string creationMessage = ":" + client_usr.get_nick() + "!" + client_usr.get_name() + "@" + client_usr.get_host() + " JOIN :" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
-            std::cout << "USER = " << client_usr.get_name() << " end" << "\n";
-            std::cout << "USER = " << client_usr.get_pass() << " end" << "\n"; 
-            std::cout << "USER = " << client_usr.get_nick() << " end" <<"\n"; 
-			//print_client(client_usr.get_client_fd(), creationMessage);
-            //print_client(client_usr.get_client_fd(), "Channel " + channelName + " created and user added.\n");
+            print_client(client_usr.get_client_fd(), creationMessage);
+            print_client(client_usr.get_client_fd(), "Channel " + channelName + " created and user added.\n");
 
             // Send topic message
-        	//std::string message = ":bmonteir JOIN #channelname\n";
-			//send(client_usr.get_client_fd(), message.c_str(), message.length(), 0);
-		    std::string channelCreate = ":" + client_usr.get_nick() + " JOIN #" + channelName + "\r\n";
-            print_client(client_usr.get_client_fd(), channelCreate);
-		}
-		else{
-            channels[channelName]->addUser(client_usr);
-			std::string channelCreate = ":" + client_usr.get_nick() + " JOIN #" + channelName + "\r\n";
-            print_client(client_usr.get_client_fd(), channelCreate);
+            std::string topicMessage = ":server 332 " + client_usr.get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+            print_client(client_usr.get_client_fd(), topicMessage);
 		}
 		/* else{
 			//TODO: CHANGE THIS

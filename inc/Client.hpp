@@ -1,11 +1,9 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include "server.hpp"
+#include "Server.hpp"
 
 //TODO: ADD STUFF FOR THE CLIENT USER
-
-class server;
 
 class Client
 {
@@ -20,9 +18,10 @@ private:
 	int _socket;
 	struct sockaddr_in _client_addr;
 
+	Client(Client &cp);
+	Client &operator=(Client &cp);
 public:
 	Client();
-	Client(Client &cp);
 	~Client();
 	
 	int const &get_socket() const;
@@ -38,6 +37,7 @@ public:
 	void set_client_fd(int fd);
 	void set_user_info(char buffer[]);
 	void set_auth(bool value);
+	std::string extract_value(const std::string& line, const std::string& key);
 };
 
 
