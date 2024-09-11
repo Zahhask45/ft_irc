@@ -29,47 +29,44 @@ int const &Server::get_socket() const{
 }
 
 void Server::binding(){
-	_addr.sin_family = AF_INET;
-	_addr.sin_addr.s_addr = INADDR_ANY;
-	_addr.sin_port = htons(_port);
-	bind(_socket_Server, (const struct sockaddr *)&_addr, sizeof(_addr));
-	listen(_socket_Server, 10);
+    _addr.sin_family = AF_INET;
+    _addr.sin_addr.s_addr = INADDR_ANY;
+    _addr.sin_port = htons(_port);
+    bind(_socket_Server, (const struct sockaddr *)&_addr, sizeof(_addr));
+    listen(_socket_Server, 10);
 
-	//! DONT KNOW WHERE TO PUT THIS
-	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN;
+    _events[0].data.fd = _socket_Server;
+    _events[0].events = EPOLLIN;
 
-	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_events[0]) == -1){
-		std::cerr << "Error adding socket to epoll" << std::endl;
-		close(_socket_Server);
-		exit(EXIT_FAILURE);
-	}
+    if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_events[0]) == -1){
+        std::cerr << "Error adding socket to epoll: " << strerror(errno) << std::endl;
+        close(_socket_Server);
+        exit(EXIT_FAILURE);
+    }
 }
 
 void Server::loop(){
-	while(true){
-		std::cout << "Fase 0: " << _cur_online << " " << _nfds << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
-		std::cout << "Fase 0: " << _cur_online << " " << _nfds << std::endl;
-		if (_nfds == -1) {
-			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
-			// exit(EXIT_FAILURE);
+    while(true){
+        std::cout << "Fase 0: " << _cur_online << " " << _nfds << std::endl;
+        _nfds = epoll_wait(_epoll_fd, _events, 10, -1);
+        std::cout << "Fase 0: " << _cur_online << " " << _nfds << std::endl;
+        if (_nfds == -1) {
+            std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
+            // exit(EXIT_FAILURE);
         }
-		//TODO: ERROR MESSAGE HERE
-		for(int i = 0; i < _cur_online; i++){
-			std::cout << "Fase 1\n";
-			if (_events[i].events & EPOLLIN) {
-				if(_events[i].data.fd == _socket_Server){
-					funct_NewClient();
-				}
-				else{
-					funct_NotNewClient(i);
-				}
-			}
-			std::cout << "END Fase 1\n";
-		}
-		std::cout << "END Fase 0: " << _cur_online << std::endl;
-	}
+        for(int i = 0; i < _nfds; i++){
+            std::cout << "Fase 1\n";
+            if (_events[i].events & EPOLLIN) {
+                if(_events[i].data.fd == _socket_Server){
+                    funct_NewClient();
+                } else {
+                    funct_NotNewClient(i);
+                }
+            }
+            std::cout << "END Fase 1\n";
+        }
+        std::cout << "END Fase 0: " << _cur_online << std::endl;
+    }
 }
 
 void Server::handleCommands(int fd, const std::string &command){
@@ -97,28 +94,28 @@ void Server::handleCommands(int fd, const std::string &command){
 
 	}
 		// Procurar por USER
-	pos = cmd.find("USER");
+	pos = command.find("USER");
 	if (pos != std::string::npos) {
 		// Extrair a informação do usuário e armazená-la no vetor
-		std::string line = cmd.substr(pos);
+		std::string line = command.substr(pos);
 		this->clients[fd]->set_name(extract_value(line, "USER"));
 		std::cout << "start>>" << this->clients[fd]->get_name() << "<<end\n" << std::endl;
 	}
 
 	// Procurar por PASS
-	pos = cmd.find("PASS");
+	pos = command.find("PASS");
 	if (pos != std::string::npos) {
 		// Extrair a informação da senha e armazená-la no vetor
-		std::string line = cmd.substr(pos);
+		std::string line = command.substr(pos);
 		this->clients[fd]->set_pass(extract_value(line, "PASS"));
 		std::cout << "start>>" << this->clients[fd]->get_pass() << "<<end\n" << std::endl;
 	}
 
 	// Procurar por NICK
-	pos = cmd.find("NICK");
+	pos = command.find("NICK");
 	if (pos != std::string::npos) {
 		// Extrair a informação do apelido e armazená-la no vetor
-		std::string line = cmd.substr(pos);
+		std::string line = command.substr(pos);
 		this->clients[fd]->set_nick(extract_value(line, "NICK"));
 		std::cout << "start>>" << this->clients[fd]->get_nick() << "<<end\n" << std::endl;
 	}
@@ -203,57 +200,48 @@ std::string const &Server::getUser()const{
 } */
 
 void Server::funct_NewClient(){
-	struct sockaddr_storage remote_addr;
-	socklen_t client_len = sizeof(remote_addr);
-	std::cout << "Fase 2\n";
-	int newsocket = accept(_socket_Server, (struct sockaddr*)&remote_addr, &client_len);
-	if (newsocket == -1)
-		std::cerr << "Error accepting new connection" << std::endl;
-	else{
-		_events[_cur_online].data.fd = newsocket;
-		_events[_cur_online].events = EPOLLIN;
-		this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
-		this->_cur_online++;
-		
-		// clients[newsocket]->set_socket(newsocket);
-		// clients[newsocket]->set_addr(remote_addr);
-		//TODO: PUT ERROR MESSAGE HERE
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, clients[newsocket]->get_socket(), &_events[_cur_online]) == -1){
-			std::cerr << "Error adding new socket to epoll" << std::endl;
-			close(clients[newsocket]->get_socket());
-			exit(EXIT_FAILURE);
-		}
-	}
+    struct sockaddr_storage remote_addr;
+    socklen_t client_len = sizeof(remote_addr);
+    std::cout << "Fase 2\n";
+    int newsocket = accept(_socket_Server, (struct sockaddr*)&remote_addr, &client_len);
+    if (newsocket == -1) {
+        std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
+    } else {
+        struct epoll_event ev;
+        ev.events = EPOLLIN;
+        ev.data.fd = newsocket;
+        if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &ev) == -1) {
+            std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
+            close(newsocket);
+        } else {
+            this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
+            this->_cur_online++;
+        }
+    }
 }
 
 void Server::funct_NotNewClient(int i){
-	std::cout << "Fase 3\n";
-	char buf[6000];
-	int sender_fd = _events[i].data.fd;
-	int bytes_received = recv(sender_fd, buf, sizeof(buf), 0);
-	
-	if (bytes_received <= 0){
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-			std::cerr << "Error removing socket from epoll" << std::endl;
-		}
-		close (_events[i].data.fd);
-	}
-	else{
-		std::string command(buf, strlen(buf) - 1);
-		if (!command.empty() && command[command.size() - 1] == '\r') {
-			command.erase(command.end() - 1);
-		}
-		handleCommands(_events[i].data.fd, command);
-		// Aqui você pode adicionar os dados do usuário ao objeto client
-		// clients[_events[i].data.fd]->set_user_info(_buffer);	
-		
-		// clients[_events[i].data.fd]->set_client_fd(_events[i].data.fd);
-		// std::cout << newClient.get_name() << "\n";
-		// std::cout << newClient.get_pass() << "\n"; 
-		// std::cout << newClient.get_nick() << "\n";
-		std::cout << "Calling handleCommands with fd: " << _events[i].data.fd << " and command: " << command << std::endl;
-	}
-	std::cout << "END Fase 3\n";
+    std::cout << "Fase 3\n";
+    char buf[6000];
+    int sender_fd = _events[i].data.fd;
+    int bytes_received = recv(sender_fd, buf, sizeof(buf), 0);
+    
+    if (bytes_received <= 0){
+        if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, sender_fd, NULL) == -1) {
+            std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
+        }
+        close(sender_fd);
+        this->clients.erase(sender_fd);
+        this->_cur_online--;
+    } else {
+        std::string command(buf, bytes_received);
+        if (!command.empty() && command[command.size() - 1] == '\r') {
+            command.erase(command.end() - 1);
+        }
+        handleCommands(sender_fd, command);
+        std::cout << "Calling handleCommands with fd: " << sender_fd << " and command: " << command << std::endl;
+    }
+    std::cout << "END Fase 3\n";
 }
 
 std::string Server::extract_value(const std::string& line, const std::string& key) {
