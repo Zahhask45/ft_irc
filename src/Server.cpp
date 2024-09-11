@@ -55,7 +55,7 @@ void Server::loop(){
 			std::cout << "Fase 1\n";
 			
 			struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
+			socklen_t client_len = sizeof(client_addr);
 
 			if(_events[i].data.fd == _socket_Server){
 				std::cout << "Fase 2\n";
@@ -80,7 +80,7 @@ void Server::loop(){
 				if (bytes_received <= 0){
 					close (_events[i].data.fd);
 					if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-                        std::cerr << "Error removing socket from epoll" << std::endl;
+						std::cerr << "Error removing socket from epoll" << std::endl;
 					}
 				}
 				else{
@@ -90,10 +90,10 @@ void Server::loop(){
 					
 					// Aqui você pode adicionar os dados do usuário ao objeto client
 					newClient.set_client_fd(_events->data.fd);
-                    newClient.set_user_info(_buffer);
-                    // std::cout << newClient.get_name() << "\n";
-                    // std::cout << newClient.get_pass() << "\n"; 
-                    // std::cout << newClient.get_nick() << "\n"; 
+					newClient.set_user_info(_buffer);
+					// std::cout << newClient.get_name() << "\n";
+					// std::cout << newClient.get_pass() << "\n"; 
+					// std::cout << newClient.get_nick() << "\n"; 
 					handleCommands(newClient, command);
 				}
 			}
@@ -138,21 +138,21 @@ void Server::handleCommands(Client &client_usr, const std::string &command){
 		Channel *channel;
 		channel = getChannel(channelName);
 		if (channel == NULL){
-            createChannel(channelName);
-            channels[channelName]->addUser(client_usr);
-            std::string creationMessage = ":" + client_usr.get_nick() + "!" + client_usr.get_name() + "@" + client_usr.get_host() + " JOIN :#" + channelName + "\r\n";
+			createChannel(channelName);
+			channels[channelName]->addUser(client_usr);
+			std::string creationMessage = ":" + client_usr.get_nick() + "!" + client_usr.get_name() + "@" + client_usr.get_host() + " JOIN :#" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
-            print_client(client_usr.get_client_fd(), creationMessage);
-            print_client(client_usr.get_client_fd(), "Channel " + channelName + " created and user added.\n");
+			print_client(client_usr.get_client_fd(), creationMessage);
+			print_client(client_usr.get_client_fd(), "Channel " + channelName + " created and user added.\n");
 
-            // Send topic message
-            std::string topicMessage = ":server 332 " + client_usr.get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
-            print_client(client_usr.get_client_fd(), topicMessage);
+			// Send topic message
+			std::string topicMessage = ":server 332 " + client_usr.get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+			print_client(client_usr.get_client_fd(), topicMessage);
 		}
 		/* else{
 			//TODO: CHANGE THIS
 			if (channel->getUser(client_fd) == client_fd){
-            	channel->addUser(client_fd);
+				channel->addUser(client_fd);
 				std::string response = "User added\n";
 				send(client.get_client_fd(), response.c_str(), response.size(), 0);
 			}
@@ -162,12 +162,12 @@ void Server::handleCommands(Client &client_usr, const std::string &command){
 			}
 		} */
 
-        /* if (!channel) {
+		/* if (!channel) {
 			createChannel(channelName);
-            channel->addUser(...);
-            std::string response = "Channel " + channelName + " created and user added.\n";
-            send(client.get_client_fd(), response.c_str(), response.size(), 0);
-        } */
+			channel->addUser(...);
+			std::string response = "Channel " + channelName + " created and user added.\n";
+			send(client.get_client_fd(), response.c_str(), response.size(), 0);
+		} */
 	}	
 }
 
@@ -188,7 +188,7 @@ Channel *Server::getChannel(const std::string name)  {
 void Server::setUsers(std::string userName){
 	std::vector<std::string>::iterator it = user.  
 	if (user.(userName) == user.end())
-    	user.insert(user);
+		user.insert(user);
 }
 
 std::string const &Server::getUser()const{
