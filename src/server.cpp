@@ -6,18 +6,18 @@ void print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
 }
 
-server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(1){
+server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(0){
 	//! DONT KNOW WHERE TO PUT THIS
-	_epoll_fd = epoll_create1(0);
+	/* _epoll_fd = epoll_create1(0);
 	if (_epoll_fd == -1) {
 		std::cerr << "Error creating epoll file descriptor" << std::endl;
 		exit(EXIT_FAILURE);
-	}
+	} */
 	
-	_socket_Server = socket(AF_INET, SOCK_STREAM, 0);
+	/* _socket_Server = socket(AF_INET, SOCK_STREAM, 0);
 
 	int opt = 1;
-	setsockopt(_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+	setsockopt(_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); */
 }
 
 server::~server() {}
@@ -30,32 +30,75 @@ void server::binding(){
 	// _addr.sin_family = AF_INET;
 	// _addr.sin_addr.s_addr = INADDR_ANY;
 	// _addr.sin_port = htons(_port);
-	_addr.ss_family = AF_INET;
+	//_addr.ss_family = AF_INET;
 	struct addrinfo hints, *serverinfo, *tmp;
+	int status;
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_INET;
-	//hints.ai_socktype = SOCKET_STREAM;
-	hints
-	/* bind(_socket_Server, (const struct sockaddr *)&_addr, sizeof(_addr));
-	listen(_socket_Server, 10); */
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_protocol = getprotobyname("TCP")->p_proto;
+
+	std::stringstream ss;
+	int opt = 1;
+	ss << _port;
+	std::string Port = ss.str();
+	status = getaddrinfo("0.0.0.0", Port.c_str(), &hints, &serverinfo);
+	if (status != 0){
+		std::cout << "ERROR ON GETTING ADDRESS INFO" << std::endl;
+		exit (-1);
+	}
+	for (tmp = serverinfo; tmp != NULL; tmp = tmp->ai_next){
+		this->_socket_Server = socket(tmp->ai_family, tmp->ai_socktype, tmp->ai_protocol);
+		if (this->_socket_Server < 0)
+			continue;
+		setsockopt(this->_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
+		if (bind(_socket_Server, tmp->ai_addr, tmp->ai_addrlen) < 0){
+			close(this->_socket_Server);
+			continue;
+		}
+		break;
+	}
+
+	freeaddrinfo(serverinfo);
+
+	//TODO: ERROR MESSAGE FOR TMP = NULL
+	
+
+	listen(_socket_Server, 10);
+
+	//TODO: ERROR MESSAGE FOR LISTEN
+	
+	_epoll_fd = epoll_create1(0);
+	if (_epoll_fd == -1) {
+		std::cerr << "Error creating epoll file descriptor" << std::endl;
+		exit(EXIT_FAILURE);
+	}
+
+
 
 	//! DONT KNOW WHERE TO PUT THIS
 	_events[0].data.fd = _socket_Server;
 	_events[0].events = EPOLLIN;
 	
-	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_eve) == -1){
+	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
 		close(_socket_Server);
 		exit(EXIT_FAILURE);
 	}
+	_cur_online++;
 }
 
 void server::loop(){
 	while(true){
 
+		std::cout << "FUCK" <<std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
 		//TODO: ERROR MESSAGE HERE
+		if (_nfds == -1){
+			std::cout << "epoll_wait() error" << std::endl;
+			exit (-1);
+		}
 
 		for(int i = 0; i < _cur_online; i++){
 			if (_events[i].events & EPOLLIN){
@@ -71,29 +114,38 @@ void server::loop(){
 					this->clients.insert(std::pair<int, Client *>(newsocket, new Client()));
 					clients[newsocket]->set_addr(client_addr);
 
+
+					fcntl(clients[newsocket]->get_client_fd(), F_SETFL, O_NONBLOCK);
+					epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, clients[newsocket]->get_client_fd(), &_events[_cur_online]);
+
+
+
 					this->_cur_online++;
 				}
 				else{
 					std::cout << "Fase 3\n";
 					int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
 					if (bytes_received <= 0){
+						std::cout << "Fase 3.1\n";
 						close (_events[i].data.fd);
 						if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 							std::cerr << "Error removing socket from epoll" << std::endl;
 						}
 					}
 					else{
+						std::cout << "Fase 3.2\n";
 						_buffer[bytes_received] = '\0';
 						std::cout << "Received: " << _buffer << std::endl;
 						std::string command(_buffer);
-						clients[_events[i].data.fd]->set_user_info(_buffer);
+						//clients[_events[i].data.fd]->set_user_info(_buffer);
 						// std::cout << newClient.get_name() << "\n";
 						// std::cout << newClient.get_pass() << "\n"; 
 						// std::cout << newClient.get_nick() << "\n"; 
 						handleCommands(_events[i].data.fd, command);
 
 					}
-					//memset(_buffer, 0, 1024);
+					std::cout << "banana" << std::endl;
+					memset(_buffer, 0, 1024);
 				}
 			}
 		}
@@ -165,6 +217,7 @@ void server::handleCommands(int fd, const std::string &command){
 	std::istringstream iss(command);
 	std::string cmd;
 	iss >> cmd;
+	std::cout << command << std::endl;
 	if (cmd == "auth" || cmd == "AUTH"){
 		std::cout << "PASS SERVER: " << _pass << std::endl;
 		std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
