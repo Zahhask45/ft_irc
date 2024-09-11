@@ -3,16 +3,16 @@
 Client::Client(): _client_fd(), _name(), _nick() {
 	_auth = false;
 }
+Client::Client(int newsocket): _client_fd(newsocket), _name(), _nick() {
+	_auth = false;
+
+}
 
 Client::Client(Client &cp){
 	*this = cp;
 }
 
 Client::~Client(){}
-
-int const &Client::get_socket() const{
-	return _socket;
-}
 
 bool const &Client::get_auth() const{
 	return _auth;
@@ -31,10 +31,6 @@ std::string const &Client::get_pass() const{
 
 std::string const &Client::get_nick() const{
 	return _nick;
-}
-
-void Client::set_socket(int value){
-	_socket = value;
 }
 
 void Client::set_addr(struct sockaddr_storage value){

@@ -8,11 +8,11 @@ void print_client(int client_fd, std::string str){
 
 server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(0){
 	//! DONT KNOW WHERE TO PUT THIS
-	/* _epoll_fd = epoll_create1(0);
+	_epoll_fd = epoll_create1(0);
 	if (_epoll_fd == -1) {
 		std::cerr << "Error creating epoll file descriptor" << std::endl;
 		exit(EXIT_FAILURE);
-	} */
+	}
 	
 	/* _socket_Server = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -62,20 +62,16 @@ void server::binding(){
 
 	freeaddrinfo(serverinfo);
 
-	//TODO: ERROR MESSAGE FOR TMP = NULL
-	
-
-	listen(_socket_Server, 10);
-
-	//TODO: ERROR MESSAGE FOR LISTEN
-	
-	_epoll_fd = epoll_create1(0);
-	if (_epoll_fd == -1) {
-		std::cerr << "Error creating epoll file descriptor" << std::endl;
+	if (tmp == NULL) {
+		std::cerr << "Failed to bind to any address" << std::endl;
 		exit(EXIT_FAILURE);
 	}
+	
 
-
+	if (listen(_socket_Server, 10) == -1) {
+    	std::cerr << "Error in listen()" << std::endl;
+    	exit(EXIT_FAILURE);
+	}
 
 	//! DONT KNOW WHERE TO PUT THIS
 	_events[0].data.fd = _socket_Server;
@@ -99,25 +95,28 @@ void server::loop(){
 			std::cout << "epoll_wait() error" << std::endl;
 			exit (-1);
 		}
-
+		//! _cur_online or _nfds
 		for(int i = 0; i < _cur_online; i++){
-			if (_events[i].events & EPOLLIN){
+			//if (_events[i].events & EPOLLIN){
 
 				if(_events[i].data.fd == _socket_Server){
+					std::cout << "Fase 2\n";
+					
 					struct sockaddr_storage client_addr;
 					socklen_t client_len = sizeof(client_addr);
-					std::cout << "Fase 2\n";
 					int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
+					if (newsocket == -1){
+						std::cout << "Error on accept" << std::endl;
+					}
+					//fcntl(newsocket, F_SETFL, O_NONBLOCK);
 					
 					_events[_cur_online].data.fd = newsocket;
 					_events[_cur_online].events = EPOLLIN;
-					this->clients.insert(std::pair<int, Client *>(newsocket, new Client()));
+					this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
 					clients[newsocket]->set_addr(client_addr);
 
 
-					fcntl(clients[newsocket]->get_client_fd(), F_SETFL, O_NONBLOCK);
-					epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, clients[newsocket]->get_client_fd(), &_events[_cur_online]);
-
+					epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[_cur_online]);
 
 
 					this->_cur_online++;
@@ -147,7 +146,7 @@ void server::loop(){
 					std::cout << "banana" << std::endl;
 					memset(_buffer, 0, 1024);
 				}
-			}
+			//}
 		}
 	}
 }

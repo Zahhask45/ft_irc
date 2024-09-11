@@ -26,6 +26,6 @@ int main(int argc, char **argv){
 	(void)argc;
 	
 	close(serv.get_socket());
-	close(clients.get_socket());
+	close(clients.get_client_fd());
 	return 0;
 }
