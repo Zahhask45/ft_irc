@@ -31,13 +31,19 @@ void server::binding(){
 	// _addr.sin_addr.s_addr = INADDR_ANY;
 	// _addr.sin_port = htons(_port);
 	_addr.ss_family = AF_INET;
-	bind(_socket_Server, (const struct sockaddr *)&_addr, sizeof(_addr));
-	listen(_socket_Server, 10);
+	struct addrinfo hints, *serverinfo, *tmp;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_family = AF_INET;
+	//hints.ai_socktype = SOCKET_STREAM;
+	hints
+	/* bind(_socket_Server, (const struct sockaddr *)&_addr, sizeof(_addr));
+	listen(_socket_Server, 10); */
 
 	//! DONT KNOW WHERE TO PUT THIS
 	_events[0].data.fd = _socket_Server;
 	_events[0].events = EPOLLIN;
-
+	
 	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_eve) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
 		close(_socket_Server);
@@ -47,6 +53,7 @@ void server::binding(){
 
 void server::loop(){
 	while(true){
+
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
 		//TODO: ERROR MESSAGE HERE
 
