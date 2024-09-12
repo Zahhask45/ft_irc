@@ -1,15 +1,15 @@
 #include "Client.hpp"
 
-Client::Client(): _client_fd(), _name(), _nick() {
+Client::Client(): _client_fd(), _user(), _nick(), _host("banana") {
 	_auth = false;
 }
-Client::Client(int newsocket): _client_fd(newsocket), _name(), _nick() {
+Client::Client(int newsocket): _client_fd(newsocket), _user(), _nick(), _host("banana") {
 	_auth = false;
 
 }
 
 Client::Client(Client &cp){
-	*this = cp;
+	(void)cp;
 }
 
 Client::~Client(){}
@@ -22,8 +22,8 @@ int const &Client::get_client_fd() const{
 	return _client_fd;
 }
 
-std::string const &Client::get_name() const{
-	return _name;
+std::string const &Client::get_user() const{
+	return _user;
 }
 std::string const &Client::get_pass() const{
 	return _pass;
@@ -32,6 +32,17 @@ std::string const &Client::get_pass() const{
 std::string const &Client::get_nick() const{
 	return _nick;
 }
+
+std::string const &Client::get_host() const{
+	return _host;
+}
+
+std::string const &Client::get_mask() const{
+	return _mask;
+}
+
+
+
 
 void Client::set_addr(struct sockaddr_storage value){
 	_client_addr = value;
@@ -45,6 +56,31 @@ void Client::set_client_fd(int fd){
 	_client_fd = fd;
 }
 
+void Client::set_user(std::string user){
+	_user = user;
+}
+
+void Client::set_nick(std::string nick){
+	_nick = nick;
+}
+
+void Client::set_pass(std::string pass){
+	_pass = pass;
+}
+
+//? CAN BE DIFFERENT
+void Client::set_mask(std::string mask){
+	_mask = mask;
+}
+
+
+
+
+
+
+
+
+
 void Client::set_user_info(char buffer[]){
 	std::string bufferStr(buffer);
 	size_t pos;
@@ -56,7 +92,7 @@ void Client::set_user_info(char buffer[]){
 	    std::string line = bufferStr.substr(pos);
 		pos = line.find(" ");
 	    //std::string user = line.substr(pos + 1, line.find(' ', pos + 1) - pos - 1);
-	    this->_name = line.substr(pos + 1, line.find(' ', pos + 1) - pos - 1);;
+	    this->_user = line.substr(pos + 1, line.find(' ', pos + 1) - pos - 1);;
 		// std::cout << "==========================================" << std::endl;
 		// std::cout << _name << std::endl;
 		// std::cout << "==========================================" << std::endl;

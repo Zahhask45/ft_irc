@@ -13,11 +13,6 @@ server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1),
 		std::cerr << "Error creating epoll file descriptor" << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	
-	/* _socket_Server = socket(AF_INET, SOCK_STREAM, 0);
-
-	int opt = 1;
-	setsockopt(_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)); */
 }
 
 server::~server() {}
@@ -27,10 +22,6 @@ int const &server::get_socket() const{
 }
 
 void server::binding(){
-	// _addr.sin_family = AF_INET;
-	// _addr.sin_addr.s_addr = INADDR_ANY;
-	// _addr.sin_port = htons(_port);
-	//_addr.ss_family = AF_INET;
 	struct addrinfo hints, *serverinfo, *tmp;
 	int status;
 
@@ -73,7 +64,6 @@ void server::binding(){
     	exit(EXIT_FAILURE);
 	}
 
-	//! DONT KNOW WHERE TO PUT THIS
 	_events[0].data.fd = _socket_Server;
 	_events[0].events = EPOLLIN;
 	
@@ -90,14 +80,12 @@ void server::loop(){
 
 		std::cout << "FUCK" <<std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
-		//TODO: ERROR MESSAGE HERE
 		if (_nfds == -1){
 			std::cout << "epoll_wait() error" << std::endl;
 			exit (-1);
 		}
-		//! _cur_online or _nfds
 		for(int i = 0; i < _cur_online; i++){
-			//if (_events[i].events & EPOLLIN){
+			if (_events[i].events & EPOLLIN){
 
 				if(_events[i].data.fd == _socket_Server){
 					std::cout << "Fase 2\n";
@@ -108,7 +96,7 @@ void server::loop(){
 					if (newsocket == -1){
 						std::cout << "Error on accept" << std::endl;
 					}
-					//fcntl(newsocket, F_SETFL, O_NONBLOCK);
+					//! fcntl(newsocket, F_SETFL, O_NONBLOCK);
 					
 					_events[_cur_online].data.fd = newsocket;
 					_events[_cur_online].events = EPOLLIN;
@@ -136,17 +124,13 @@ void server::loop(){
 						_buffer[bytes_received] = '\0';
 						std::cout << "Received: " << _buffer << std::endl;
 						std::string command(_buffer);
-						//clients[_events[i].data.fd]->set_user_info(_buffer);
-						// std::cout << newClient.get_name() << "\n";
-						// std::cout << newClient.get_pass() << "\n"; 
-						// std::cout << newClient.get_nick() << "\n"; 
 						handleCommands(_events[i].data.fd, command);
 
 					}
 					std::cout << "banana" << std::endl;
 					memset(_buffer, 0, 1024);
 				}
-			//}
+			}
 		}
 	}
 }
@@ -212,6 +196,8 @@ void server::loop(){
 	}
 } */
 
+
+//! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void server::handleCommands(int fd, const std::string &command){
 	std::istringstream iss(command);
 	std::string cmd;
@@ -235,6 +221,51 @@ void server::handleCommands(int fd, const std::string &command){
 		}
 
 	}
+
+	if (cmd == "pass" || cmd == "PASS"){
+		std::string pass;
+		iss >> pass;
+		if (_pass != pass){
+			print_client(clients[fd]->get_client_fd(), "WRONG PASSWORD\n");
+			return ;
+		}
+
+		clients[fd]->set_pass(pass);
+		print_client(clients[fd]->get_client_fd(), "PASSWORD CONFIRMED\n");
+	}
+
+
+
+
+
+	if (cmd == "nick" || cmd == "NICK"){
+		std::string nick;
+		iss >> nick;
+		
+		clients[fd]->set_nick(nick);
+		print_client(clients[fd]->get_client_fd(), "NICK SETTED\n");
+		if (clients[fd]->get_user() != "\0"){
+			clients[fd]->set_mask(clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host());
+		}
+	}
+
+	if (cmd == "user" || cmd == "USER"){
+		std::string user;
+		iss >> user;
+		
+		clients[fd]->set_user(user);
+		print_client(clients[fd]->get_client_fd(), "USER SETTED\n");
+		if (clients[fd]->get_nick() != "\0"){
+			clients[fd]->set_mask(clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host());
+		}
+	}
+
+
+
+
+
+
+
 	if (cmd == "join" || cmd == "JOIN"){
 		if (clients[fd]->get_auth() == false){
 			print_client(clients[fd]->get_client_fd(), "Need to Auth the user\n");
@@ -249,27 +280,24 @@ void server::handleCommands(int fd, const std::string &command){
 		Channel *channel;
 		channel = getChannel(channelName);
 		if (channel == NULL){
-			Channel *channel = new Channel(channelName);
-			createChannel(channelName, *channel);
+			createChannel(channelName);
 			channels[channelName]->addUser(getClient(fd));
-			print_client(clients[fd]->get_client_fd(), "Channel created and user added\n");
+			std::string creationMessage = ":" + clients[fd]->get_mask() + " JOIN :#" + channelName + "\r\n";
+			std::cout << creationMessage << std::endl;
+
+			print_client(clients[fd]->get_client_fd(), creationMessage);
 			clients[clients[fd]->get_client_fd()]->addChannel(channelName, *channel);
-			std::string ret = "";
-			send(this->_eve.data.fd, ret.c_str(), ret.length(), 0);
+
+			print_client(clients[fd]->get_client_fd(), "Channel " + channelName + " created and user added.\n");
+
+			// Send topic message
+			std::string topicMessage = ":server 332 " + clients[fd]->get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+			print_client(clients[fd]->get_client_fd(), topicMessage);
 			return ;
 		}
-		/* else{
-			//TODO: CHANGE THIS
-			if (channel->getUser(client_fd) == client_fd){
-            	channel->addUser(client_fd);
-				std::string response = "User added\n";
-				send(client.get_client_fd(), response.c_str(), response.size(), 0);
-			}
-			else{
-				std::string response = "User already added\n";
-				send(client.get_client_fd(), response.c_str(), response.size(), 0);
-			}
-		} */
+		else{
+			std::string creationMessage = ":" + clients[fd]->get_mask() + " JOIN :#" + channelName + "\r\n";
+		}
 
         /* if (!channel) {
 			createChannel(channelName);
@@ -280,9 +308,10 @@ void server::handleCommands(int fd, const std::string &command){
 	}	
 }
 
-void server::createChannel(const std::string &channelName, Channel &channel){
+void server::createChannel(const std::string &channelName){
 	if (channels.find(channelName) == channels.end()){
-		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
+		Channel *channel = new Channel(channelName);
+		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
 	}
 }
 
