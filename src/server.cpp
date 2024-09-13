@@ -122,80 +122,20 @@ void server::loop(){
 					else{
 						std::cout << "Fase 3.2\n";
 						_buffer[bytes_received] = '\0';
-						std::cout << "Received: " << _buffer << std::endl;
 						std::string command(_buffer);
+						std::cout << "Received: " << command << std::endl;
+						/* if (!command.empty() && command[command.size() - 1] == '\r') {
+        					command.erase(command.end() - 1);
+						} */
 						handleCommands(_events[i].data.fd, command);
 
 					}
-					std::cout << "banana" << std::endl;
 					memset(_buffer, 0, 1024);
 				}
 			}
 		}
 	}
 }
-
-//! NEED TO CHANGE ALL THIS LOOP, BECAUSE WE CAN NOT CREATE A NEW CLIENT EVERYTIME WE SEND A COMMAND AND ALSO WE NEED TO CREATE A WAY TO ADD THE USER TO THE SERVER
-/* void server::loop(){
-	Client newClient;
-	while(true){
-		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
-		//TODO: ERROR MESSAGE HERE
-
-		for(int i = 0; i < _nfds; i++){
-			std::cout << "Fase 1\n";
-			
-			struct sockaddr_storage client_addr;
-            socklen_t client_len = sizeof(client_addr);
-
-			if(_events[i].data.fd == _socket_Server){
-				std::cout << "Fase 2\n";
-				int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
-				
-				newClient.set_socket(newsocket);
-				newClient.set_addr(client_addr);
-				newClient.set_user_info(_buffer);
-				//TODO: PUT ERROR MESSAGE HERE
-
-				_eve.events = EPOLLIN;
-				_eve.data.fd = newClient.get_socket();
-				if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newClient.get_socket(), &_eve) == -1){
-					std::cerr << "Error adding new socket to epoll" << std::endl;
-					close(newClient.get_socket());
-					exit(EXIT_FAILURE);
-				}
-				// Aqui você pode adicionar os dados do usuário ao objeto client
-				newClient.set_client_fd(_events->data.fd);
-				newClient.set_user_info(_buffer);
-				this->clients.insert(std::pair<int, Client *>(newClient.get_client_fd(), &newClient));
-			}
-			else{
-				std::cout << "Fase 3\n";
-				int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
-				if (bytes_received <= 0){
-
-					
-					close (_events[i].data.fd);
-					if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-                        std::cerr << "Error removing socket from epoll" << std::endl;
-					}
-				}
-				else{
-					_buffer[bytes_received] = '\0';
-					std::cout << "Received: " << _buffer << std::endl;
-					std::string command(_buffer);
-                    // std::cout << newClient.get_name() << "\n";
-                    // std::cout << newClient.get_pass() << "\n"; 
-                    // std::cout << newClient.get_nick() << "\n"; 
-					handleCommands(_events[i].data.fd, command);
-
-				}
-				memset(_buffer, 0, 1024);
-			}
-		}
-	}
-} */
-
 
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void server::handleCommands(int fd, const std::string &command){
