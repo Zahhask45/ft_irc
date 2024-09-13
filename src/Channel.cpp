@@ -61,7 +61,7 @@ std::string		Channel::listAllUsers() const
 
 std::map<int, Client *> Channel::getUsers(void) const{
 	std::map<int, Client *> allUsers(this->users.begin(), this->users.end());
-	allUsers.insert(this->users.begin(), this->users.end());
+	//allUsers.insert(this->users.begin(), this->users.end());
 	return allUsers;
 }
 

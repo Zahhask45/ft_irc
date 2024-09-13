@@ -114,7 +114,7 @@ void server::loop(){
 					int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
 					if (bytes_received <= 0){
 						std::cout << "Fase 3.1\n";
-						close (_events[i].data.fd);
+						//close (_events[i].data.fd);
 						if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 							std::cerr << "Error removing socket from epoll" << std::endl;
 						}
@@ -267,7 +267,20 @@ void server::handleCommands(int fd, const std::string &command){
 	}	
 
 	if (cmd == "privmsg" || cmd == "PRIVMSG"){
-		
+		//! change to varius types of privmsg
+		std::string channel_name;
+		iss >> channel_name;
+		channel_name = channel_name.substr(1, channel_name.size() - 1);
+		std::string msg;
+		iss >> msg;
+
+		std::map<std::string, Channel *>::iterator it = this->channels.find(channel_name);
+		if (it != this->channels.end()){
+			std::cout << "I DID ENTER IN FACT" << std::endl;
+			std::cout << "PRIVMSG #" + channel_name + " " + msg << std::endl;
+			_ToAll(it->second, clients[fd]->get_client_fd(), "PRIVMSG #" + channel_name + " " + msg + "\r\n");
+		}
+
 	}
 
 }
@@ -305,11 +318,11 @@ std::string const &server::getUser()const{
 void server::_ToAll(Channel *channel, int ori_fd, std::string message){
 	std::map<int, Client *> all_users = channel->getUsers();
 	std::map<int, Client *>::iterator it = all_users.begin();
-	std::string rep = this->clients[ori_fd]->get_nick();
+	std::string rep = this->clients[ori_fd]->get_mask();
 	rep.append(message);
 	while (it != all_users.end()){
 		if (ori_fd != it->first)
-			print_client(it->first, message);
+			_sendall(it->first, message);
 		it++;
 	}
 }
