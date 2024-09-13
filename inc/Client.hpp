@@ -22,6 +22,7 @@ private:
 	Client &operator=(Client &cp);
 public:
 	Client();
+	Client(int fd);
 	~Client();
 	
 	int const &get_socket() const;
@@ -37,7 +38,10 @@ public:
 	void set_client_fd(int fd);
 	void set_user_info(char buffer[]);
 	void set_auth(bool value);
-	std::string extract_value(const std::string& line, const std::string& key);
+	void set_name(std::string name);
+	void set_pass(std::string pass);
+	void set_nick(std::string nick);
+
 };
 
 

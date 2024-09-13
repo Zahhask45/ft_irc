@@ -4,16 +4,16 @@
 fd_set active;
 
 void handle_signal(int signal) {
-    std::cout << "Signal " << signal << " received. Closing server." << std::endl;
-    exit(0);
+	std::cout << "Signal " << signal << " received. Closing server." << std::endl;
+	exit(0);
 }
 
 int main(int argc, char **argv){
 	struct sigaction sa;
-    sa.sa_handler = handle_signal;
-    sigemptyset(&sa.sa_mask);
-    sa.sa_flags = SA_RESTART;
-    sigaction(SIGINT, &sa, NULL);
+	sa.sa_handler = handle_signal;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_flags = SA_RESTART;
+	sigaction(SIGINT, &sa, NULL);
 
 	Server serv(6667, "banana123");
 	Client clients;

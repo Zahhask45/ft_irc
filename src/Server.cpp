@@ -1,4 +1,7 @@
-#include "server.hpp"
+#include "Server.hpp"
+#include <errno.h>
+#include "replies.hpp"
+
 
 server::server(){}
 
@@ -6,7 +9,7 @@ void print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
 }
 
-server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1){
+Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(1){
 	//! DONT KNOW WHERE TO PUT THIS
 	_epoll_fd = epoll_create1(0);
 	if (_epoll_fd == -1) {
@@ -26,131 +29,131 @@ int const &server::get_socket() const{
 	return _socket_Server;
 }
 
-void server::binding(){
-	_addr.sin_family = AF_INET;
-	_addr.sin_addr.s_addr = INADDR_ANY;
-	_addr.sin_port = htons(_port);
-	bind(_socket_Server, (const struct sockaddr *)&_addr, sizeof(_addr));
-	listen(_socket_Server, 10);
+void Server::binding(){
+    _addr.sin_family = AF_INET;
+    _addr.sin_addr.s_addr = INADDR_ANY;
+    _addr.sin_port = htons(_port);
+    bind(_socket_Server, (const struct sockaddr *)&_addr, sizeof(_addr));
+    listen(_socket_Server, 10);
 
-	//! DONT KNOW WHERE TO PUT THIS
-	_eve.events = EPOLLIN;
-	_eve.data.fd = _socket_Server;
+    _events[0].data.fd = _socket_Server;
+    _events[0].events = EPOLLIN;
 
-	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_eve) == -1){
-		std::cerr << "Error adding socket to epoll" << std::endl;
-		close(_socket_Server);
-		exit(EXIT_FAILURE);
-	}
+    if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_events[0]) == -1){
+        std::cerr << "Error adding socket to epoll: " << strerror(errno) << std::endl;
+        close(_socket_Server);
+        exit(EXIT_FAILURE);
+    }
 }
 
-void server::loop(){
-	Client newClient;
-	while(true){
-		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
-		//TODO: ERROR MESSAGE HERE
-
-		for(int i = 0; i < _nfds; i++){
-			std::cout << "Fase 1\n";
-			
-			struct sockaddr_in client_addr;
-            socklen_t client_len = sizeof(client_addr);
-
-			if(_events[i].data.fd == _socket_Server){
-				std::cout << "Fase 2\n";
-				int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
-				
-				newClient.set_socket(newsocket);
-				newClient.set_addr(client_addr);
-				newClient.set_user_info(_buffer);
-				//TODO: PUT ERROR MESSAGE HERE
-
-				_eve.events = EPOLLIN;
-				_eve.data.fd = newClient.get_socket();
-				if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newClient.get_socket(), &_eve) == -1){
-					std::cerr << "Error adding new socket to epoll" << std::endl;
-					close(newClient.get_socket());
-					exit(EXIT_FAILURE);
-				}
-			}
-			else{
-				std::cout << "Fase 3\n";
-				int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
-				if (bytes_received <= 0){
-					close (_events[i].data.fd);
-					if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-                        std::cerr << "Error removing socket from epoll" << std::endl;
-					}
-				}
-				else{
-					_buffer[bytes_received] = '\0';
-					std::cout << "Received: " << _buffer << std::endl;
-					std::string command(_buffer);
-					
-					// Aqui você pode adicionar os dados do usuário ao objeto client
-					newClient.set_client_fd(_events->data.fd);
-                    newClient.set_user_info(_buffer);
-                    // std::cout << newClient.get_name() << "\n";
-                    // std::cout << newClient.get_pass() << "\n"; 
-                    // std::cout << newClient.get_nick() << "\n"; 
-					handleCommands(newClient, command);
-				}
-			}
-		}
-	}
+void Server::loop(){
+    while(true){
+        std::cout << "Fase 0: " << _cur_online << " " << _nfds << std::endl;
+        _nfds = epoll_wait(_epoll_fd, _events, 10, -1);
+        std::cout << "Fase 0: " << _cur_online << " " << _nfds << std::endl;
+        if (_nfds == -1) {
+            std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
+            // exit(EXIT_FAILURE);
+        }
+        for(int i = 0; i < _nfds; i++){
+            std::cout << "Fase 1\n";
+            if (_events[i].events & EPOLLIN) {
+                if(_events[i].data.fd == _socket_Server){
+                    funct_NewClient();
+                } else {
+                    funct_NotNewClient(i);
+                }
+            }
+            std::cout << "END Fase 1\n";
+        }
+        std::cout << "END Fase 0: " << _cur_online << std::endl;
+    }
 }
 
-void server::handleCommands(Client &client_usr, const std::string &command){
+void Server::handleCommands(int fd, const std::string &command){
 	std::istringstream iss(command);
 	std::string cmd;
+	size_t pos;
 	iss >> cmd;
 	if (cmd == "auth" || cmd == "AUTH"){
 		std::cout << "PASS SERVER: " << _pass << std::endl;
-		std::cout << "GET PASS: " << client_usr.get_pass() << std::endl;
-		std::string pass = client_usr.get_pass();
-		for(size_t i = 0; pass[i] != '\0'; i++){
-			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;}
+		std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
+		std::string pass = clients[fd]->get_pass();
+		/* for(size_t i = 0; pass[i] != '\0'; i++){
+			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;} */
 		std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
 		if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-			print_client(client_usr.get_client_fd(), "User is Authenticated\n");
-			client_usr.set_auth(true);
+			print_client(clients[fd]->get_client_fd(), ":server 371 " + clients[fd]->get_nick() +": User is Authenticated\n");
+			clients[fd]->set_auth(true);
 			return ;
 		}
 		else{
-			print_client(client_usr.get_client_fd(), "User is not Authenticated\n");
+			print_client(clients[fd]->get_client_fd(), ":server 464 " + clients[fd]->get_nick() + " :Password incorrect\n");
+			print_client(clients[fd]->get_client_fd(), ":server 451 " + clients[fd]->get_nick() + " :You have not registered\n");
 			return ;
 		}
 
 	}
+		// Procurar por USER
+	pos = command.find("USER");
+	if (pos != std::string::npos) {
+		// Extrair a informação do usuário e armazená-la no vetor
+		std::string line = command.substr(pos);
+		this->clients[fd]->set_name(extract_value(line, "USER"));
+		std::cout << "start>>" << this->clients[fd]->get_name() << "<<end\n" << std::endl;
+	}
+
+	// Procurar por PASS
+	pos = command.find("PASS");
+	if (pos != std::string::npos) {
+		// Extrair a informação da senha e armazená-la no vetor
+		std::string line = command.substr(pos);
+		this->clients[fd]->set_pass(extract_value(line, "PASS"));
+		std::cout << "start>>" << this->clients[fd]->get_pass() << "<<end\n" << std::endl;
+	}
+
+	// Procurar por NICK
+	pos = command.find("NICK");
+	if (pos != std::string::npos) {
+		// Extrair a informação do apelido e armazená-la no vetor
+		std::string line = command.substr(pos);
+		this->clients[fd]->set_nick(extract_value(line, "NICK"));
+		std::cout << "start>>" << this->clients[fd]->get_nick() << "<<end\n" << std::endl;
+	}
+
 	if (cmd == "join" || cmd == "JOIN"){
-		if (client_usr.get_auth() == false){
-			print_client(client_usr.get_client_fd(), "Need to Auth the user\n");
+		if (clients[fd]->get_auth() == false){
+			print_client(clients[fd]->get_client_fd(), "Need to Auth the user\n");
+			print_client(clients[fd]->get_client_fd(), ERR_NOSUCHNICK(clients[fd]->get_nick()));
 			return ;
 		}
 		std::string channelName;
 		iss >> channelName;
 		if (channelName.empty()){
-			print_client(client_usr.get_client_fd(), "Channel name is empty\n");
+			print_client(clients[fd]->get_client_fd(), "Channel name is empty\n");
 			return ;
 		}
 		Channel *channel;
 		channel = getChannel(channelName);
 		if (channel == NULL){
-            createChannel(channelName);
-            channels[channelName]->addUser(client_usr);
-            std::string creationMessage = ":" + client_usr.get_nick() + "!" + client_usr.get_name() + "@" + client_usr.get_host() + " JOIN :" + channelName + "\r\n";
+			createChannel(channelName);
+			channels[channelName]->addUser(getClient(fd));
+			std::string creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
-            print_client(client_usr.get_client_fd(), creationMessage);
-            print_client(client_usr.get_client_fd(), "Channel " + channelName + " created and user added.\n");
+			print_client(clients[fd]->get_client_fd(), creationMessage);
+			print_client(clients[fd]->get_client_fd(), "Channel " + channelName + " created and user added.\n");
 
-            // Send topic message
-            std::string topicMessage = ":server 332 " + client_usr.get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
-            print_client(client_usr.get_client_fd(), topicMessage);
+			// Send topic message
+			std::string topicMessage = ":server 332 " + clients[fd]->get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+			print_client(clients[fd]->get_client_fd(), topicMessage);
+		}
+		else {
+			// std::string creationMessage = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN :#" + channelName + "\r\n";
 		}
 		/* else{
 			//TODO: CHANGE THIS
 			if (channel->getUser(client_fd) == client_fd){
-            	channel->addUser(client_fd);
+				channel->addUser(client_fd);
 				std::string response = "User added\n";
 				send(client.get_client_fd(), response.c_str(), response.size(), 0);
 			}
@@ -160,12 +163,12 @@ void server::handleCommands(Client &client_usr, const std::string &command){
 			}
 		} */
 
-        /* if (!channel) {
+		/* if (!channel) {
 			createChannel(channelName);
-            channel->addUser(...);
-            std::string response = "Channel " + channelName + " created and user added.\n";
-            send(client.get_client_fd(), response.c_str(), response.size(), 0);
-        } */
+			channel->addUser(...);
+			std::string response = "Channel " + channelName + " created and user added.\n";
+			send(client.get_client_fd(), response.c_str(), response.size(), 0);
+		} */
 	}	
 }
 
@@ -182,13 +185,87 @@ Channel *server::getChannel(const std::string name)  {
 	return NULL;
 }
 
+
+Client &Server::getClient(int fd){
+	std::map<int, Client *>::iterator it = clients.find(fd);
+	return *it->second;
+}
 /* 
 void server::setUsers(std::string userName){
 	std::vector<std::string>::iterator it = user.  
 	if (user.(userName) == user.end())
-    	user.insert(user);
+		user.insert(user);
 }
 
 std::string const &server::getUser()const{
 
 } */
+
+void Server::funct_NewClient(){
+    struct sockaddr_storage remote_addr;
+    socklen_t client_len = sizeof(remote_addr);
+    std::cout << "Fase 2\n";
+    int newsocket = accept(_socket_Server, (struct sockaddr*)&remote_addr, &client_len);
+    if (newsocket == -1) {
+        std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
+    } else {
+        struct epoll_event ev;
+        ev.events = EPOLLIN;
+        ev.data.fd = newsocket;
+        if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &ev) == -1) {
+            std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
+            close(newsocket);
+        } else {
+            this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
+            this->_cur_online++;
+        }
+    }
+}
+
+void Server::funct_NotNewClient(int i){
+    std::cout << "Fase 3\n";
+    char buf[6000];
+    int sender_fd = _events[i].data.fd;
+    int bytes_received = recv(sender_fd, buf, sizeof(buf), 0);
+    
+    if (bytes_received <= 0){
+        if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, sender_fd, NULL) == -1) {
+            std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
+        }
+        close(sender_fd);
+        this->clients.erase(sender_fd);
+        this->_cur_online--;
+    } else {
+        std::string command(buf, bytes_received);
+        if (!command.empty() && command[command.size() - 1] == '\r') {
+            command.erase(command.end() - 1);
+        }
+        handleCommands(sender_fd, command);
+        std::cout << "Calling handleCommands with fd: " << sender_fd << " and command: " << command << std::endl;
+    }
+    std::cout << "END Fase 3\n";
+}
+
+std::string Server::extract_value(const std::string& line, const std::string& key) {
+	size_t start = line.find(key) + key.length();  // Find end of key
+	if (start == std::string::npos) {
+		return "";  // Key not found
+	}
+	// Skip any spaces or colons that follow the key
+	while (start < line.length() && (line[start] == ' ' || line[start] == ':')) {
+		start++;
+	}
+	// Find the end of the first word (next space or newline)
+	size_t end = line.find_first_of(" \r\n", start);
+	if (end == std::string::npos) {
+		end = line.length();  // If no space or newline, take until the end of the line
+	}
+	std::string value = line.substr(start, end - start);
+
+	// Remove any trailing newline character
+	if (!value.empty() && value[value.length() - 1] == '\n') {
+		value = value.substr(0, value.length() - 1);
+	}
+
+	return value;
+}
