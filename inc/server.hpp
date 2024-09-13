@@ -44,6 +44,9 @@ public:
 	Channel *getChannel(const std::string name);
 	Client &getClient(int fd);
 	void newClient();
+	void _ToAll(Channel *channel, int ori_fd, std::string message);
+	int _sendall(int destfd, std::string message);
+
 };
 
 

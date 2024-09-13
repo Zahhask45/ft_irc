@@ -45,10 +45,24 @@ void Channel::setName(std::string name){
 }
 
 
-/* //TODO: CHANGE THIS
-std::string Channel::getUser(std::string const user) const{
-	std::map< std::string, std::pair<std::string,std::string> >::const_iterator it = users.find(user);
-	if (it != users.end())
-        return it->first;
-    return std::string();
-} */
+std::string		Channel::listAllUsers() const
+{
+	std::string		AllUsers(":");
+	std::map<int, Client *>::const_iterator it = this->users.begin();
+	
+	it = this->users.begin();
+	while (it != this->users.end())
+	{
+		AllUsers.append(it->second->get_nick() + " ");
+		it++;
+	}
+	return (AllUsers);
+}
+
+std::map<int, Client *> Channel::getUsers(void) const{
+	std::map<int, Client *> allUsers(this->users.begin(), this->users.end());
+	allUsers.insert(this->users.begin(), this->users.end());
+	return allUsers;
+}
+
+
