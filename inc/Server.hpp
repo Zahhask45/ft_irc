@@ -46,6 +46,8 @@ public:
 	void funct_NewClient();
 	void funct_NotNewClient(int i);
 	std::string extract_value(const std::string& line, const std::string& key);
+	void broadcast_to_channel(const std::string &channelName, int sender_fd) ;
+	void _ToAll(Channel *channel, int ori_fd, std::string message);
 };
 
 #include "Client.hpp"

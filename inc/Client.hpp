@@ -14,6 +14,7 @@ private:
 	std::string _nick;
 	std::string _pass;
 	bool _auth;
+	std::string _mask;
 
 	int _socket;
 	struct sockaddr_in _client_addr;
@@ -30,6 +31,7 @@ public:
 	std::string const &get_name() const;
 	std::string const &get_pass() const;
 	std::string const &get_nick() const;
+	std::string const &get_mask() const;
 	bool const &get_auth() const;
 	std::string get_host() const;
 
@@ -41,6 +43,7 @@ public:
 	void set_name(std::string name);
 	void set_pass(std::string pass);
 	void set_nick(std::string nick);
+	void set_mask(std::string mask);
 
 };
 

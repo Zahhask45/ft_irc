@@ -42,6 +42,10 @@ std::string const &Client::get_nick() const{
 	return _nick;
 }
 
+std::string const &Client::get_mask() const{
+	return _mask;
+}
+
 void Client::set_socket(int value){
 	_socket = value;
 }
@@ -69,6 +73,11 @@ void Client::set_pass(std::string pass){
 void Client::set_nick(std::string nick){
 	this->_nick = nick;
 }
+
+void Client::set_mask(std::string mask){
+	_mask = mask;
+}
+
 
 // void Client::set_user_info(char buffer[]){
 // 	std::string bufferStr(buffer);

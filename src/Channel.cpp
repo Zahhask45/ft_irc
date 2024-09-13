@@ -38,8 +38,10 @@ void Channel::removeUser(std::string user_name){
 
 std::string const &Channel::getName(void) const {return name;}
 
+std::map<int, Client*>& Channel::getUsers() {
+        return users;
+    }
 /* //TODO: CHANGE THIS
-std::string Channel::getUser(std::string const user) const{
 	std::map< std::string, std::pair<std::string,std::string> >::const_iterator it = users.find(user);
 	if (it != users.end())
 		return it->first;
