@@ -24,7 +24,16 @@ Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1),
 	setsockopt(_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 }
 
-Server::~Server() {}
+Server::~Server() {
+	close(_socket_Server);
+	close(_epoll_fd);
+	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
+		close(it->first);
+	}
+	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+		delete it->second;
+	}
+}
 
 int const &Server::get_socket() const{
 	return _socket_Server;
@@ -227,10 +236,9 @@ void Server::funct_NewClient(){
     if (newsocket == -1) {
         std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
     } else {
-        struct epoll_event ev;
-        ev.events = EPOLLIN;
-        ev.data.fd = newsocket;
-        if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &ev) == -1) {
+        _events[_cur_online].events = EPOLLIN;
+        _events[_cur_online].data.fd = newsocket;
+        if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[_cur_online]) == -1) {
             std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
             close(newsocket);
         } else {
