@@ -118,7 +118,15 @@ void Server::handleCommands(int fd, const std::string &command){
 	if (pos != std::string::npos) {
 		// Extrair a informação do apelido e armazená-la no vetor
 		std::string line = command.substr(pos);
-		this->clients[fd]->set_nick(extract_value(line, "NICK"));
+		if (this->clients[fd]->get_nick().empty()) 
+			this->clients[fd]->set_nick(extract_value(line, "NICK"));
+		else{
+			std::string Newnick = extract_value(line, "NICK");
+			std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + Newnick + "\r\n";
+			print_client(clients[fd]->get_client_fd(), changeNick);
+			this->clients[fd]->set_nick(Newnick);
+		}
+
 		std::cout << "start>>" << this->clients[fd]->get_nick() << "<<end\n" << std::endl;
 	}
 
@@ -142,14 +150,23 @@ void Server::handleCommands(int fd, const std::string &command){
 			std::string creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
 			print_client(clients[fd]->get_client_fd(), creationMessage);
-			print_client(clients[fd]->get_client_fd(), "Channel " + channelName + " created and user added.\n");
+			// print_client(clients[fd]->get_client_fd(), "Channel " + channelName + " created and user added.\r\n");
 
 			// Send topic message
-			std::string topicMessage = ":server 332 " + clients[fd]->get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+			// After JOIN handling
+			std::string topicMessage = RPL_NOTOPIC(channelName);
 			print_client(clients[fd]->get_client_fd(), topicMessage);
+			
+			// Send RPL_NAMREPLY (353) and RPL_ENDOFNAMES (366) afterwards
+			std::string namesMessage = ":server 353 " + clients[fd]->get_nick() + " = " + channelName + " :" + clients[fd]->get_nick() + "\r\n";
+			print_client(clients[fd]->get_client_fd(), namesMessage);
+			
+			std::string endOfNamesMessage = ":server 366 " + clients[fd]->get_nick() + " " + channelName + " :End of /NAMES list\r\n";
+			print_client(clients[fd]->get_client_fd(), endOfNamesMessage);
 		}
 		else {
-			// std::string creationMessage = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN :#" + channelName + "\r\n";
+			std::string creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
+			print_client(clients[fd]->get_client_fd(), creationMessage);
 		}
 		/* else{
 			//TODO: CHANGE THIS
