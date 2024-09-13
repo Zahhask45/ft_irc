@@ -1,5 +1,7 @@
 #include "Server.hpp"
 #include <errno.h>
+#include "replies.hpp"
+
 
 Server::Server(){}
 
@@ -123,6 +125,7 @@ void Server::handleCommands(int fd, const std::string &command){
 	if (cmd == "join" || cmd == "JOIN"){
 		if (clients[fd]->get_auth() == false){
 			print_client(clients[fd]->get_client_fd(), "Need to Auth the user\n");
+			print_client(clients[fd]->get_client_fd(), ERR_NOSUCHNICK(clients[fd]->get_nick()));
 			return ;
 		}
 		std::string channelName;
@@ -136,7 +139,7 @@ void Server::handleCommands(int fd, const std::string &command){
 		if (channel == NULL){
 			createChannel(channelName);
 			channels[channelName]->addUser(getClient(fd));
-			std::string creationMessage = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN :#" + channelName + "\r\n";
+			std::string creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
 			print_client(clients[fd]->get_client_fd(), creationMessage);
 			print_client(clients[fd]->get_client_fd(), "Channel " + channelName + " created and user added.\n");
@@ -146,7 +149,7 @@ void Server::handleCommands(int fd, const std::string &command){
 			print_client(clients[fd]->get_client_fd(), topicMessage);
 		}
 		else {
-			std::string creationMessage = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN :#" + channelName + "\r\n";
+			// std::string creationMessage = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN :#" + channelName + "\r\n";
 		}
 		/* else{
 			//TODO: CHANGE THIS
