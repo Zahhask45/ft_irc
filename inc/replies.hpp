@@ -101,7 +101,7 @@
 
 //         431     ERR_NONICKNAMEGIVEN
 //                         ":No nickname given"
-#define ERR_NONICKNAMEGIVEN ":server 431
+#define ERR_NONICKNAMEGIVEN ":server 431"
 //                 - Returned when a nickname parameter expected for a
 //                   command and isn't found.
 
@@ -520,7 +520,7 @@
 #define RPL_USERS ":server 393 :\n" 
 //         394     RPL_ENDOFUSERS
 //                         ":End of users"
-#define RPL_ENDOFUSERS ":server 394
+#define RPL_ENDOFUSERS ":server 394"
 //         395     RPL_NOUSERS
 //                         ":Nobody logged in"
 #define RPL_NOUSERS ":server 395 :\n"

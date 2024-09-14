@@ -13,11 +13,14 @@ private:
 	std::string _name;
 	std::string _nick;
 	std::string _pass;
+	std::string _mask;
 	bool _auth;
 
 	int _socket;
 	struct sockaddr_in _client_addr;
 
+	std::map<std::string, Channel *> channels;
+	
 	Client(Client &cp);
 	Client &operator=(Client &cp);
 public:
@@ -32,6 +35,8 @@ public:
 	std::string const &get_nick() const;
 	bool const &get_auth() const;
 	std::string get_host() const;
+	std::string const &get_mask() const;
+
 
 	void set_socket(int value);
 	void set_addr(struct sockaddr_in value);
@@ -41,7 +46,9 @@ public:
 	void set_name(std::string name);
 	void set_pass(std::string pass);
 	void set_nick(std::string nick);
+	void set_mask(std::string mask);
 
+	void addChannel(const std::string &channelName, Channel &channel);
 };
 
 

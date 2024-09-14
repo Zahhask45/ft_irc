@@ -3,7 +3,7 @@
 #include "replies.hpp"
 
 
-server::server(){}
+Server::Server(){}
 
 void print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
@@ -23,9 +23,9 @@ Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1),
 	setsockopt(_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
 }
 
-server::~server() {}
+Server::~Server() {}
 
-int const &server::get_socket() const{
+int const &Server::get_socket() const{
 	return _socket_Server;
 }
 
@@ -83,13 +83,13 @@ void Server::handleCommands(int fd, const std::string &command){
 			std::cout << "123>" << pass[i] << "<<<<<<" << std::endl;} */
 		std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
 		if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-			print_client(clients[fd]->get_client_fd(), ":server 371 " + clients[fd]->get_nick() +": User is Authenticated\n");
+			print_client(clients[fd]->get_client_fd(), ":Server 371 " + clients[fd]->get_nick() +": User is Authenticated\n");
 			clients[fd]->set_auth(true);
 			return ;
 		}
 		else{
-			print_client(clients[fd]->get_client_fd(), ":server 464 " + clients[fd]->get_nick() + " :Password incorrect\n");
-			print_client(clients[fd]->get_client_fd(), ":server 451 " + clients[fd]->get_nick() + " :You have not registered\n");
+			print_client(clients[fd]->get_client_fd(), ":Server 464 " + clients[fd]->get_nick() + " :Password incorrect\n");
+			print_client(clients[fd]->get_client_fd(), ":Server 451 " + clients[fd]->get_nick() + " :You have not registered\n");
 			return ;
 		}
 
@@ -135,33 +135,47 @@ void Server::handleCommands(int fd, const std::string &command){
 		}
 		Channel *channel;
 		channel = getChannel(channelName);
+		std::string creationMessage;
 		if (channel == NULL){
+			std::cout << "Channel already exists\n";
 			createChannel(channelName);
 			channels[channelName]->addUser(getClient(fd));
-			std::string creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
+			creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
 			print_client(clients[fd]->get_client_fd(), creationMessage);
-			print_client(clients[fd]->get_client_fd(), "Channel " + channelName + " created and user added.\n");
+			// print_client(clients[fd]->get_client_fd(), "Channel " + channelName + " created and user added.\r\n");
 
 			// Send topic message
-			std::string topicMessage = ":server 332 " + clients[fd]->get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+			// After JOIN handling
+			std::string topicMessage = RPL_NOTOPIC(channelName);
 			print_client(clients[fd]->get_client_fd(), topicMessage);
+			
+			// Send RPL_NAMREPLY (353) and RPL_ENDOFNAMES (366) afterwards
+			std::string namesMessage = ":server 353 " + clients[fd]->get_nick() + " = " + channelName + " :" + clients[fd]->get_nick() + "\r\n";
+			print_client(clients[fd]->get_client_fd(), namesMessage);
+			
+			std::string endOfNamesMessage = ":server 366 " + clients[fd]->get_nick() + " " + channelName + " :End of /NAMES list\r\n";
+			print_client(clients[fd]->get_client_fd(), endOfNamesMessage);
+			_ToAll(channels[channelName], clients[fd]->get_client_fd(), creationMessage);
+			
 		}
 		else {
-			// std::string creationMessage = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN :#" + channelName + "\r\n";
+			std::cout << "Channel already exists\n";
+			creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
+			print_client(clients[fd]->get_client_fd(), creationMessage);
+			std::string reply = "JOIN " + channelName + "\n";
+			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN " + channelName + "\n";
+			_ToAll(channels[channelName], clients[fd]->get_client_fd(), creationMessage);
+
+			// for (int i = 0; i < _cur_online; i++) {
+			// 		print_client(_events[i].data.fd, response);
+			// }
+			std::string namesMessage = ":server 353 " + clients[fd]->get_nick() + " = " + channelName + " :" + clients[fd]->get_nick() + "\r\n";
+			print_client(clients[fd]->get_client_fd(), namesMessage);
+			
+			std::string endOfNamesMessage = ":server 366 " + clients[fd]->get_nick() + " " + channelName + " :End of /NAMES list\r\n";
+			print_client(clients[fd]->get_client_fd(), endOfNamesMessage); 
 		}
-		/* else{
-			//TODO: CHANGE THIS
-			if (channel->getUser(client_fd) == client_fd){
-				channel->addUser(client_fd);
-				std::string response = "User added\n";
-				send(client.get_client_fd(), response.c_str(), response.size(), 0);
-			}
-			else{
-				std::string response = "User already added\n";
-				send(client.get_client_fd(), response.c_str(), response.size(), 0);
-			}
-		} */
 
 		/* if (!channel) {
 			createChannel(channelName);
@@ -170,16 +184,32 @@ void Server::handleCommands(int fd, const std::string &command){
 			send(client.get_client_fd(), response.c_str(), response.size(), 0);
 		} */
 	}	
+	if (cmd == "privmsg" || cmd == "PRIVMSG"){
+		//! change to varius types of privmsg
+		std::string channel_name;
+		iss >> channel_name;
+		channel_name = channel_name.substr(1, channel_name.size() - 1);
+		std::string msg;
+		iss >> msg;
+
+		std::map<std::string, Channel *>::iterator it = this->channels.find(channel_name);
+		if (it != this->channels.end()){
+			std::cout << "I DID ENTER IN FACT" << std::endl;
+			std::cout << "PRIVMSG #" + channel_name + " " + msg << std::endl;
+			_ToAll(it->second, clients[fd]->get_client_fd(), "PRIVMSG #" + channel_name + " " + msg + "\r\n");
+		}
+
+	}
 }
 
-void server::createChannel(const std::string &channelName){
+void Server::createChannel(const std::string &channelName){
 	if (channels.find(channelName) == channels.end()){
 		Channel *channel = new Channel(channelName);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
 	}
 }
 
-Channel *server::getChannel(const std::string name)  {
+Channel *Server::getChannel(const std::string name)  {
 	if (channels.find(name) != channels.end())
 		return channels[name];
 	return NULL;
@@ -191,13 +221,13 @@ Client &Server::getClient(int fd){
 	return *it->second;
 }
 /* 
-void server::setUsers(std::string userName){
+void Server::setUsers(std::string userName){
 	std::vector<std::string>::iterator it = user.  
 	if (user.(userName) == user.end())
 		user.insert(user);
 }
 
-std::string const &server::getUser()const{
+std::string const &Server::getUser()const{
 
 } */
 
@@ -268,4 +298,32 @@ std::string Server::extract_value(const std::string& line, const std::string& ke
 	}
 
 	return value;
+}
+
+void Server::_ToAll(Channel *channel, int ori_fd, std::string message){
+	std::map<int, Client *> all_users = channel->getUsers();
+	std::map<int, Client *>::iterator it = all_users.begin();
+	std::string rep = this->clients[ori_fd]->get_mask();
+	rep.append(message);
+	while (it != all_users.end()){
+		if (ori_fd != it->first)
+			_sendall(it->first, message);
+		it++;
+	}
+}
+
+int Server::_sendall(int destfd, std::string message)
+{
+	int total = 0;
+	int bytesleft = message.length();
+	int b;
+
+	while (total < (int)message.length())
+	{
+		b = send(destfd, message.c_str() + total, bytesleft, 0);
+		if (b == -1) break;
+		total += b;
+		bytesleft -= b;
+	}
+	return (b == -1 ? -1 : 0);
 }
