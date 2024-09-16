@@ -26,6 +26,7 @@ public:
 	std::map<int, Client*>& getUsers();
     void setName(std::string name);
     void setUser(int id, Client *client);
+    std::string	listAllUsers() const;
     
 };
 

@@ -56,3 +56,17 @@ void Channel::setUser(int id, Client *client) {
 		users.insert(std::make_pair(id, client));
 	}
 }
+
+
+std::string		Channel::listAllUsers() const {
+	std::string		AllUsers(":");
+	std::map<int, Client *>::const_iterator it = this->users.begin();
+	
+	it = this->users.begin();
+	while (it != this->users.end())
+	{
+		AllUsers.append(it->second->get_nick() + " ");
+		it++;
+	}
+	return (AllUsers);
+}
