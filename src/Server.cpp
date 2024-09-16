@@ -10,6 +10,8 @@ void print_client(int client_fd, std::string str){
 	std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
 }
 
+
+
 Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(1){
 	//! DONT KNOW WHERE TO PUT THIS
 	_epoll_fd = epoll_create1(0);
@@ -33,6 +35,7 @@ Server::~Server() {
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
 		delete it->second;
 	}
+	this->clients.clear();
 }
 
 int const &Server::get_socket() const{
@@ -129,14 +132,16 @@ void Server::handleCommands(int fd, const std::string &command){
 		std::string line = command.substr(pos);
 		if (this->clients[fd]->get_nick().empty()) {
 			this->clients[fd]->set_nick(extract_value(line, "NICK"));
-			this->clients[fd]->set_mask(this->clients[fd]->get_name() + "@" + this->clients[fd]->get_host());
+			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " ";
+			this->clients[fd]->set_mask(response);
 		}
 		else{
 			std::string Newnick = extract_value(line, "NICK");
 			std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + Newnick + "\r\n";
 			print_client(clients[fd]->get_client_fd(), changeNick);
 			this->clients[fd]->set_nick(Newnick);
-			this->clients[fd]->set_mask(this->clients[fd]->get_name() + "@" + this->clients[fd]->get_host());
+			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " ";
+			this->clients[fd]->set_mask(response);
 		}
 
 		// std::cout << "start>>" << this->clients[fd]->get_nick() << "<<end\n" << std::endl;
@@ -161,7 +166,7 @@ void Server::handleCommands(int fd, const std::string &command){
 			std::cout << "Channel already exists\n";
 			createChannel(channelName);
 			channels[channelName]->addUser(getClient(fd));
-			creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
+			creationMessage = clients[fd]->get_mask() + "JOIN :" + channelName + "\n";
 			std::cout << creationMessage << std::endl;
 			print_client(clients[fd]->get_client_fd(), creationMessage);
 			// print_client(clients[fd]->get_client_fd(), "Channel " + channelName + " created and user added.\r\n");
@@ -177,16 +182,18 @@ void Server::handleCommands(int fd, const std::string &command){
 			
 			std::string endOfNamesMessage = ":server 366 " + clients[fd]->get_nick() + " " + channelName + " :End of /NAMES list\r\n";
 			print_client(clients[fd]->get_client_fd(), endOfNamesMessage);
-			_ToAll(channels[channelName], clients[fd]->get_client_fd(), creationMessage);
+			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN " + channelName + "\n";
+			// _ToAll(channels[channelName], clients[fd]->get_client_fd(), response);
+			broadcast_to_channel(channelName, clients[fd]->get_client_fd());
 		}
 		else {
 			std::cout << "Channel already exists\n";
-			creationMessage = ":" + clients[fd]->get_nick() + " JOIN :#" + channelName + "\r\n";
+			channels[channelName]->addUser(getClient(fd));
+			creationMessage = clients[fd]->get_mask() + "JOIN :" + channelName + "\n";
 			print_client(clients[fd]->get_client_fd(), creationMessage);
 			std::string reply = "JOIN " + channelName + "\n";
-			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " JOIN " + channelName + "\n";
-			_ToAll(channels[channelName], clients[fd]->get_client_fd(), creationMessage);
-
+			// _ToAll(channels[channelName], clients[fd]->get_client_fd(), reply);
+			broadcast_to_channel(channelName, clients[fd]->get_client_fd());
 			// for (int i = 0; i < _cur_online; i++) {
 			// 		print_client(_events[i].data.fd, response);
 			// }
@@ -324,27 +331,33 @@ void Server::broadcast_to_channel(const std::string &channelName, int sender_fd)
         std::map<int, Client*>::iterator it;
         for (it = channel->getUsers().begin(); it != channel->getUsers().end(); ++it) {
             int client_fd = it->first;
-			std::string response = ":" + clients[sender_fd]->get_nick() + "!" + clients[sender_fd]->get_name() + "@" + clients[sender_fd]->get_host() + " JOIN " + channelName + "\r\n";
-            
-            // Send the message to each user, excluding the sender if needed
+			std::string response = ":" + clients[sender_fd]->get_nick() + "!" + clients[sender_fd]->get_name() + "@" + clients[sender_fd]->get_host() + " JOIN :" + channelName + "\r\n";
             if (client_fd != sender_fd) {
                 print_client(client_fd, response);
-				response = ":" + clients[client_fd]->get_nick() + "!" + clients[client_fd]->get_name() + "@" + clients[client_fd]->get_host() + " JOIN " + channelName + "\r\n";
-				print_client(sender_fd, response);
             }
+			else{
+				std::map<int, Client*>::iterator it2;
+				for (it2 = channel->getUsers().begin(); it2 != channel->getUsers().end(); ++it2){
+					int client_fd2 = it2->first;
+					std::string response = ":" + clients[it2->first]->get_nick() + "!" + clients[it2->first]->get_name() + "@" + clients[it2->first]->get_host() + " JOIN :" + channelName + "\r\n";
+					if (client_fd2 != sender_fd)
+						print_client(sender_fd, response);
+				}
+			}
         }
     }
 }
 
-void Server::_ToAll(Channel *channel, int ori_fd, std::string message){
-	std::map<int, Client *> all_users = channel->getUsers();
-	std::map<int, Client *>::iterator it = all_users.begin();
-	std::string rep = this->clients[ori_fd]->get_mask();
-	rep.append(message);
-	std::cout << "Original FD: " << ori_fd << std::endl;
-	while (it != all_users.end()){
-		if (ori_fd != it->first)
-			print_client(it->first, message);
-		it++;
-	}
-}
+// void Server::_ToAll(Channel *channel, int ori_fd, std::string message){
+// 	std::map<int, Client *> all_users = channel->getUsers();
+// 	std::map<int, Client *>::iterator it = all_users.begin();
+// 	std::string rep = this->clients[ori_fd]->get_mask();
+// 	rep.append(message);
+// 	std::cout << "Original FD: " << ori_fd << std::endl;
+// 	while (it != all_users.end()){
+// 		if (ori_fd != it->first){
+// 			print_client(it->first, rep);
+// 		}
+// 		it++;
+// 	}
+// }

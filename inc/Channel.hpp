@@ -7,9 +7,9 @@ class Client;
 class Channel
 {
 private:
-    std::string name;
+    std::string _name;
 	//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
-    std::map<int , Client *> users;
+    std::map<int, Client *> users;
     //TODO: BANNED USERS
     
     Channel(const Channel &cp);

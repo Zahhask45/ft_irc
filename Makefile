@@ -21,7 +21,7 @@ CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
 DEBUG				= -g -fsanitize=address
 
-NAME		=	ircserv
+NAME		=	ircserv_mamaral
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	./obj/
@@ -44,7 +44,7 @@ DEP			=	$(addprefix $(DEPS_DIR), $(DEPS))
 all:	debug
 
 $(NAME): $(OBJ)
-	printf "$(_GONE) $(_GREEN) All files compiled into $(OBJ_DIR) $(_END)\n"
+	printf "$(_GONE) $(_GREEN) All files compiled into $(OBJ_DIR), $(DEPS_DIR) $(_END)\n"
 	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJ) $(INCLUDE)
 	
 	printf "$(_GONE) $(_GREEN) Executable $(NAME) created $(_END)\n"
