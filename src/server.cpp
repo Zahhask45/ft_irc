@@ -15,7 +15,9 @@ server::server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1),
 	}
 }
 
-server::~server() {}
+server::~server() {
+	close(get_socket());
+}
 
 int const &server::get_socket() const{
 	return _socket_Server;
@@ -185,7 +187,7 @@ void server::handleCommands(int fd, const std::string &command){
 		clients[fd]->set_nick(nick);
 		print_client(clients[fd]->get_client_fd(), "NICK SETTED\n");
 		if (clients[fd]->get_user() != "\0"){
-			clients[fd]->set_mask(clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host());
+			clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 			print_client(clients[fd]->get_client_fd(), ":BANANA 001 " + nick + " " + "WELCOME\r\n");
 		}
 	}
@@ -197,7 +199,7 @@ void server::handleCommands(int fd, const std::string &command){
 		clients[fd]->set_user(user);
 		print_client(clients[fd]->get_client_fd(), "USER SETTED\n");
 		if (clients[fd]->get_nick() != ""){
-			clients[fd]->set_mask(clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host());
+			clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 		}
 	}
 
@@ -221,14 +223,14 @@ void server::handleCommands(int fd, const std::string &command){
 			clients[clients[fd]->get_client_fd()]->addChannel(channelName, *channel);
 			it->second->addUser(getClient(fd));
 
-			_sendall(fd, clients[fd]->get_client_fd() + "JOIN #" + channelName + "\r\n");
-			std::string topicMessage = ":server 332 " + clients[fd]->get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+			_sendall(fd, clients[fd]->get_mask() + "JOIN " + channelName + "\r\n");
+			std::string topicMessage = ":server 332 " + clients[fd]->get_mask() + " " + channelName + " :Welcome to " + channelName + "\r\n";
 			_sendall(fd, topicMessage);
-			std::string anothermessage = ":server 353 " + clients[fd]->get_nick() + " = " + channelName + it->second->listAllUsers() + "\r\n";
+			std::string anothermessage = ":server 353 " + clients[fd]->get_mask() + " = " + channelName + it->second->listAllUsers() + "\r\n";
 			_sendall(fd, anothermessage);
-			std::string anothermessage2 = ":server 353 " + clients[fd]->get_nick() + " " + channelName + "END OF NAMES\r\n";
+			std::string anothermessage2 = ":server 353 " + clients[fd]->get_mask() + " " + channelName + "END OF NAMES\r\n";
 			_sendall(fd, anothermessage2);
-			_ToAll(channels[channelName], clients[fd]->get_client_fd(), "JOIN THIS I GUESS\n");
+			_ToAll(channels[channelName], clients[fd]->get_client_fd(), "JOIN THIS I GUESS\r\n");
 			/* std::string creationMessage = ":" + clients[fd]->get_mask() + " JOIN :#" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
 			print_client(clients[fd]->get_client_fd(), creationMessage);
@@ -241,19 +243,19 @@ void server::handleCommands(int fd, const std::string &command){
 		else{
 			std::map<std::string, Channel *>::iterator it = this->channels.find(channelName);
 			channels[channelName]->addUser(getClient(fd));
-			std::string creationMessage = ":" + clients[fd]->get_mask() + " JOIN :#" + channelName + "\r\n";
+			std::string creationMessage = clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n";
 			std::cout << creationMessage << std::endl;
 
-			print_client(clients[fd]->get_client_fd(), creationMessage);
+			_sendall(fd, clients[fd]->get_mask() + "JOIN " + channelName + "\r\n");
 			clients[clients[fd]->get_client_fd()]->addChannel(channelName, *channel);
 
-			std::string topicMessage = ":server 332 " + clients[fd]->get_nick() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+			std::string topicMessage = ":server 332 " + clients[fd]->get_mask() + "" + channelName + " :Welcome to " + channelName + "\r\n";
 			_sendall(fd, topicMessage);
-			std::string anothermessage = ":server 353 " + clients[fd]->get_nick() + " = " + channelName + it->second->listAllUsers() + "\r\n";
+			std::string anothermessage = ":server 353 " + clients[fd]->get_mask() + "= " + channelName + it->second->listAllUsers() + "\r\n";
 			_sendall(fd, anothermessage);
-			std::string anothermessage2 = ":server 353 " + clients[fd]->get_nick() + " " + channelName + "END OF NAMES\r\n";
+			std::string anothermessage2 = ":server 353 " + clients[fd]->get_mask() + "" + channelName + "END OF NAMES\r\n";
 			_sendall(fd, anothermessage2);
-			_ToAll(channels[channelName], clients[fd]->get_client_fd(), "JOIN THIS I GUESS\n");
+			_ToAll(channels[channelName], clients[fd]->get_client_fd(), "JOIN THIS I GUESS\r\n");
 			
 			return ;
 		}
@@ -270,15 +272,20 @@ void server::handleCommands(int fd, const std::string &command){
 		//! change to varius types of privmsg
 		std::string channel_name;
 		iss >> channel_name;
-		channel_name = channel_name.substr(1, channel_name.size() - 1);
-		std::string msg;
-		iss >> msg;
+		//channel_name = channel_name.substr(1, channel_name.size() - 1);
+		size_t pos;
+		pos = command.find(channel_name);
+		if (pos == std::string::npos) {
+			return;
+		}
+		//! NEED TO PUT THIS BETTER
+		std::string msg = command.substr(pos + channel_name.size() + 1, command.size() - (pos + channel_name.size() + 1));
+		std::cout << "start>>" << msg << "<<end\n" << std::endl;
 
 		std::map<std::string, Channel *>::iterator it = this->channels.find(channel_name);
 		if (it != this->channels.end()){
-			std::cout << "I DID ENTER IN FACT" << std::endl;
-			std::cout << "PRIVMSG #" + channel_name + " " + msg << std::endl;
-			_ToAll(it->second, clients[fd]->get_client_fd(), "PRIVMSG #" + channel_name + " " + msg + "\r\n");
+			std::cout << "INSIDE THE PRIVMSG >>>> " << "PRIVMSG " + channel_name + " " + msg << std::endl;
+			_ToAll(it->second, fd, "PRIVMSG " + channel_name + " " + msg + "\n");
 		}
 
 	}
@@ -304,29 +311,6 @@ Client &server::getClient(int fd){
 	return *it->second;
 }
 
-/* 
-void server::setUsers(std::string userName){
-	std::vector<std::string>::iterator it = user.  
-	if (user.(userName) == user.end())
-    	user.insert(user);
-}
-
-std::string const &server::getUser()const{
-
-} */
-
-void server::_ToAll(Channel *channel, int ori_fd, std::string message){
-	std::map<int, Client *> all_users = channel->getUsers();
-	std::map<int, Client *>::iterator it = all_users.begin();
-	std::string rep = this->clients[ori_fd]->get_mask();
-	rep.append(message);
-	while (it != all_users.end()){
-		if (ori_fd != it->first)
-			_sendall(it->first, message);
-		it++;
-	}
-}
-
 
 int server::_sendall(int destfd, std::string message)
 {
@@ -343,4 +327,18 @@ int server::_sendall(int destfd, std::string message)
 	}
 	return (b == -1 ? -1 : 0);
 }
+
+void server::_ToAll(Channel *channel, int ori_fd, std::string message){
+	std::map<int, Client *> all_users = channel->getUsers();
+	std::map<int, Client *>::iterator it = all_users.begin();
+	std::string rep = this->clients[ori_fd]->get_mask();
+	rep.append(message);
+	while (it != all_users.end()){
+		if (ori_fd != it->first)
+			_sendall(it->first, rep);
+		it++;
+	}
+}
+
+
 

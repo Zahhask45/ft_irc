@@ -12,7 +12,10 @@ Client::Client(Client &cp){
 	(void)cp;
 }
 
-Client::~Client(){}
+Client::~Client(){
+	close(get_client_fd());
+
+}
 
 bool const &Client::get_auth() const{
 	return _auth;
