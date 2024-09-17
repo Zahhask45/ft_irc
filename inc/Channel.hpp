@@ -22,7 +22,6 @@ public:
     void addUser(Client &client);
     void removeUser(std::string user);
     std::string const &getName(void) const;
-    std::set<int> const &getUsers(void) const;
 	std::map<int, Client*>& getUsers();
     void setName(std::string name);
     void setUser(int id, Client *client);

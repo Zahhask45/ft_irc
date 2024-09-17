@@ -375,10 +375,10 @@
 #define RPL_CHANNELMODEIS(channel, mode, mode_params) ":server 324 " + (channel) + " " + (mode) + " " + (mode_params) + "\r\n"
 //         331     RPL_NOTOPIC
 //                         "<channel> :No topic is set"
-#define RPL_NOTOPIC(channel) ":server 331 <channel> " + (channel) + " \r\n"
+#define RPL_NOTOPIC(nick, channel) ":server 331 " + (nick) + " " + (channel) + " \r\n"
 //         332     RPL_TOPIC
 //                         "<channel> :<topic>"
-#define RPL_TOPIC(channel, topic) ":server 332 <channel> TOPIC " + (channel) + " :" + (topic) + "\r\n"
+#define RPL_TOPIC(channel, topic) ":server 332 TOPIC " + (channel) + " :" + (topic) + "\r\n"
 //                 - When sending a TOPIC message to determine the
 //                   channel topic, one of two replies is sent.  If
 //                   the topic is set, RPL_TOPIC is sent back else
