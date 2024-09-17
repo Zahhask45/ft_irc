@@ -286,7 +286,6 @@ void Server::handleCommands(int fd, const std::string &command){
 			std::string response2 = clients[fd]->get_mask() + " PART " + channelName + "\r\n";
 			print_client(fd, response);
 			_ToAll(channel, fd, "PART " + channelName + "\r\n");
-			// _ToAll(channel, fd, response2);
 			channel->removeUser(clients[fd]->get_nick());
 			clients[fd]->removeChannel(channelName);
 		}
@@ -295,6 +294,7 @@ void Server::handleCommands(int fd, const std::string &command){
 			iss >> message;
 			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " QUIT :" + message + "\r\n";
 			_ToAll(fd, response);
+			print_client(fd, response);
 		}
 	}
 }
