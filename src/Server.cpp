@@ -145,11 +145,12 @@ void Server::handleCommands(int fd, const std::string &command){
 		else{
 			std::string Newnick = extract_value(line, "NICK");
 			std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + Newnick + "\r\n";
+			std::string nickChangeMsg = ":" + this->clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " NICK :" + Newnick + "\r\n";
 			print_client(clients[fd]->get_client_fd(), changeNick);
 			this->clients[fd]->set_nick(Newnick);
 			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_name() + "@" + clients[fd]->get_host() + " ";
 			this->clients[fd]->set_mask(response);
-			// _ToAll(clients[fd]->get_client_fd(), changeNick);
+			_ToAll(clients[fd]->get_client_fd(), nickChangeMsg);
 		}
 
 		// std::cout << "start>>" << this->clients[fd]->get_nick() << "<<end\n" << std::endl;
@@ -298,24 +299,35 @@ void Server::broadcast_to_channel(const std::string &channelName, int last_fd) {
     }
 }
 
-// void Server::_ToAll(int ori_fd, std::string message){
-// 	std::map<int, Client *> all_users = channel->getUsers();
-// 	std::map<int, Client *>::iterator it = all_users.begin();
-// 	while (it != all_users.end()){
-// 		if (ori_fd != it->first){
-// 			print_client(it->first, message);
-// 		}
-// 		it++;
-// 	}
-// }
+//Essa funcao recebe o fd e a mensagem a ser enviada para todos os clientes conectados no mesmo canal que o usuario do fd.
+// é auxiliada pela função findInChannel que retorna o nome do canal em que o usuário está conectado.
+void Server::_ToAll(int ori_fd, std::string message){
+	std::set<std::string> channelList = findInChannel(ori_fd);
+	while (!channelList.empty()){
+		std::string channelName = *channelList.begin();
+		std::map<int, Client *> all_users = channels[channelName]->getUsers();
+		std::map<int, Client *>::iterator it = all_users.begin();
+		while (it != all_users.end()){
+			if (ori_fd != it->first){
+				print_client(it->first, message);
+			}
+			it++;
+		}
+		channelList.erase(channelList.begin());
+	}
+}
 
-// std::string Server::findInChannel(int fd){
-// 	std::map<std::string, Channel *>::iterator it = channels.begin();
-// 	while (it != channels.end()){
-// 		this->clients = it->second->getUsers();
-// 		if (this->clients.find(fd) != this->clients.end()){
-
-// 		}
-// 		it++;
-// 	}
-// }
+// Essa tem como objetivo localizar o usuário em um canal dentre todos os canais armazendaos no servidor
+// em caso positivo, retorna a lista com o nome dos canais, caso contrário, retorna null.
+std::set<std::string> Server::findInChannel(int fd){
+	std::set<std::string> channelList;
+	std::map<std::string, Channel *>::iterator it = channels.begin();
+	while (it != channels.end()){
+		std::map<int, Client *> users = it->second->getUsers();
+		if (users.find(fd) != users.end()) {
+            channelList.insert(it->first);
+        }
+		it++;
+	}
+	return channelList;
+}
