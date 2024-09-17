@@ -13,7 +13,7 @@ private:
 	int _socket_Server;
 	int _port;
 	std::string _pass;
-	struct sockaddr_in _addr;
+	struct sockaddr_storage _addr;
 	std::map<std::string, Channel *> channels;
 	std::map<int, Client *> clients;
 	// std::vector<std::string> user;
@@ -31,7 +31,7 @@ public:
 	Server();
 	Server(int port, std::string pass);
 	~Server();
-
+//* Execution functions
 	void binding();
 	void loop();
 	void handleCommands(int fd, const std::string &command);
@@ -43,13 +43,17 @@ public:
 	int const &get_socket() const;
 	Channel *getChannel(const std::string name);
 	Client &getClient(int fd);
-	void funct_NewClient();
+	void funct_NewClient(int i);
 	void funct_NotNewClient(int i);
-	std::string extract_value(const std::string& line, const std::string& key);
-	void broadcast_to_channel(const std::string &channelName, int sender_fd) ;
+
+//* Auxiliar functions
 	void _ToAll(int ori_fd, std::string message);
+	void _ToAll(Channel *channel, int ori_fd, std::string message);
+	void broadcast_to_channel(const std::string &channelName, int sender_fd) ;
 	void sendCode(int fd, std::string num, std::string nickname, std::string message);
 	std::set<std::string> findInChannel(int fd);
+	std::string extract_value(const std::string& line, const std::string& key);
+	void print_client(int client_fd, std::string str);
 };
 
 #include "Client.hpp"

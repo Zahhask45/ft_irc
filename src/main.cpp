@@ -16,7 +16,6 @@ int main(int argc, char **argv){
 	sigaction(SIGINT, &sa, NULL);
 
 	Server serv(6667, "banana123");
-	Client clients;
 
 	serv.binding();
 	serv.loop();
@@ -26,6 +25,5 @@ int main(int argc, char **argv){
 	(void)argc;
 	
 	close(serv.get_socket());
-	close(clients.get_socket());
 	return 0;
 }
