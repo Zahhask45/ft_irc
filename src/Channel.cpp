@@ -8,7 +8,9 @@ Channel::Channel(const Channel &cp){
 	*this = cp;
 }
 
-Channel::~Channel(){}
+Channel::~Channel(){
+	users.clear();
+}
 
 Channel &Channel::operator=(const Channel &origin) {
 	if (this != &origin) {

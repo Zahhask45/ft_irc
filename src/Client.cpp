@@ -11,11 +11,11 @@ Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 }
 
 Client::~Client(){
-	close(get_client_fd());
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
 		delete it->second;
 	}
 	channels.clear();
+	close(get_client_fd());
 }
 
 bool const &Client::get_auth() const{ return _auth; }

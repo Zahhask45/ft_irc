@@ -165,13 +165,13 @@ void Server::handleCommands(int fd, const std::string &command){
 			std::string pass = clients[fd]->get_pass();
 			std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
 			if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-				sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated\n");
+				sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
 				clients[fd]->set_auth(true);
 				return ;
 			}
 			else{
-				sendCode(fd, "464", clients[fd]->get_nick(), ": Password incorrect\n");
-				sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered\n");
+				sendCode(fd, "464", clients[fd]->get_nick(), ": Password incorrect");
+				sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
 				return ;
 			}
 		}
@@ -227,6 +227,8 @@ void Server::handleCommands(int fd, const std::string &command){
 				print_client(fd, "Channel name is empty\n");
 				return ;
 			}
+			if (channelName[0] != '#')
+				channelName = "#" + channelName;
 			if (getChannel(channelName) == NULL)
 				createChannel(channelName);
 			clients[fd]->addChannel(channelName, *channels[channelName]);
@@ -238,10 +240,10 @@ void Server::handleCommands(int fd, const std::string &command){
 			std::string topicMessage = ":server 332 " + clients[fd]->get_mask() + " " + channelName + " :Welcome to " + channelName + "\r\n";
 			print_client(fd, topicMessage);
 
-			std::string namesMessage = ":server 353 " + clients[fd]->get_nick() + " = " + channelName + " :" + clients[fd]->get_nick() + "\r\n";
+			std::string namesMessage = ":server 353 " + clients[fd]->get_mask() + " = " + channelName + channels[channelName]->listAllUsers() + "\r\n";
 			print_client(fd, namesMessage);
 
-			std::string endOfNamesMessage = ":server 366 " + clients[fd]->get_nick() + " " + channelName + " :End of /NAMES list\r\n";
+			std::string endOfNamesMessage = ":server 366 " + clients[fd]->get_mask() + " " + channelName + " :End of /NAMES list\r\n";
 			print_client(fd, endOfNamesMessage);
 
 			broadcast_to_channel(channelName, fd);
