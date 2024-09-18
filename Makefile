@@ -40,8 +40,8 @@ OBJ			=	$(addprefix $(OBJ_DIR), $(OBJS))
 DEPS		=	$(SRCS:.cpp=.d)
 DEP			=	$(addprefix $(DEPS_DIR), $(DEPS))
 
-# all:	$(NAME)
-all:	debug
+all:	$(NAME)
+# all:	debug
 
 $(NAME): $(OBJ)
 	printf "$(_GONE) $(_GREEN) All files compiled into $(OBJ_DIR), $(DEPS_DIR) $(_END)\n"
@@ -72,8 +72,12 @@ fclean: clean
 re: fclean all
 
 debug: CXXFLAGS += $(DEBUG)
-# debug: re
-debug: $(NAME)
+debug: re
+# debug: all
+
+valgrind: CXXFLAGS += -g
+valgrind: re
+	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt ./$(NAME)
 
 .SILENT:
 

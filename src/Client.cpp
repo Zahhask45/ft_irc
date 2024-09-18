@@ -2,12 +2,12 @@
 
 Client::Client(): _client_fd(), _user(), _nick() {
 	_auth = false;
-	_host = std::string(inet_ntoa(((struct sockaddr_in *)&_client_addr)->sin_addr));
+	_host = "nada";
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_auth = false;
-	_host = std::string(inet_ntoa(((struct sockaddr_in *)&_client_addr)->sin_addr));
+	_host = "nada";
 }
 
 Client::~Client(){

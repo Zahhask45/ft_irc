@@ -35,6 +35,7 @@ void Server::binding(){
 	int status;
 
 	memset(&hints, 0, sizeof(hints));
+	memset(_events, 0, sizeof(_events));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = getprotobyname("TCP")->p_proto;
@@ -193,16 +194,15 @@ void Server::handleCommands(int fd, const std::string &command){
 			iss >> nick;
 			if (this->clients[fd]->get_nick().empty()) {
 				this->clients[fd]->set_nick(nick);
-				std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ";
-				this->clients[fd]->set_mask(response);
+				clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
+
 			}
 			else{
 				std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
 				std::string nickChangeMsg = ":" + this->clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " NICK :" + nick + "\r\n";
 				print_client(fd, changeNick);
 				this->clients[fd]->set_nick(nick);
-				std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ";
-				this->clients[fd]->set_mask(response);
+				clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 				_ToAll(fd, nickChangeMsg);
 			}
 		}
@@ -211,7 +211,7 @@ void Server::handleCommands(int fd, const std::string &command){
 			std::string user;
 			iss >> user;
 			this->clients[fd]->set_user(extract_value(user, "USER"));
-			if (clients[fd]->get_nick() != "")
+			if (clients[fd]->get_nick() != "\0")
 				clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 		}
 
