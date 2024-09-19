@@ -35,7 +35,7 @@ void Server::binding(){
 	int status;
 
 	memset(&hints, 0, sizeof(hints));
-	memset(_events, 0, sizeof(_events));
+	memset(&_events, 0, sizeof(_events));
 	hints.ai_family = AF_INET;
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = getprotobyname("TCP")->p_proto;
@@ -236,17 +236,14 @@ void Server::handleCommands(int fd, const std::string &command){
 			std::string creationMessage = clients[fd]->get_mask() + "JOIN :" + channelName + "\n";
 			print_client(fd, creationMessage);
 
-			// std::string topicMessage = RPL_NOTOPIC(clients[fd]->get_nick(), channelName);
-			std::string topicMessage = ":server 332 " + clients[fd]->get_mask() + " " + channelName + " :Welcome to " + channelName + "\r\n";
-			print_client(fd, topicMessage);
+			// std::string topicMessage = ":server 332 " + clients[fd]->get_mask() + " " + channelName + " :Welcome to " + channelName + "\r\n";
+			sendCode(fd, "332", clients[fd]->get_nick(), channelName + " :Welcome to " + channelName);
+			// print_client(fd, topicMessage);
 
-			std::string namesMessage = ":server 353 " + clients[fd]->get_mask() + " = " + channelName + channels[channelName]->listAllUsers() + "\r\n";
-			print_client(fd, namesMessage);
-
-			std::string endOfNamesMessage = ":server 366 " + clients[fd]->get_mask() + " " + channelName + " :End of /NAMES list\r\n";
-			print_client(fd, endOfNamesMessage);
-
-			broadcast_to_channel(channelName, fd);
+			sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, channels[channelName]->listAllUsers());
+			sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
+			_ToAll(channels[channelName], fd, creationMessage);
+			// broadcast_to_channel(channelName, fd);
 		}
 		if (cmd == "privmsg" || cmd == "PRIVMSG"){
 			//! change to varius types of privmsg
@@ -345,25 +342,25 @@ std::string Server::extract_value(const std::string& line, const std::string& ke
 	return value;
 }
 
-void Server::broadcast_to_channel(const std::string &channelName, int last_fd) {
-	// Check if the channel exists
-	if (channels.find(channelName) != channels.end()) {
-		Channel* channel = channels[channelName];
+// void Server::broadcast_to_channel(const std::string &channelName, int last_fd) {
+// 	// Check if the channel exists
+// 	if (channels.find(channelName) != channels.end()) {
+// 		Channel* channel = channels[channelName];
 
-		// Iterate through all users in the channel
-		std::map<int, Client*>::iterator it;
-		for (it = channel->getUsers().begin(); it != channel->getUsers().end(); ++it) {
-			int client_fd = it->first;
-			std::string response = ":" + clients[last_fd]->get_nick() + "!" + clients[last_fd]->get_user() + "@" + clients[last_fd]->get_host() + " JOIN :" + channelName + "\r\n";
-			std::string response2 = ":" + clients[client_fd]->get_nick() + "!" + clients[client_fd]->get_user() + "@" + clients[client_fd]->get_host() + " JOIN :" + channelName + "\r\n";
+// 		// Iterate through all users in the channel
+// 		std::map<int, Client*>::iterator it;
+// 		for (it = channel->getUsers().begin(); it != channel->getUsers().end(); ++it) {
+// 			int client_fd = it->first;
+// 			std::string response = ":" + clients[last_fd]->get_nick() + "!" + clients[last_fd]->get_user() + "@" + clients[last_fd]->get_host() + " JOIN :" + channelName + "\r\n";
+// 			std::string response2 = ":" + clients[client_fd]->get_nick() + "!" + clients[client_fd]->get_user() + "@" + clients[client_fd]->get_host() + " JOIN :" + channelName + "\r\n";
 
-			if (client_fd != last_fd) {
-				print_client(client_fd, response);
-				print_client(last_fd, response2);
-			}
-		}
-	}
-}
+// 			if (client_fd != last_fd) {
+// 				print_client(client_fd, response);
+// 				print_client(last_fd, response2);
+// 			}
+// 		}
+// 	}
+// }
 
 //Essa funcao recebe o fd e a mensagem a ser enviada para todos os clientes conectados no mesmo canal que o usuario do fd.
 // é auxiliada pela função findInChannel que retorna o nome do canal em que o usuário está conectado.
@@ -418,5 +415,5 @@ void Server::print_client(int client_fd, std::string str){
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
 	if (nickname.empty())
 		nickname = "*";
-	print_client(fd, ":server " + num + " " + nickname + " " + message + "\n");
+	print_client(fd, ":server " + num + " " + nickname + " " + message + "\r\n");
 }

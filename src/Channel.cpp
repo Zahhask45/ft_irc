@@ -60,7 +60,7 @@ void Channel::setUser(int id, Client *client) {
 }
 
 std::string		Channel::listAllUsers() const {
-	std::string		AllUsers(" :");
+	std::string		AllUsers(":");
 	std::map<int, Client *>::const_iterator it = this->users.begin();
 	
 	it = this->users.begin();

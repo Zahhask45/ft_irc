@@ -77,7 +77,7 @@ debug: re
 
 valgrind: CXXFLAGS += -g
 valgrind: re
-	valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt ./$(NAME)
+	valgrind -q --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt ./$(NAME)
 
 .SILENT:
 
