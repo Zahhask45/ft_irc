@@ -11,23 +11,22 @@ private:
 	//* STUFF ABOUT THE USER
 	int _client_fd;
 	std::string _user;
-	std::string _user;
 	std::string _nick;
 	std::string _pass;
 	const std::string _host;
+
+
 	std::string _mask;
 	bool _auth;
 
 	struct sockaddr_storage _client_addr;
 	socklen_t _client_len;
 	std::map<std::string, Channel *> channels;
-
 	Client(Client &cp);
 	Client &operator=(Client &cp);
 public:
 	Client();
 	Client(int fd);
-	Client(Client &cp);
 	~Client();
 	
 	int const &get_client_fd() const;

@@ -102,7 +102,7 @@ void Server::loop(){
 				}
 			}
 		}
-		std::cout << "Number of clients: " << _cur_online << std::endl;
+		//std::cout << "Number of clients: " << _cur_online << std::endl;
 	}
 }
 
@@ -144,7 +144,7 @@ void Server::funct_NotNewClient(int i){
 			command.erase(command.end() - 1);
 		}
 		handleCommands(_events[i].data.fd, command);
-		std::cout << "Calling handleCommands with fd: " << _events[i].data.fd << " and command: " << command << std::endl;
+		std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 	}
 	memset(_buffer, 0, 1024);
 }
@@ -290,13 +290,14 @@ void Server::handleCommands(int fd, const std::string &command){
 					it->second->removeUser(clients[fd]->get_nick());
 				}
 			}
-			close(clients[fd]->get_client_fd());
-			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[fd].data.fd, NULL) == -1) {
-				std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
+			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {
+				std::cerr << "Error removing socket from epoll(quit): " << strerror(errno) << std::endl;
 			}
-			close(_events[fd].data.fd);
-			this->clients.erase(_events[fd].data.fd);
+			close(clients[fd]->get_client_fd());
+			delete this->clients[fd];
+			this->clients.erase(fd);
 			this->_cur_online--;
+			this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
 			print_client(fd, response);
 		}
 	}
@@ -413,7 +414,6 @@ std::set<std::string> Server::findInChannel(int fd){
 
 void Server::print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
-	std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
 }
 
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){

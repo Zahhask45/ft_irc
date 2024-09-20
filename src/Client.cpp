@@ -2,12 +2,8 @@
 
 Client::Client(): _client_fd(), _user(), _nick(), _host("banana") {
 	_auth = false;
-	_host = "GenericHost";
 }
-Client::Client(int newsocket): _client_fd(newsocket), _user(), _nick(), _host("banana") {
-	_auth = false;
 
-}
 Client::Client(int fd): _client_fd(fd), _user(), _nick(), _host("banana") {
 	_auth = false;
 
@@ -37,53 +33,30 @@ void Client::set_addr(struct sockaddr_storage value){
 }
 
 void Client::set_auth(bool value){
-	this->_auth = value;
+	_auth = value;
 }
 
 void Client::set_client_fd(int const &fd){
-	this->_client_fd = fd;
+	_client_fd = fd;
 }
 
-void Client::set_user(std::string user){
+void Client::set_user(const std::string &user){
 	_user = user;
 }
 
-void Client::set_nick(std::string nick){
+void Client::set_nick(const std::string &nick){
 	_nick = nick;
 }
 
-void Client::set_pass(std::string pass){
+void Client::set_pass(const std::string &pass){
 	_pass = pass;
 }
 
 //? CAN BE DIFFERENT
-void Client::set_mask(std::string mask){
+void Client::set_mask(const std::string &mask){
 	_mask = mask;
 }
 
-
-
-
-
-
-
-
-
-void Client::set_user(std::string const &user){
-	this->_user = user;	
-}
-
-void Client::set_nick(std::string const &nick){
-	this->_nick = nick;
-}
-
-void Client::set_pass(std::string const &pass){
-	this->_pass = pass;
-}
-
-void Client::set_mask(std::string const &mask) {
-	this->_mask = mask;
-}
 
 void Client::addChannel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){
@@ -94,12 +67,6 @@ void Client::addChannel(const std::string &channelName, Channel &channel){
 void Client::removeChannel(const std::string &channelName){
 	if (channels.find(channelName) != channels.end()){
 		channels.erase(channelName);
-	}
-}
-
-void Client::addChannel(const std::string &channelName, Channel &channel){
-	if (channels.find(channelName) == channels.end()){
-		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
 	}
 }
 
