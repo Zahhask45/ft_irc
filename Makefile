@@ -21,7 +21,7 @@ CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
 DEBUG				= -g -fsanitize=address
 
-NAME		=	ircserv
+NAME		=	ircserv_mamaral
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	./obj/
@@ -40,11 +40,11 @@ OBJ			=	$(addprefix $(OBJ_DIR), $(OBJS))
 DEPS		=	$(SRCS:.cpp=.d)
 DEP			=	$(addprefix $(DEPS_DIR), $(DEPS))
 
-# all:	$(NAME)
-all:	debug
+all:	$(NAME)
+# all:	debug
 
 $(NAME): $(OBJ)
-	printf "$(_GONE) $(_GREEN) All files compiled into $(OBJ_DIR) $(_END)\n"
+	printf "$(_GONE) $(_GREEN) All files compiled into $(OBJ_DIR), $(DEPS_DIR) $(_END)\n"
 	$(CXX) $(CXXFLAGS) -o $(NAME) $(OBJ) $(INCLUDE)
 	
 	printf "$(_GONE) $(_GREEN) Executable $(NAME) created $(_END)\n"
@@ -71,9 +71,17 @@ fclean: clean
 
 re: fclean all
 
+# run: valgrind
+run: debug
+	./$(NAME)
+
 debug: CXXFLAGS += $(DEBUG)
-# debug: re
+debug: re
 debug: $(NAME)
+
+valgrind: CXXFLAGS += -g
+valgrind: re
+		valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt ./$(NAME)
 
 .SILENT:
 

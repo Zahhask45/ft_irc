@@ -1,18 +1,23 @@
 #include "Channel.hpp"
 
-Channel::Channel(): name(), users(){}
+Channel::Channel(): _name(), users(){}
 
-Channel::Channel(const std::string name): name(name), users(){}
+Channel::Channel(const std::string name): _name(name), users(){}
 
-Channel::Channel(const Channel &cp){
-	*this = cp;
+// Channel::Channel(const Channel &cp){
+// 	*this = cp;
+// }
+
+Channel::~Channel(){
+	// for(std::map<int, Client *>::iterator it = users.begin(); it != users.end(); it++) {
+	// 	delete it->second;
+	// }
+	// users.clear();
 }
-
-Channel::~Channel(){}
 
 Channel &Channel::operator=(const Channel &origin) {
 	if (this != &origin) {
-		name = origin.name;
+		_name = origin._name;
 		users = origin.users;
 	}
 	return *this;
@@ -20,9 +25,7 @@ Channel &Channel::operator=(const Channel &origin) {
 
 void Channel::addUser(Client &client){
 	if (this->users.find(client.get_client_fd()) == this->users.end())
-		{
 			this->users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
-		}
 }
 
 void Channel::removeUser(std::string user_name){
@@ -36,10 +39,12 @@ void Channel::removeUser(std::string user_name){
 	}
 }
 
-std::string const &Channel::getName(void) const {return name;}
+std::string const &Channel::getName(void) const {return _name;}
 
+std::map<int, Client*>& Channel::getUsers() {
+        return users;
+    }
 /* //TODO: CHANGE THIS
-std::string Channel::getUser(std::string const user) const{
 	std::map< std::string, std::pair<std::string,std::string> >::const_iterator it = users.find(user);
 	if (it != users.end())
 		return it->first;
@@ -52,17 +57,16 @@ std::map<int, Client *> Channel::getUsers(void) const{
 	return allUsers;
 }
 
-void Channel::setName(std::string name) {this->name = name;}
+void Channel::setName(std::string const &name) {this->_name = name;}
 
-void Channel::setUser(int id, Client *client) {
-	std::map<int, Client *>::iterator it = users.find(id);
+void Channel::setUser(int const &id, Client *client) {
+	std::map<int, Client *>::const_iterator it = users.find(id);
 	if (it == users.end()) {
 		users.insert(std::make_pair(id, client));
 	}
 }
 
-std::string		Channel::listAllUsers() const
-{
+std::string		Channel::listAllUsers() const {
 	std::string		AllUsers(":");
 	std::map<int, Client *>::const_iterator it = this->users.begin();
 	

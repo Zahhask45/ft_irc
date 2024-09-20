@@ -4,28 +4,30 @@
 fd_set active;
 
 void handle_signal(int signal) {
-	std::cout << "Signal " << signal << " received. Closing server." << std::endl;
-	exit(0);
+	if (SIGINT == signal || SIGQUIT == signal)
+		throw std::runtime_error("Signal ^C received. Closing server.");
 }
 
-int main(int argc, char **argv){
+int main(){
+	try{
 	struct sigaction sa;
-	sa.sa_handler = handle_signal;
-	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART;
+	sigemptyset(&sa.sa_mask);
+	sa.sa_handler = handle_signal;
 	sigaction(SIGINT, &sa, NULL);
+	sigaction(SIGQUIT, &sa, NULL); // Ensure SIGQUIT is also handled
+
 
 	Server serv(6667, "banana123");
-	Client clients;
 
 	serv.binding();
 	serv.loop();
-	std::string command;
-	command = "NICK";
-	(void)argv;
-	(void)argc;
 	
 	close(serv.get_socket());
-	close(clients.get_socket());
-	return 0;
+	}
+	catch (std::runtime_error &e) {
+		std::cerr << e.what() << std::endl;
+		return 0;
+	}
+	return 1;
 }

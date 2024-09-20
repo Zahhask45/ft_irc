@@ -1,77 +1,62 @@
 #include "Client.hpp"
 
-Client::Client(): _client_fd(), _name(), _nick() {
+Client::Client(): _client_fd(), _user(), _nick() {
 	_auth = false;
+	_host = "GenericHost";
 }
 
-Client::Client(int fd): _client_fd(fd), _name(), _nick() {
+Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_auth = false;
+	_host = "GenericHost";
 }
 
-// Client::Client(Client &cp){
-// 	*this = cp;
-// }
-
-
-Client::~Client(){}
-
-int const &Client::get_socket() const{
-	return _socket;
+Client::~Client(){
+	// for(std::map<std::string, Channel *>::iterator it = this->channels.begin(); it != channels.end(); it++) {
+	// 	delete it->second;
+	// }
+	// channels.clear();
 }
 
-bool const &Client::get_auth() const{
-	return _auth;
-}
+bool const &Client::get_auth() const{ return _auth; }
 
-int const &Client::get_client_fd() const{
-	return _client_fd;
-}
+int const &Client::get_client_fd() const{ return _client_fd; }
 
-std::string Client::get_host() const {
-	return std::string(inet_ntoa(_client_addr.sin_addr));
-}
+std::string const &Client::get_user() const{ return _user; }
 
-std::string const &Client::get_name() const{
-	return _name;
-}
-std::string const &Client::get_pass() const{
-	return _pass;
-}
+std::string const &Client::get_pass() const{ return _pass; }
 
-std::string const &Client::get_nick() const{
-	return _nick;
-}
+std::string const &Client::get_nick() const{ return _nick; }
 
-std::string const &Client::get_mask() const{
-	return _mask;
-}
+std::string const &Client::get_host() const { return _host; }
 
-void Client::set_socket(int value){
-	_socket = value;
-}
+std::string const &Client::get_mask() const{ return _mask; }
 
-void Client::set_addr(struct sockaddr_in value){
+void Client::set_addr(struct sockaddr_storage value){
 	_client_addr = value;
 }
 
 void Client::set_auth(bool value){
-	_auth = value;
+	this->_auth = value;
 }
 
-void Client::set_client_fd(int fd){
-	_client_fd = fd;
+void Client::set_client_fd(int const &fd){
+	this->_client_fd = fd;
 }
 
-void Client::set_name(std::string name){
-	this->_name = name;	
+void Client::set_user(std::string const &user){
+	this->_user = user;	
 }
 
-void Client::set_pass(std::string pass){
+void Client::set_nick(std::string const &nick){
+	this->_nick = nick;
+}
+
+void Client::set_pass(std::string const &pass){
 	this->_pass = pass;
 }
 
-void Client::set_nick(std::string nick){
-	this->_nick = nick;
+void Client::set_mask(std::string const &mask) {
+	this->_mask = mask;
 }
 
 //? CAN BE DIFFERENT
@@ -86,34 +71,14 @@ void Client::addChannel(const std::string &channelName, Channel &channel){
 	}
 }
 
-// void Client::set_user_info(char buffer[]){
-// 	std::string bufferStr(buffer);
-// 	size_t pos;
+void Client::addChannel(const std::string &channelName, Channel &channel){
+	if (channels.find(channelName) == channels.end()){
+		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
+	}
+}
 
-// 	// Procurar por USER
-// 	pos = bufferStr.find("USER");
-// 	if (pos != std::string::npos) {
-// 		// Extrair a informação do usuário e armazená-la no vetor
-// 		std::string line = bufferStr.substr(pos);
-// 		this->_name = extract_value(line, "USER");
-// 		std::cout << "start>>" << this->_name << "<<end\n" << std::endl;
-// 	}
-
-// 	// Procurar por PASS
-// 	pos = bufferStr.find("PASS");
-// 	if (pos != std::string::npos) {
-// 		// Extrair a informação da senha e armazená-la no vetor
-// 		std::string line = bufferStr.substr(pos);
-// 		this->_pass = extract_value(line, "PASS");
-// 		std::cout << "start>>" << this->_pass << "<<end\n" << std::endl;
-// 	}
-
-// 	// Procurar por NICK
-// 	pos = bufferStr.find("NICK");
-// 	if (pos != std::string::npos) {
-// 		// Extrair a informação do apelido e armazená-la no vetor
-// 		std::string line = bufferStr.substr(pos);
-// 		this->_nick = extract_value(line, "NICK");
-// 		std::cout << "start>>" << this->_nick << "<<end\n" << std::endl;
-// 	}
-// }
+void Client::removeChannel(const std::string &channelName){
+	if (channels.find(channelName) != channels.end()){
+		channels.erase(channelName);
+	}
+}
