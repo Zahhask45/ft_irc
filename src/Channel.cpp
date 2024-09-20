@@ -4,12 +4,15 @@ Channel::Channel(): _name(), users(){}
 
 Channel::Channel(const std::string name): _name(name), users(){}
 
-Channel::Channel(const Channel &cp){
-	*this = cp;
-}
+// Channel::Channel(const Channel &cp){
+// 	*this = cp;
+// }
 
 Channel::~Channel(){
-	users.clear();
+	// for(std::map<int, Client *>::iterator it = users.begin(); it != users.end(); it++) {
+	// 	delete it->second;
+	// }
+	// users.clear();
 }
 
 Channel &Channel::operator=(const Channel &origin) {
@@ -22,9 +25,7 @@ Channel &Channel::operator=(const Channel &origin) {
 
 void Channel::addUser(Client &client){
 	if (this->users.find(client.get_client_fd()) == this->users.end())
-		{
 			this->users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
-		}
 }
 
 void Channel::removeUser(std::string user_name){
@@ -50,10 +51,10 @@ std::map<int, Client*>& Channel::getUsers() {
 	return std::string();
 } */
 
-void Channel::setName(std::string name) {this->_name = name;}
+void Channel::setName(std::string const &name) {this->_name = name;}
 
-void Channel::setUser(int id, Client *client) {
-	std::map<int, Client *>::iterator it = users.find(id);
+void Channel::setUser(int const &id, Client *client) {
+	std::map<int, Client *>::const_iterator it = users.find(id);
 	if (it == users.end()) {
 		users.insert(std::make_pair(id, client));
 	}

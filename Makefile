@@ -71,13 +71,17 @@ fclean: clean
 
 re: fclean all
 
+# run: valgrind
+run: debug
+	./$(NAME)
+
 debug: CXXFLAGS += $(DEBUG)
 debug: re
-# debug: all
+debug: $(NAME)
 
 valgrind: CXXFLAGS += -g
 valgrind: re
-	valgrind -q --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt ./$(NAME)
+		valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt ./$(NAME)
 
 .SILENT:
 

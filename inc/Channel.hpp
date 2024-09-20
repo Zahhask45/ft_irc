@@ -23,8 +23,8 @@ public:
     void removeUser(std::string user);
     std::string const &getName(void) const;
 	std::map<int, Client*>& getUsers();
-    void setName(std::string name);
-    void setUser(int id, Client *client);
+    void setName(std::string const &name);
+    void setUser(int const &id, Client *client);
     std::string	listAllUsers() const;
     
 };

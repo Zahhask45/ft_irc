@@ -11,8 +11,7 @@ Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 }
 
 Client::~Client(){
-	close(get_client_fd());
-	// for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
+	// for(std::map<std::string, Channel *>::iterator it = this->channels.begin(); it != channels.end(); it++) {
 	// 	delete it->second;
 	// }
 	// channels.clear();
@@ -37,27 +36,27 @@ void Client::set_addr(struct sockaddr_storage value){
 }
 
 void Client::set_auth(bool value){
-	_auth = value;
+	this->_auth = value;
 }
 
-void Client::set_client_fd(int fd){
-	_client_fd = fd;
+void Client::set_client_fd(int const &fd){
+	this->_client_fd = fd;
 }
 
-void Client::set_user(std::string user){
+void Client::set_user(std::string const &user){
 	this->_user = user;	
 }
 
-void Client::set_nick(std::string nick){
+void Client::set_nick(std::string const &nick){
 	this->_nick = nick;
 }
 
-void Client::set_pass(std::string pass){
+void Client::set_pass(std::string const &pass){
 	this->_pass = pass;
 }
 
-void Client::set_mask(std::string mask){
-	_mask = mask;
+void Client::set_mask(std::string const &mask) {
+	this->_mask = mask;
 }
 
 void Client::addChannel(const std::string &channelName, Channel &channel){

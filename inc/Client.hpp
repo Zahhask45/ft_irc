@@ -39,12 +39,12 @@ public: //GETTERS
 
 public: //SETTERS
 	void set_addr(struct sockaddr_storage value);
-	void set_client_fd(int fd);
+	void set_client_fd(const int &fd);
 	void set_auth(bool value);
-	void set_user(std::string name);
-	void set_pass(std::string pass);
-	void set_nick(std::string nick);
-	void set_mask(std::string mask);
+	void set_user(const std::string &name);
+	void set_pass(const std::string &pass);
+	void set_nick(const std::string &nick);
+	void set_mask(const std::string &mask);
 
 	void addChannel(const std::string &channelName, Channel &channel);
 	void removeChannel(const std::string &channelName);

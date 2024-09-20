@@ -1,6 +1,5 @@
 #include "Server.hpp"
 #include <errno.h>
-#include "replies.hpp"
 
 Server::Server(){}
 
@@ -19,11 +18,12 @@ Server::~Server() {
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
 		delete it->second;
 	}
-	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++) {
+	clients.clear();
+
+	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); ++it) {
 		delete it->second;
 	}
-	this->clients.clear();
-	this->channels.clear();
+	channels.clear();
 }
 
 int const &Server::get_socket() const{
@@ -170,22 +170,18 @@ void Server::handleCommands(int fd, const std::string &command){
 				clients[fd]->set_auth(true);
 				return ;
 			}
-			else{
-				sendCode(fd, "464", clients[fd]->get_nick(), ": Password incorrect");
-				sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
-				return ;
-			}
+			
 		}
 		if (cmd == "pass" || cmd == "PASS"){
 			std::string pass;
 			iss >> pass;
 			pass = extract_value(pass, "PASS");
 			if (_pass != pass){
-				print_client(fd, "WRONG PASSWORD\n");
+				sendCode(fd, "464", clients[fd]->get_nick(), ": Password incorrect");
 				return ;
 			}
 			clients[fd]->set_pass(pass);
-			print_client(fd, "PASSWORD CONFIRMED\n");
+			sendCode(fd, "375", clients[fd]->get_nick(), ": Password accepted");
 		}
 
 		if (cmd == "nick" || cmd == "NICK"){
@@ -218,7 +214,7 @@ void Server::handleCommands(int fd, const std::string &command){
 		if (cmd == "join" || cmd == "JOIN"){
 			if (clients[fd]->get_auth() == false){
 				print_client(fd, "Need to Auth the user\n");
-				print_client(fd, ERR_NOSUCHNICK(clients[fd]->get_nick()));
+				sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
 				return ;
 			}
 			std::string channelName;
@@ -231,19 +227,15 @@ void Server::handleCommands(int fd, const std::string &command){
 				channelName = "#" + channelName;
 			if (getChannel(channelName) == NULL)
 				createChannel(channelName);
-			clients[fd]->addChannel(channelName, *channels[channelName]);
-			channels[channelName]->addUser(getClient(fd));
-			std::string creationMessage = clients[fd]->get_mask() + "JOIN :" + channelName + "\n";
-			print_client(fd, creationMessage);
+			this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
+			this->channels[channelName]->addUser(getClient(fd));
+			print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
-			// std::string topicMessage = ":server 332 " + clients[fd]->get_mask() + " " + channelName + " :Welcome to " + channelName + "\r\n";
 			sendCode(fd, "332", clients[fd]->get_nick(), channelName + " :Welcome to " + channelName);
-			// print_client(fd, topicMessage);
 
-			sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, channels[channelName]->listAllUsers());
+			sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
 			sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
-			_ToAll(channels[channelName], fd, creationMessage);
-			// broadcast_to_channel(channelName, fd);
+			_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
 		}
 		if (cmd == "privmsg" || cmd == "PRIVMSG"){
 			//! change to varius types of privmsg
@@ -291,8 +283,20 @@ void Server::handleCommands(int fd, const std::string &command){
 		if (cmd == "quit" || cmd == "QUIT"){
 			std::string message;
 			iss >> message;
-			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " QUIT :" + message + "\r\n";
+			std::string response = clients[fd]->get_mask() + "QUIT :" + message + "\r\n";
 			_ToAll(fd, response);
+			for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
+				if (it->second->getUsers().find(fd) != it->second->getUsers().end()){
+					it->second->removeUser(clients[fd]->get_nick());
+				}
+			}
+			close(clients[fd]->get_client_fd());
+			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[fd].data.fd, NULL) == -1) {
+				std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
+			}
+			close(_events[fd].data.fd);
+			this->clients.erase(_events[fd].data.fd);
+			this->_cur_online--;
 			print_client(fd, response);
 		}
 	}

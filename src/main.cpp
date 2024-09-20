@@ -24,10 +24,10 @@ int main(){
 	serv.loop();
 	
 	close(serv.get_socket());
-	return 0;
 	}
 	catch (std::runtime_error &e) {
 		std::cerr << e.what() << std::endl;
+		return 0;
 	}
 	return 1;
 }

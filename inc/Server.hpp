@@ -37,8 +37,6 @@ public:
 	void handleCommands(int fd, const std::string &command);
 	void createChannel(const std::string &channelName);
 	
-	void setUsers(std::string userName);
-
 	std::string const &getUser()const;
 	int const &get_socket() const;
 	Channel *getChannel(const std::string name);
@@ -49,7 +47,7 @@ public:
 //* Auxiliar functions
 	void _ToAll(int ori_fd, std::string message);
 	void _ToAll(Channel *channel, int ori_fd, std::string message);
-	void broadcast_to_channel(const std::string &channelName, int sender_fd) ;
+	// void broadcast_to_channel(const std::string &channelName, int sender_fd) ;
 	void sendCode(int fd, std::string num, std::string nickname, std::string message);
 	std::set<std::string> findInChannel(int fd);
 	std::string extract_value(const std::string& line, const std::string& key);
