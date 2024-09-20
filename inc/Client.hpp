@@ -11,9 +11,10 @@ private:
 	//* STUFF ABOUT THE USER
 	int _client_fd;
 	std::string _user;
+	std::string _user;
 	std::string _nick;
 	std::string _pass;
-	std::string _host;
+	const std::string _host;
 	std::string _mask;
 	bool _auth;
 
@@ -26,9 +27,9 @@ private:
 public:
 	Client();
 	Client(int fd);
+	Client(Client &cp);
 	~Client();
-
-public: //GETTERS
+	
 	int const &get_client_fd() const;
 	std::string const &get_user() const;
 	std::string const &get_pass() const;
