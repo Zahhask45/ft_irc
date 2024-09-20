@@ -59,23 +59,12 @@ void Client::set_mask(std::string const &mask) {
 	this->_mask = mask;
 }
 
-//? CAN BE DIFFERENT
-void Client::set_mask(std::string mask){
-	_mask = mask;
-}
-
-
 void Client::addChannel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){
 		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
 	}
 }
 
-void Client::addChannel(const std::string &channelName, Channel &channel){
-	if (channels.find(channelName) == channels.end()){
-		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
-	}
-}
 
 void Client::removeChannel(const std::string &channelName){
 	if (channels.find(channelName) != channels.end()){

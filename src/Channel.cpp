@@ -51,12 +51,6 @@ std::map<int, Client*>& Channel::getUsers() {
 	return std::string();
 } */
 
-std::map<int, Client *> Channel::getUsers(void) const{
-	std::map<int, Client *> allUsers(this->users.begin(), this->users.end());
-	//allUsers.insert(this->users.begin(), this->users.end());
-	return allUsers;
-}
-
 void Channel::setName(std::string const &name) {this->_name = name;}
 
 void Channel::setUser(int const &id, Client *client) {
