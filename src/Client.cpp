@@ -10,12 +10,7 @@ Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_host = "GenericHost";
 }
 
-Client::~Client(){
-	// for(std::map<std::string, Channel *>::iterator it = this->channels.begin(); it != channels.end(); it++) {
-	// 	delete it->second;
-	// }
-	// channels.clear();
-}
+Client::~Client(){}
 
 bool const &Client::get_auth() const{ return _auth; }
 

@@ -4,24 +4,7 @@ Channel::Channel(): _name(), users(){}
 
 Channel::Channel(const std::string name): _name(name), users(){}
 
-// Channel::Channel(const Channel &cp){
-// 	*this = cp;
-// }
-
-Channel::~Channel(){
-	// for(std::map<int, Client *>::iterator it = users.begin(); it != users.end(); it++) {
-	// 	delete it->second;
-	// }
-	// users.clear();
-}
-
-Channel &Channel::operator=(const Channel &origin) {
-	if (this != &origin) {
-		_name = origin._name;
-		users = origin.users;
-	}
-	return *this;
-}
+Channel::~Channel(){ }
 
 void Channel::addUser(Client &client){
 	if (this->users.find(client.get_client_fd()) == this->users.end())
@@ -44,12 +27,6 @@ std::string const &Channel::getName(void) const {return _name;}
 std::map<int, Client*>& Channel::getUsers() {
         return users;
     }
-/* //TODO: CHANGE THIS
-	std::map< std::string, std::pair<std::string,std::string> >::const_iterator it = users.find(user);
-	if (it != users.end())
-		return it->first;
-	return std::string();
-} */
 
 void Channel::setName(std::string const &name) {this->_name = name;}
 

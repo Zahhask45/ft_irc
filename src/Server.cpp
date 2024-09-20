@@ -241,7 +241,6 @@ void Server::handleCommands(int fd, const std::string &command){
 			//! change to varius types of privmsg
 			std::string channel_name;
 			iss >> channel_name;
-			//channel_name = channel_name.substr(1, channel_name.size() - 1);
 			size_t pos;
 			pos = command.find(channel_name);
 			if (pos == std::string::npos) {
@@ -249,11 +248,9 @@ void Server::handleCommands(int fd, const std::string &command){
 			}
 			//! NEED TO PUT THIS BETTER
 			std::string msg = command.substr(pos + channel_name.size() + 1, command.size() - (pos + channel_name.size() + 1));
-			// std::cout << "start>>" << msg << "<<end\n" << std::endl;
 
 			std::map<std::string, Channel *>::iterator it = this->channels.find(channel_name);
 			if (it != this->channels.end()){
-				// std::cout << "INSIDE THE PRIVMSG >>>> " << "PRIVMSG " + channel_name + " " + msg << std::endl;
 				_ToAll(it->second, fd, "PRIVMSG " + channel_name + " " + msg + "\n");
 			}
 		}
