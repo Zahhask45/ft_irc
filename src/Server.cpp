@@ -133,9 +133,11 @@ void Server::funct_NotNewClient(int i){
 		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 			std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
 		}
-		close(_events[i].data.fd);
-        this->clients.erase(_events[i].data.fd);
-        this->_cur_online--;
+		else {
+			close(_events[i].data.fd);
+			this->clients.erase(_events[i].data.fd);
+			this->_cur_online--;
+		}
 	}
 	else {
 		_buffer[bytes_received] = '\0';
@@ -153,35 +155,19 @@ void Server::funct_NotNewClient(int i){
 void Server::handleCommands(int fd, const std::string &command){
 	std::istringstream commandStream(command);
     std::string line;
-    
     // Percorre cada linha do comando
     while (std::getline(commandStream, line, '\n')) {
         std::istringstream iss(line);
         std::string cmd;
 		iss >> cmd;
-		// std::cout << "[Command]: " << cmd << " [Command]" << std::endl;
-		if (cmd == "auth" || cmd == "AUTH"){
-			std::cout << "PASS SERVER: " << _pass << std::endl;
-			std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
-			std::string pass = clients[fd]->get_pass();
-			std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
-			if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-				sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
-				clients[fd]->set_auth(true);
-				return ;
-			}
-			
-		}
-		if (cmd == "pass" || cmd == "PASS"){
+		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
+		if (cmd == "AUTH")
+			handleAuth(fd);
+		if (cmd == "PASS"){
 			std::string pass;
 			iss >> pass;
 			pass = extract_value(pass, "PASS");
-			if (_pass != pass){
-				sendCode(fd, "464", clients[fd]->get_nick(), ": Password incorrect");
-				return ;
-			}
-			clients[fd]->set_pass(pass);
-			sendCode(fd, "375", clients[fd]->get_nick(), ": Password accepted");
+			handlePass(fd, pass);
 		}
 
 		if (cmd == "nick" || cmd == "NICK"){
@@ -287,14 +273,14 @@ void Server::handleCommands(int fd, const std::string &command){
 					it->second->removeUser(clients[fd]->get_nick());
 				}
 			}
-			close(clients[fd]->get_client_fd());
-			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[fd].data.fd, NULL) == -1) {
-				std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
-			}
-			close(_events[fd].data.fd);
-			this->clients.erase(_events[fd].data.fd);
-			this->_cur_online--;
-			print_client(fd, response);
+			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {
+                std::cerr << "Error removing socket from epoll(quit): " << strerror(errno) << std::endl;
+            }
+            close(clients[fd]->get_client_fd());
+            this->clients.erase(clients[fd]->get_client_fd());
+            this->_cur_online--;
+            this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
+            print_client(fd, response);
 		}
 	}
 }

@@ -32,7 +32,8 @@ INCLUDE		=	-I ./inc/
 SRCS		=	main.cpp \
 				Server.cpp \
 				Client.cpp \
-				Channel.cpp
+				Channel.cpp \
+				commands.cpp
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRCS))
 OBJS		=	$(SRCS:.cpp=.o)
@@ -77,7 +78,6 @@ run: debug
 
 debug: CXXFLAGS += $(DEBUG)
 debug: re
-debug: $(NAME)
 
 valgrind: CXXFLAGS += -g
 valgrind: re
