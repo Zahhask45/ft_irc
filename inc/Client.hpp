@@ -15,6 +15,7 @@ private:
 	std::string _pass;
 	std::string _host;
 	std::string _mask;
+	std::string _realname;
 	bool _auth;
 
 	struct sockaddr_storage _client_addr;
@@ -45,6 +46,7 @@ public: //SETTERS
 	void set_pass(const std::string &pass);
 	void set_nick(const std::string &nick);
 	void set_mask(const std::string &mask);
+	void set_realname(const std::string &realname);
 
 	void addChannel(const std::string &channelName, Channel &channel);
 	void removeChannel(const std::string &channelName);

@@ -54,6 +54,10 @@ void Client::set_mask(std::string const &mask) {
 	this->_mask = mask;
 }
 
+void Client::set_realname(std::string const &realname){
+	this->_realname = realname;
+}
+
 void Client::addChannel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){
 		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));

@@ -163,65 +163,14 @@ void Server::handleCommands(int fd, const std::string &command){
 		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 		if (cmd == "AUTH")
 			handleAuth(fd);
-		if (cmd == "PASS"){
-			std::string pass;
-			iss >> pass;
-			pass = extract_value(pass, "PASS");
-			handlePass(fd, pass);
-		}
-
-		if (cmd == "nick" || cmd == "NICK"){
-			// Extrair a informação do apelido e armazená-la no vetor
-			std::string nick;
-			iss >> nick;
-			if (this->clients[fd]->get_nick().empty()) {
-				this->clients[fd]->set_nick(nick);
-				clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
-
-			}
-			else{
-				std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
-				std::string nickChangeMsg = ":" + this->clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " NICK :" + nick + "\r\n";
-				print_client(fd, changeNick);
-				this->clients[fd]->set_nick(nick);
-				clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
-				_ToAll(fd, nickChangeMsg);
-			}
-		}
-		if (cmd == "user" || cmd == "USER") {
-			// Extrair a informação do usuário e armazená-la no vetor
-			std::string user;
-			iss >> user;
-			this->clients[fd]->set_user(extract_value(user, "USER"));
-			if (clients[fd]->get_nick() != "\0")
-				clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
-		}
-
-		if (cmd == "join" || cmd == "JOIN"){
-			if (clients[fd]->get_auth() == false){
-				print_client(fd, "Need to Auth the user\n");
-				sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
-				return ;
-			}
-			std::string channelName;
-			iss >> channelName;
-			if (channelName.empty()){
-				print_client(fd, "Channel name is empty\n");
-				return ;
-			}
-			if (channelName[0] != '#')
-				channelName = "#" + channelName;
-			if (getChannel(channelName) == NULL)
-				createChannel(channelName);
-			this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
-			this->channels[channelName]->addUser(getClient(fd));
-			print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
-
-			sendCode(fd, "332", clients[fd]->get_nick(), channelName + " :Welcome to " + channelName);
-
-			sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
-			sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
-			_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
+		if (cmd == "PASS")
+			handlePass(fd, iss);
+		if (cmd == "NICK")
+			handleNick(fd, iss);
+		if (cmd == "USER")
+			handleUser(fd, iss);
+		if (cmd == "JOIN"){
+			handleJoin(fd, iss);
 		}
 		if (cmd == "privmsg" || cmd == "PRIVMSG"){
 			//! change to varius types of privmsg
@@ -304,8 +253,7 @@ Client &Server::getClient(int fd){
 	return *it->second;
 }
 
-std::string Server::extract_value(const std::string& line, const std::string& key) {
-	(void)key;
+std::string Server::extract_value(const std::string& line) {
 	size_t start = 0;  // Find end of key
 	if (start == std::string::npos) {
 		return "";  // Key not found
