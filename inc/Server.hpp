@@ -35,7 +35,7 @@ public:
 	void binding();
 	void loop();
 	void handleCommands(int fd, const std::string &command);
-	void createChannel(const std::string &channelName);
+	void createChannel(const std::string &channelName, int fd);
 	
 	std::string const &getUser()const;
 	int const &get_socket() const;

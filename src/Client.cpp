@@ -2,11 +2,13 @@
 
 Client::Client(): _client_fd(), _user(), _nick() {
 	_auth = false;
+	_isOperator = false;
 	_host = "GenericHost";
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_auth = false;
+	_isOperator = false;
 	_host = "GenericHost";
 }
 
@@ -18,6 +20,8 @@ Client::~Client(){
 }
 
 bool const &Client::get_auth() const{ return _auth; }
+
+bool const &Client::get_isOperator() const{ return _isOperator; }
 
 int const &Client::get_client_fd() const{ return _client_fd; }
 
@@ -37,6 +41,10 @@ void Client::set_addr(struct sockaddr_storage value){
 
 void Client::set_auth(bool value){
 	this->_auth = value;
+}
+
+void Client::set_isOperator(bool value){
+	this->_isOperator = value;
 }
 
 void Client::set_client_fd(int const &fd){
@@ -64,7 +72,6 @@ void Client::addChannel(const std::string &channelName, Channel &channel){
 		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
 	}
 }
-
 
 void Client::removeChannel(const std::string &channelName){
 	if (channels.find(channelName) != channels.end()){

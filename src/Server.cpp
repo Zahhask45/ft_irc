@@ -172,7 +172,7 @@ void Server::handleCommands(int fd, const std::string &command){
 			}
 			
 		}
-		if (cmd == "pass" || cmd == "PASS"){
+		else if (cmd == "pass" || cmd == "PASS"){
 			std::string pass;
 			iss >> pass;
 			pass = extract_value(pass, "PASS");
@@ -184,7 +184,7 @@ void Server::handleCommands(int fd, const std::string &command){
 			sendCode(fd, "375", clients[fd]->get_nick(), ": Password accepted");
 		}
 
-		if (cmd == "nick" || cmd == "NICK"){
+		else if (cmd == "nick" || cmd == "NICK"){
 			// Extrair a informação do apelido e armazená-la no vetor
 			std::string nick;
 			iss >> nick;
@@ -202,7 +202,7 @@ void Server::handleCommands(int fd, const std::string &command){
 				_ToAll(fd, nickChangeMsg);
 			}
 		}
-		if (cmd == "user" || cmd == "USER") {
+		else if (cmd == "user" || cmd == "USER") {
 			// Extrair a informação do usuário e armazená-la no vetor
 			std::string user;
 			iss >> user;
@@ -211,7 +211,7 @@ void Server::handleCommands(int fd, const std::string &command){
 				clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 		}
 
-		if (cmd == "join" || cmd == "JOIN"){
+		else if (cmd == "join" || cmd == "JOIN"){
 			if (clients[fd]->get_auth() == false){
 				print_client(fd, "Need to Auth the user\n");
 				sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
@@ -226,9 +226,14 @@ void Server::handleCommands(int fd, const std::string &command){
 			if (channelName[0] != '#')
 				channelName = "#" + channelName;
 			if (getChannel(channelName) == NULL)
-				createChannel(channelName);
+				createChannel(channelName, fd);
 			this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
-			this->channels[channelName]->addUser(getClient(fd));
+			
+			if (this->clients[fd]->get_isOperator() == true)
+				this->channels[channelName]->addOperator(getClient(fd));
+			else
+				this->channels[channelName]->addUser(getClient(fd));
+
 			print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
 			sendCode(fd, "332", clients[fd]->get_nick(), channelName + " :Welcome to " + channelName);
@@ -237,7 +242,7 @@ void Server::handleCommands(int fd, const std::string &command){
 			sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 			_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
 		}
-		if (cmd == "privmsg" || cmd == "PRIVMSG"){
+		else if (cmd == "privmsg" || cmd == "PRIVMSG"){
 			//! change to varius types of privmsg
 			std::string channel_name;
 			iss >> channel_name;
@@ -257,7 +262,7 @@ void Server::handleCommands(int fd, const std::string &command){
 				_ToAll(it->second, fd, "PRIVMSG " + channel_name + " " + msg + "\n");
 			}
 		}
-		if (cmd == "part" || cmd == "PART"){
+		else if (cmd == "part" || cmd == "PART"){
 			std::string channelName;
 			iss >> channelName;
 			if (channelName.empty()){
@@ -280,7 +285,7 @@ void Server::handleCommands(int fd, const std::string &command){
 			channel->removeUser(clients[fd]->get_nick());
 			clients[fd]->removeChannel(channelName);
 		}
-		if (cmd == "quit" || cmd == "QUIT"){
+		else if (cmd == "quit" || cmd == "QUIT"){
 			std::string message;
 			iss >> message;
 			std::string response = clients[fd]->get_mask() + "QUIT :" + message + "\r\n";
@@ -302,11 +307,18 @@ void Server::handleCommands(int fd, const std::string &command){
 	}
 }
 
-void Server::createChannel(const std::string &channelName){
-	if (channels.find(channelName) == channels.end()){
-		Channel *channel = new Channel(channelName);
+void Server::createChannel(const std::string &channelName, int fd){
+	std::map<std::string, Channel *>::iterator it = channels.find(channelName);
+	if (it == channels.end()){
+		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
 	}
+/* 	else{
+		if (this->clients[fd]->get_isOperator() == true)
+			it->second->addOperator(getClient(fd));
+		else
+			it->second->addUser(getClient(fd));
+	} */
 }
 
 Channel *Server::getChannel(const std::string name)  {

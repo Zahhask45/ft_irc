@@ -16,6 +16,7 @@ private:
 	std::string _host;
 	std::string _mask;
 	bool _auth;
+	bool _isOperator;
 
 	struct sockaddr_storage _client_addr;
 	socklen_t _client_len;
@@ -34,6 +35,7 @@ public: //GETTERS
 	std::string const &get_pass() const;
 	std::string const &get_nick() const;
 	bool const &get_auth() const;
+	bool const &get_isOperator() const;
 	std::string const &get_host() const;
 	std::string const &get_mask() const;
 
@@ -41,6 +43,7 @@ public: //SETTERS
 	void set_addr(struct sockaddr_storage value);
 	void set_client_fd(const int &fd);
 	void set_auth(bool value);
+	void set_isOperator(bool value);
 	void set_user(const std::string &name);
 	void set_pass(const std::string &pass);
 	void set_nick(const std::string &nick);
