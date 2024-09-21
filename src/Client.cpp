@@ -9,10 +9,7 @@ Client::Client(int fd): _client_fd(fd), _user(), _nick(), _host("banana") {
 
 }
 
-Client::~Client(){
-	close(get_client_fd());
-
-}
+Client::~Client(){}
 
 bool const &Client::get_auth() const{ return _auth; }
 
@@ -57,6 +54,9 @@ void Client::set_mask(const std::string &mask){
 	_mask = mask;
 }
 
+void Client::set_realname(std::string const &realname){
+	this->_realname = realname;
+}
 
 void Client::addChannel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){

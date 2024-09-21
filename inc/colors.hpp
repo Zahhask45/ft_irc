@@ -1,7 +1,6 @@
 #ifndef COLORS_HPP
 #define COLORS_HPP
 
-
 #define _END			"\033[0m"
 #define _BOLD			"\033[1m"
 #define _UNDER			"\033[4m"
@@ -16,8 +15,7 @@
 #define _CYAN			"\033[0;36m"
 #define _WHITE			"\033[0;37m"
 
-
-
+#include <cerrno>
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -42,6 +40,5 @@
 #include <sstream>
 #include <map>
 #include <set>
-
 
 #endif
