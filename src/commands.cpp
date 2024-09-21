@@ -103,8 +103,8 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		print_client(fd, "Channel name is empty\n");
 		return ;
 	}
-	// if (channelName[0] != '#')
-	// 	channelName = "#" + channelName;
+	if (channelName[0] != '#')
+		channelName = "#" + channelName;
 	if (getChannel(channelName) == NULL)
 		createChannel(channelName);
 	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
@@ -115,4 +115,69 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
 	sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 	_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
+}
+
+void Server::handlePrivmsg(int fd, std::istringstream &command){
+	std::string target, message;
+	command >> target;
+	std::getline(command, message);
+	if (target.empty() || message.empty()){
+		sendCode(fd, "411", clients[fd]->get_nick(), ": No recipient given (PRIVMSG)");
+		return ;
+	}
+	if (target[0] == '#'){
+		if (channels.find(target) == channels.end()){
+			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
+			return ;
+		}
+		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
+			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
+			return ;
+		}
+		_ToAll(channels[target], fd, "PRIVMSG " + target + " " + message + "\n");
+	}
+}
+
+void Server::handlePart(int fd, std::istringstream &command){
+	std::string channelName;
+	command >> channelName;
+	if (channelName.empty()){
+		print_client(fd, "Channel name is empty\n");
+		return ;
+	}
+	if (channelName[0] != '#')
+		channelName = "#" + channelName;
+	if (channels.find(channelName) == channels.end()){
+		print_client(fd, "Channel does not exist\n");
+		return ;
+	}
+	Channel *channel = channels[channelName];
+	if (channel->getUsers().find(fd) == channel->getUsers().end()){
+		print_client(fd, "You are not in this channel\n");
+		return ;
+	}
+	print_client(fd, clients[fd]->get_mask() + "PART " + channelName + "\r\n");
+	_ToAll(channel, fd, "PART " + channelName + "\r\n");
+	channel->removeUser(clients[fd]->get_nick());
+	clients[fd]->removeChannel(channelName);
+}
+
+void Server::handleQuit(int fd, std::istringstream &command){
+	std::string message;
+	command >> message;
+	std::string response = clients[fd]->get_mask() + "QUIT :" + message + "\r\n";
+	_ToAll(fd, response);
+	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
+		if (it->second->getUsers().find(fd) != it->second->getUsers().end()){
+			it->second->removeUser(clients[fd]->get_nick());
+		}
+	}
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {
+		std::cerr << "Error removing socket from epoll(quit): " << strerror(errno) << std::endl;
+	}
+	close(clients[fd]->get_client_fd());
+	this->clients.erase(clients[fd]->get_client_fd());
+	this->_cur_online--;
+	this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
+	print_client(fd, response);
 }

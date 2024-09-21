@@ -1,6 +1,7 @@
 #ifndef COLORS_HPP
 #define COLORS_HPP
 
+#include <cerrno>
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -25,6 +26,5 @@
 #include <sstream>
 #include <map>
 #include <set>
-
 
 #endif
