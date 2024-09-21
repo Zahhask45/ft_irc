@@ -13,7 +13,9 @@ private:
 	std::string _user;
 	std::string _nick;
 	std::string _pass;
-	std::string _host;
+	const std::string _host;
+
+
 	std::string _mask;
 	std::string _realname;
 	bool _auth;
@@ -21,15 +23,13 @@ private:
 	struct sockaddr_storage _client_addr;
 	socklen_t _client_len;
 	std::map<std::string, Channel *> channels;
-
 	Client(Client &cp);
 	Client &operator=(Client &cp);
 public:
 	Client();
 	Client(int fd);
 	~Client();
-
-public: //GETTERS
+	
 	int const &get_client_fd() const;
 	std::string const &get_user() const;
 	std::string const &get_pass() const;

@@ -1,13 +1,12 @@
 #include "Client.hpp"
 
-Client::Client(): _client_fd(), _user(), _nick() {
+Client::Client(): _client_fd(), _user(), _nick(), _host("banana") {
 	_auth = false;
-	_host = "GenericHost";
 }
 
-Client::Client(int fd): _client_fd(fd), _user(), _nick() {
+Client::Client(int fd): _client_fd(fd), _user(), _nick(), _host("banana") {
 	_auth = false;
-	_host = "GenericHost";
+
 }
 
 Client::~Client(){}
@@ -31,27 +30,28 @@ void Client::set_addr(struct sockaddr_storage value){
 }
 
 void Client::set_auth(bool value){
-	this->_auth = value;
+	_auth = value;
 }
 
 void Client::set_client_fd(int const &fd){
-	this->_client_fd = fd;
+	_client_fd = fd;
 }
 
-void Client::set_user(std::string const &user){
-	this->_user = user;	
+void Client::set_user(const std::string &user){
+	_user = user;
 }
 
-void Client::set_nick(std::string const &nick){
-	this->_nick = nick;
+void Client::set_nick(const std::string &nick){
+	_nick = nick;
 }
 
-void Client::set_pass(std::string const &pass){
-	this->_pass = pass;
+void Client::set_pass(const std::string &pass){
+	_pass = pass;
 }
 
-void Client::set_mask(std::string const &mask) {
-	this->_mask = mask;
+//? CAN BE DIFFERENT
+void Client::set_mask(const std::string &mask){
+	_mask = mask;
 }
 
 void Client::set_realname(std::string const &realname){
@@ -69,3 +69,6 @@ void Client::removeChannel(const std::string &channelName){
 		channels.erase(channelName);
 	}
 }
+
+
+

@@ -101,7 +101,7 @@ void Server::loop(){
 				}
 			}
 		}
-		std::cout << "Number of clients: " << _cur_online << std::endl;
+		//std::cout << "Number of clients: " << _cur_online << std::endl;
 	}
 }
 
@@ -145,7 +145,7 @@ void Server::funct_NotNewClient(int i){
 			command.erase(command.end() - 1);
 		}
 		handleCommands(_events[i].data.fd, command);
-		std::cout << "Calling handleCommands with fd: " << _events[i].data.fd << " and command: " << command << std::endl;
+		std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 	}
 	memset(_buffer, 0, 1024);
 }
@@ -291,7 +291,6 @@ std::set<std::string> Server::findInChannel(int fd){
 
 void Server::print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
-	std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
 }
 
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
