@@ -27,6 +27,7 @@ public:
     void addUser(Client &client);
 	void addOperator( Client &op );
     void removeUser(std::string user);
+    void removeOper(std::string oper);
     void setName(std::string const &name);
     void setUser(int const &id, Client *client);
     

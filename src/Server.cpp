@@ -304,6 +304,14 @@ void Server::handleCommands(int fd, const std::string &command){
 			this->_cur_online--;
 			print_client(fd, response);
 		}
+		else if (cmd == "oper" || cmd == "OPER"){
+			if (clients[fd]->get_auth() == false){
+				print_client(fd, "Need to Auth the user\n");
+				sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
+				return ;
+			}
+			this->clients[fd]->set_isOperator(true);
+		}
 	}
 }
 

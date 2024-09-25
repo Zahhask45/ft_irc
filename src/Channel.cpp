@@ -32,11 +32,27 @@ void Channel::addUser(Client &client){
 			this->users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
 }
 
+void Channel::addOperator( Client &op ){
+	if (this->users.find(op.get_client_fd()) == this->users.end())
+		this->users.insert(std::pair<int, Client *>(op.get_client_fd(), &op));
+}
+
 void Channel::removeUser(std::string user_name){
 	std::map<int, Client *>::iterator it = users.begin();
 	while (it != users.end()){
 		if (it->second->get_nick() == user_name){
 			users.erase(it);
+			break;
+		}
+		it++;
+	}
+}
+
+void Channel::removeOper(std::string oper){
+	std::map<int, Client *>::iterator it = operators.begin();
+	while (it != operators.end()){
+		if (it->second->get_nick() == oper){
+			operators.erase(it);
 			break;
 		}
 		it++;
@@ -69,6 +85,7 @@ std::string		Channel::listAllUsers() const {
 	std::map<int, Client *>::const_iterator it = this->operators.begin();
 	while (it != this->operators.end()){
 		AllUsers.append("@" + it->second->get_nick() + " ");
+		it++;
 	}
 	it = this->users.begin();
 	while (it != this->users.end())
@@ -80,7 +97,3 @@ std::string		Channel::listAllUsers() const {
 }
 
 
-void Channel::addOperator( Client &op ){
-	if (this->users.find(op.get_client_fd()) == this->users.end())
-		this->users.insert(std::pair<int, Client *>(op.get_client_fd(), &op));
-}
