@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include <errno.h>
 
 Server::Server(){}
 
@@ -150,8 +151,30 @@ void Server::funct_NotNewClient(int i){
 	memset(_buffer, 0, 1024);
 }
 
+
+// std::vector<std::string> Server::parser(const std::string &command){
+// 	 std::vector<std::string> result;
+//     std::stringstream ss(command);
+//     std::string item;
+    
+//     while (std::getline(ss, item, ' ')) {
+//         result.push_back(item);
+//     }
+// 	return result;
+// }
+
+
+
+
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void Server::handleCommands(int fd, const std::string &command){
+	// //TODO: CHANGE WAY TO RECEIVE COMMANDS
+	// std::vector<std::string> args = parser(command);
+	// for (std::size_t i = 0; i < args.size(); ++i) {
+    //     std::cout << "VECTOR ARGS: " << args[i] << std::endl;
+    // }
+
+
 	std::istringstream commandStream(command);
     std::string line;
     // Percorre cada linha do comando
@@ -297,4 +320,21 @@ void Server::sendCode(int fd, std::string num, std::string nickname, std::string
 	if (nickname.empty())
 		nickname = "*";
 	print_client(fd, ":server " + num + " " + nickname + " " + message + "\r\n");
+}
+
+
+int Server::_sendall(int destfd, std::string message)
+{
+	int total = 0;
+	int bytesleft = message.length();
+	int b;
+
+	while (total < (int)message.length())
+	{
+		b = send(destfd, message.c_str() + total, bytesleft, 0);
+		if (b == -1) break;
+		total += b;
+		bytesleft -= b;
+	}
+	return (b == -1 ? -1 : 0);
 }

@@ -136,6 +136,19 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 		}
 		_ToAll(channels[target], fd, "PRIVMSG " + target + " " + message + "\n");
 	}
+	else{
+		int receiver_fd;
+		std::map<int, Client *>::iterator it = this->clients.begin();
+		while(it != this->clients.end())
+		{
+			if (it->second->get_nick() == target){
+					receiver_fd = it->second->get_client_fd();
+				break;
+			}
+			it++;
+		}
+		_sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
+	}
 }
 
 void Server::handlePart(int fd, std::istringstream &command){
