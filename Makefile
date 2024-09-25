@@ -21,7 +21,7 @@ CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
 DEBUG				= -g -fsanitize=address
 
-NAME		=	ircserv
+NAME		=	ircserv_M
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	./obj/
