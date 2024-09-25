@@ -1,39 +1,39 @@
 #include "Server.hpp"
 
-void Server::handleAuth(int fd){
-	if (clients[fd] && (clients[fd]->get_user().empty() 
-		|| clients[fd]->get_pass().empty() 
-		|| clients[fd]->get_nick().empty())){
-		sendCode(fd, "461", "", "Not enough parameters");
-		return;
-	}
-	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
-		sendCode(fd, "001", clients[fd]->get_nick(), "Welcome to the Internet Relay Network");
-		sendCode(fd, "002", clients[fd]->get_nick(), "Your host is " + clients[fd]->get_host() + ", running version 1.0");
-		sendCode(fd, "003", clients[fd]->get_nick(), "This server was created " + clients[fd]->get_host());
-		sendCode(fd, "004", clients[fd]->get_nick(), "BANANANA 1.0 BANANUDO ENTRAR_E_USAR " + clients[fd]->get_host());
-		sendCode(fd, "005", clients[fd]->get_nick(), "This server was created " + clients[fd]->get_host());
-		sendCode(fd, "371", clients[fd]->get_nick(), "User is Authenticated");
-		sendCode(fd, "375", clients[fd]->get_nick(), "Message of the day - " + clients[fd]->get_host());
-		sendCode(fd, "372", clients[fd]->get_nick(), "Message of the day - " + clients[fd]->get_host());
-		sendCode(fd, "376", clients[fd]->get_nick(), "End of MOTD command");
+// void Server::handleAuth(int fd){
+// 	if (clients[fd] && (clients[fd]->get_user().empty() 
+// 		|| clients[fd]->get_pass().empty() 
+// 		|| clients[fd]->get_nick().empty())){
+// 		sendCode(fd, "461", "", "Not enough parameters");
+// 		return;
+// 	}
+// 	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
+// 		sendCode(fd, "001", clients[fd]->get_nick(), "Welcome to the Internet Relay Network");
+// 		sendCode(fd, "002", clients[fd]->get_nick(), "Your host is " + clients[fd]->get_host() + ", running version 1.0");
+// 		sendCode(fd, "003", clients[fd]->get_nick(), "This server was created " + clients[fd]->get_host());
+// 		sendCode(fd, "004", clients[fd]->get_nick(), "BANANANA 1.0 BANANUDO ENTRAR_E_USAR " + clients[fd]->get_host());
+// 		sendCode(fd, "005", clients[fd]->get_nick(), "This server was created " + clients[fd]->get_host());
+// 		sendCode(fd, "371", clients[fd]->get_nick(), "User is Authenticated");
+// 		sendCode(fd, "375", clients[fd]->get_nick(), "Message of the day - " + clients[fd]->get_host());
+// 		sendCode(fd, "372", clients[fd]->get_nick(), "Message of the day - " + clients[fd]->get_host());
+// 		sendCode(fd, "376", clients[fd]->get_nick(), "End of MOTD command");
+// 		clients[fd]->set_auth(true);
+// 		return ;
+// 	}
+// }
+
+void Server::handleAuth(int fd)
+{
+	// std::cout << "PASS SERVER: " << _pass << std::endl;
+	// std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
+	std::string pass = clients[fd]->get_pass();
+	std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
+	if (strcmp(pass.c_str(), _pass.c_str()) == 0){
+		sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
 		clients[fd]->set_auth(true);
 		return ;
 	}
 }
-
-/* void Server::handleAuth(int fd)
-{
-			// std::cout << "PASS SERVER: " << _pass << std::endl;
-			// std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
-			std::string pass = clients[fd]->get_pass();
-			std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
-			if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-				sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
-				clients[fd]->set_auth(true);
-				return ;
-			}
-		} */
 
 void Server::handlePass(int fd, std::istringstream &command){
 	std::string pass;
@@ -72,7 +72,7 @@ void Server::handleNick(int fd, std::istringstream &command){
 
 void Server::handleUser(int fd, std::istringstream &command){
 	std::string username, hostname, servername, realname;
-	command >> username >> hostname >> servername;
+	command >> username >> hostname >> servername; // user 5 * :realname de fato 
 	std::getline(command, realname); // Get the rest of the line
 	if (username.empty()){
 		sendCode(fd, "461", "", "Not enough parameters");
@@ -80,7 +80,7 @@ void Server::handleUser(int fd, std::istringstream &command){
 	}
 	if (clients[fd]->get_user().empty()){
 		this->clients[fd]->set_user(username);
-		this->clients[fd]->set_realname(extract_value(realname));
+		this->clients[fd]->set_realname(realname.substr(2, realname.size() - 3));
 		if (clients[fd]->get_nick() != "\0")
 			clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 	}
@@ -176,6 +176,7 @@ void Server::handlePart(int fd, std::istringstream &command){
 	print_client(fd, clients[fd]->get_mask() + "PART " + channelName + "\r\n");
 	_ToAll(channel, fd, "PART " + channelName + "\r\n");
 	channel->removeUser(clients[fd]->get_nick());
+	channel->removeOper(clients[fd]->get_nick());
 	clients[fd]->removeChannel(channelName);
 }
 
@@ -187,6 +188,7 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
 		if (it->second->getUsers().find(fd) != it->second->getUsers().end()){
 			it->second->removeUser(clients[fd]->get_nick());
+			it->second->removeOper(clients[fd]->get_nick());
 		}
 	}
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {
@@ -206,4 +208,81 @@ void Server::handleOper(int fd){
 		return ;
 	}
 	this->clients[fd]->set_isOperator(true);
+}
+
+// TODO: Implement this function
+/* void Server::handleMode(int fd, std::istringstream &command){
+	std::string target, mode, arg;
+	command >> target >> mode >> arg;
+	int user_fd = channels[target]->getByName(arg);
+	if (target.empty() || mode.empty()){
+		sendCode(fd, "461", "", "Not enough parameters");
+		return ;
+	}
+	if (target[0] == '#'){
+		if (channels.find(target) == channels.end()){
+			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
+			return ;
+		}
+		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
+			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
+			return ;
+		}
+		if (mode == "+o"){
+			channels[target]->addOperator(*clients[fd]);
+			_ToAll(channels[target], fd, "MODE " + target + " +o " + clients[fd]->get_nick() + "\r\n");
+		}
+		else if (mode == "-o"){
+			channels[target]->removeOper(clients[fd]->get_nick());
+			_ToAll(channels[target], fd, "MODE " + target + " -o " + clients[fd]->get_nick() + "\r\n");
+		}
+	}
+	else{
+		sendCode(fd, "501", clients[fd]->get_nick(), ": Unknown MODE flag");
+	}
+}
+ */
+
+void Server::handleKick(int fd, std::istringstream &command){
+	std::string channelName, user;
+	command >> channelName >> user;
+	int user_fd = channels[channelName]->getByName(user);
+	// Se o canal ou o usuário estiver vazio, envie um erro
+	if (channelName.empty() || user.empty()){
+		sendCode(fd, "461", "", "Not enough parameters");
+		return ;
+	}
+	// Se o canal não existir, envie um erro
+	if (channels.find(channelName) == channels.end()){
+		sendCode(fd, "401", clients[fd]->get_nick(), channelName + " :No such nick/channel");
+		return ;
+	}
+	if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end()){
+		sendCode(fd, "482", clients[fd]->get_nick(), channelName + " :You're not channel operator");
+		return ;
+	}
+	// Se o Operador não estiver no canal, envie um erro
+	if (channels[channelName]->getUsers().find(fd) == channels[channelName]->getUsers().end()){
+		sendCode(fd, "404", clients[fd]->get_nick(), channelName + " :Cannot send to channel");
+		return ;
+	}
+	// Se o usuário não estiver no canal, envie um erro
+	if (channels[channelName]->getUsers().find(user_fd) == channels[channelName]->getUsers().end()){
+		sendCode(fd, "441", clients[fd]->get_nick(), channelName + " :They aren't on that channel");
+		return ;
+	}
+	print_client(fd, clients[fd]->get_mask() + "KICK " + channelName + " " + user + "\r\n");
+	_ToAll(channels[channelName], fd, "KICK " + channelName + " " + user + "\r\n");
+	channels[channelName]->removeUser(user);
+	channels[channelName]->removeOper(user);
+	// Channel *channel = channels[channelName];
+	// std::map<int, Client *>::iterator it = channel->getUsers().begin();
+	// while (it != channel->getUsers().end()){
+	// 	if (it->second->get_nick() == user){
+	// 		channel->removeUser(user);
+	// 		channel->removeOper(user);
+	// 		break ;
+	// 	}
+	// 	it++;
+	// }
 }

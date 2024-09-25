@@ -36,6 +36,7 @@ public:
     std::string const &getName(void) const;
 	std::map<int, Client*>& getUsers();
     std::map<int, Client *>	const &getOperators() const;
+    int getByName(std::string const &name) const;
 
 };
 

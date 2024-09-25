@@ -174,10 +174,9 @@ void Server::handleCommands(int fd, const std::string &command){
     //     std::cout << "VECTOR ARGS: " << args[i] << std::endl;
     // }
 
-
 	std::istringstream commandStream(command);
     std::string line;
-    // Percorre cada linha do comando
+    // TODO: Percorre cada linha do comando
     while (std::getline(commandStream, line, '\n')) {
         std::istringstream iss(line);
         std::string cmd;
@@ -185,20 +184,33 @@ void Server::handleCommands(int fd, const std::string &command){
 		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 		if (cmd == "AUTH")
 			handleAuth(fd);
-		if (cmd == "PASS")
+		else if (cmd == "PASS")
 			handlePass(fd, iss);
-		if (cmd == "NICK")
+		else if (cmd == "NICK")
 			handleNick(fd, iss);
-		if (cmd == "USER")
+		else if (cmd == "USER")
 			handleUser(fd, iss);
-		if (cmd == "JOIN")
+		else if (cmd == "JOIN")
 			handleJoin(fd, iss);
-		if (cmd == "PRIVMSG")
+		else if (cmd == "PRIVMSG")
 			handlePrivmsg(fd, iss);
-		if (cmd == "PART")
+		else if (cmd == "PART")
 			handlePart(fd, iss);
-		if (cmd == "QUIT")
+		else if (cmd == "QUIT")
 			handleQuit(fd, iss);
+		else if (cmd == "OPER")
+			handleOper(fd);
+		// else if (cmd == "PING"){
+		//	handlePing(fd, iss);
+		// }
+		// else if (cmd == "MODE")
+		// 	handleMode(fd, iss);
+		else if (cmd == "KICK")
+			handleKick(fd, iss);
+		// else if (cmd == "INVITE")
+		// 	handleInvite(fd, iss);
+		// else if (cmd == "TOPIC")
+		// 	handleTopic(fd, iss);
 	}
 }
 

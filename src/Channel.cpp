@@ -78,3 +78,15 @@ std::string		Channel::listAllUsers() const {
 	}
 	return (AllUsers);
 }
+
+int Channel::getByName(std::string const &name) const {
+	std::map<int, Client *>::const_iterator it = users.begin();
+	while (it != users.end()){
+		if (it->second->get_nick() == name)
+			return it->first;
+		it++;
+	}
+	return 0;
+}
+
+std::map<int, Client *>	const &Channel::getOperators() const{ return operators;}

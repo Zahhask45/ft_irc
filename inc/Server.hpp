@@ -65,19 +65,20 @@ public: // Handdle Commands
 	void handlePart(int fd, std::istringstream &command);
 	void handlePrivmsg(int fd, std::istringstream &command);
 	void handleQuit(int fd, std::istringstream &command);
+	void handleMode(int fd, std::istringstream &command);
+	void handleKick(int fd, std::istringstream &command);
+	void handleInvite(int fd, std::istringstream &command);
+	void handleTopic(int fd, std::istringstream &command);
+	
 	void handleNames(int fd, std::istringstream &command);
 	void handleList(int fd, std::istringstream &command);
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
-	void handleMode(int fd, std::istringstream &command);
-	void handleKick(int fd, std::istringstream &command);
-	void handleTopic(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
 	void handleAway(int fd, std::istringstream &command);
 	void handlePing(int fd, std::istringstream &command);
 	void handlePong(int fd, std::istringstream &command);
 	void handleNotice(int fd, std::istringstream &command);
-	void handleInvite(int fd, std::istringstream &command);
 	void handleTime(int fd, std::istringstream &command);
 	void handleVersion(int fd, std::istringstream &command);
 	void handleStats(int fd, std::istringstream &command);
