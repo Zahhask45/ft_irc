@@ -207,8 +207,8 @@ void Server::handleCommands(int fd, const std::string &command){
 		// 	handleMode(fd, iss);
 		else if (cmd == "KICK")
 			handleKick(fd, iss);
-		// else if (cmd == "INVITE")
-		// 	handleInvite(fd, iss);
+		else if (cmd == "INVITE")
+			handleInvite(fd, iss);
 		// else if (cmd == "TOPIC")
 		// 	handleTopic(fd, iss);
 	}
