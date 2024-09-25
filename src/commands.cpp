@@ -58,9 +58,8 @@ void Server::handleNick(int fd, std::istringstream &command){
 		sendCode(fd, "431", "", "No nickname given");
 		return;
 	}
-	if (this->clients[fd]->get_nick().empty()) {
+	if (this->clients[fd]->get_nick().empty())
 		this->clients[fd]->set_nick(nick);
-	}
 	else{
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
 		std::string nickChangeMsg = this->clients[fd]->get_mask() + "NICK :" + nick + "\r\n";
@@ -106,9 +105,12 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	if (channelName[0] != '#')
 		channelName = "#" + channelName;
 	if (getChannel(channelName) == NULL)
-		createChannel(channelName);
+		createChannel(channelName, fd);
 	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
-	this->channels[channelName]->addUser(getClient(fd));
+	if (this->clients[fd]->get_isOperator() == true)
+				this->channels[channelName]->addOperator(getClient(fd));
+	else
+		this->channels[channelName]->addUser(getClient(fd));
 	print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
 	sendCode(fd, "332", clients[fd]->get_nick(), channelName + " :Welcome to " + channelName);
@@ -137,7 +139,7 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 		_ToAll(channels[target], fd, "PRIVMSG " + target + " " + message + "\n");
 	}
 	else{
-		int receiver_fd;
+		int receiver_fd = 0;
 		std::map<int, Client *>::iterator it = this->clients.begin();
 		while(it != this->clients.end())
 		{
@@ -147,7 +149,9 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			}
 			it++;
 		}
-		_sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
+		// _sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
+		if(receiver_fd)
+			print_client(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 	}
 }
 
@@ -158,8 +162,8 @@ void Server::handlePart(int fd, std::istringstream &command){
 		print_client(fd, "Channel name is empty\n");
 		return ;
 	}
-	if (channelName[0] != '#')
-		channelName = "#" + channelName;
+	// if (channelName[0] != '#')
+	// 	channelName = "#" + channelName;
 	if (channels.find(channelName) == channels.end()){
 		print_client(fd, "Channel does not exist\n");
 		return ;
@@ -193,4 +197,13 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	this->_cur_online--;
 	this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
 	print_client(fd, response);
+}
+
+void Server::handleOper(int fd){
+	if (clients[fd]->get_auth() == false){
+		print_client(fd, "Need to Auth the user\n");
+		sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
+		return ;
+	}
+	this->clients[fd]->set_isOperator(true);
 }

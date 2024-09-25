@@ -197,18 +197,23 @@ void Server::handleCommands(int fd, const std::string &command){
 			handlePrivmsg(fd, iss);
 		if (cmd == "PART")
 			handlePart(fd, iss);
-		if (cmd == "QUIT"){
+		if (cmd == "QUIT")
 			handleQuit(fd, iss);
-			return;
-		}
 	}
 }
 
-void Server::createChannel(const std::string &channelName){
-	if (channels.find(channelName) == channels.end()){
-		Channel *channel = new Channel(channelName);
+void Server::createChannel(const std::string &channelName, int fd){
+	std::map<std::string, Channel *>::iterator it = channels.find(channelName);
+	if (it == channels.end()){
+		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
 	}
+/* 	else{
+		if (this->clients[fd]->get_isOperator() == true)
+			it->second->addOperator(getClient(fd));
+		else
+			it->second->addUser(getClient(fd));
+	} */
 }
 
 Channel *Server::getChannel(const std::string name)  {
@@ -314,6 +319,7 @@ std::set<std::string> Server::findInChannel(int fd){
 
 void Server::print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
+	std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
 }
 
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
@@ -321,7 +327,6 @@ void Server::sendCode(int fd, std::string num, std::string nickname, std::string
 		nickname = "*";
 	print_client(fd, ":server " + num + " " + nickname + " " + message + "\r\n");
 }
-
 
 int Server::_sendall(int destfd, std::string message)
 {

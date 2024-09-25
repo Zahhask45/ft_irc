@@ -35,7 +35,7 @@ public:
 	void binding();
 	void loop();
 	void handleCommands(int fd, const std::string &command);
-	void createChannel(const std::string &channelName);
+	void createChannel(const std::string &channelName, int fd);
 	
 	std::string const &getUser()const;
 	int const &get_socket() const;
@@ -57,6 +57,7 @@ public:
 
 public: // Handdle Commands
 	void handleAuth(int fd);
+	void handleOper(int fd);
 	void handlePass(int fd, std::istringstream &command);
 	void handleNick(int fd, std::istringstream &command);
 	void handleUser(int fd, std::istringstream &command);
@@ -92,7 +93,6 @@ public: // Handdle Commands
 	void handleError(int fd, std::istringstream &command);
 	void handleRestart(int fd, std::istringstream &command);
 	void handleDie(int fd, std::istringstream &command);
-	void handleOper(int fd, std::istringstream &command);
 	void handleLusers(int fd, std::istringstream &command);
 	void handleWallops(int fd, std::istringstream &command);
 	void handleUserhost(int fd, std::istringstream &command);

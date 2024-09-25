@@ -78,6 +78,7 @@ run: debug
 
 debug: CXXFLAGS += $(DEBUG)
 debug: re
+debug: $(NAME)
 
 valgrind: CXXFLAGS += -g
 valgrind: re
