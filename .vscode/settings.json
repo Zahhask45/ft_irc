@@ -114,6 +114,7 @@
     "typeinfo": "cpp",
     "cerrno": "cpp",
     "csignal": "cpp",
-    "complex": "cpp"
+    "complex": "cpp",
+    "fstream": "cpp"
   }
 }

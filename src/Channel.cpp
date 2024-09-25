@@ -63,7 +63,11 @@ std::string const &Channel::getName(void) const {return _name;}
 
 std::map<int, Client*>& Channel::getUsers() {
         return users;
-    }
+}
+
+std::map<int, Client*> const & Channel::getOperators() const {
+        return operators;
+}
 /* //TODO: CHANGE THIS
 	std::map< std::string, std::pair<std::string,std::string> >::const_iterator it = users.find(user);
 	if (it != users.end())
@@ -95,5 +99,3 @@ std::string		Channel::listAllUsers() const {
 	}
 	return (AllUsers);
 }
-
-

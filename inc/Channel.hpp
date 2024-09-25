@@ -7,7 +7,7 @@ class Client;
 class Channel
 {
 private:
-
+    
     Client *    _creator;
     std::string _name;
 	//! CHANGE ALSO THIS FOR STRINGS AND NOT INT

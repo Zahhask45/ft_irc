@@ -133,9 +133,11 @@ void Server::funct_NotNewClient(int i){
 		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 			std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
 		}
-		close(_events[i].data.fd);
-        this->clients.erase(_events[i].data.fd);
-        this->_cur_online--;
+		else {
+			close(_events[i].data.fd);
+        	this->clients.erase(_events[i].data.fd);
+        	this->_cur_online--;
+		}
 	}
 	else {
 		_buffer[bytes_received] = '\0';
@@ -229,9 +231,9 @@ void Server::handleCommands(int fd, const std::string &command){
 				createChannel(channelName, fd);
 			this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
 			
-			if (this->clients[fd]->get_isOperator() == true)
+		/* 	if (this->clients[fd]->get_isOperator() == true)
 				this->channels[channelName]->addOperator(getClient(fd));
-			else
+			else */
 				this->channels[channelName]->addUser(getClient(fd));
 
 			print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
@@ -279,10 +281,11 @@ void Server::handleCommands(int fd, const std::string &command){
 				return ;
 			}
 			std::string response = ":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " PART " + channelName + "\r\n";
-			std::string response2 = clients[fd]->get_mask() + " PART " + channelName + "\r\n";
+			std::string response2 = clients[fd]->get_mask() + " PART " + channelName + "\r\n"; //??
 			print_client(fd, response);
 			_ToAll(channel, fd, "PART " + channelName + "\r\n");
 			channel->removeUser(clients[fd]->get_nick());
+			channel->removeOper(clients[fd]->get_nick());
 			clients[fd]->removeChannel(channelName);
 		}
 		else if (cmd == "quit" || cmd == "QUIT"){
@@ -293,15 +296,17 @@ void Server::handleCommands(int fd, const std::string &command){
 			for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
 				if (it->second->getUsers().find(fd) != it->second->getUsers().end()){
 					it->second->removeUser(clients[fd]->get_nick());
+					it->second->removeOper(clients[fd]->get_nick());
 				}
 			}
 			close(clients[fd]->get_client_fd());
 			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[fd].data.fd, NULL) == -1) {
 				std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
 			}
-			close(_events[fd].data.fd);
-			this->clients.erase(_events[fd].data.fd);
+			close(clients[fd]->get_client_fd());
+			this->clients.erase(clients[fd]->get_client_fd());
 			this->_cur_online--;
+			this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
 			print_client(fd, response);
 		}
 		else if (cmd == "oper" || cmd == "OPER"){
