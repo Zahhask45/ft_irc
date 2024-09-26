@@ -14,14 +14,14 @@ _WHITE		=	\e[1;37m
 
 _GONE		=	\e[2K\r
 
-CXX					=	c++
+CXX					= c++
 CXX_WARNINGS 		= -Wall -Wextra -Werror
 CXX_RESTRICTION 	= -std=c++98 -pedantic
 CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
-DEBUG				= -g -fsanitize=address
+DEBUG				= -g -fsanitize=address -fno-limit-debug-info
 
-NAME		=	ircserv_mamaral
+NAME		=	ircserv_M
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	./obj/
@@ -32,7 +32,8 @@ INCLUDE		=	-I ./inc/
 SRCS		=	main.cpp \
 				Server.cpp \
 				Client.cpp \
-				Channel.cpp
+				Channel.cpp \
+				commands.cpp
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRCS))
 OBJS		=	$(SRCS:.cpp=.o)

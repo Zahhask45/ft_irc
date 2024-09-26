@@ -12,12 +12,7 @@ Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_host = "GenericHost";
 }
 
-Client::~Client(){
-	// for(std::map<std::string, Channel *>::iterator it = this->channels.begin(); it != channels.end(); it++) {
-	// 	delete it->second;
-	// }
-	// channels.clear();
-}
+Client::~Client(){}
 
 bool const &Client::get_auth() const{ return _auth; }
 
@@ -51,20 +46,24 @@ void Client::set_client_fd(int const &fd){
 	this->_client_fd = fd;
 }
 
-void Client::set_user(std::string const &user){
-	this->_user = user;	
+void Client::set_user(const std::string &user){
+	this->_user = user;
 }
 
-void Client::set_nick(std::string const &nick){
+void Client::set_nick(const std::string &nick){
 	this->_nick = nick;
 }
 
-void Client::set_pass(std::string const &pass){
+void Client::set_pass(const std::string &pass){
 	this->_pass = pass;
 }
 
-void Client::set_mask(std::string const &mask) {
+void Client::set_mask(const std::string &mask){
 	this->_mask = mask;
+}
+
+void Client::set_realname(std::string const &realname){
+	this->_realname = realname;
 }
 
 void Client::addChannel(const std::string &channelName, Channel &channel){
@@ -78,3 +77,4 @@ void Client::removeChannel(const std::string &channelName){
 		channels.erase(channelName);
 	}
 }
+

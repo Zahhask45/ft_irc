@@ -7,17 +7,8 @@ Channel::Channel(const std::string name): _name(name), users(){}
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
 	this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
 }
-// Channel::Channel(const Channel &cp){
-// 	*this = cp;
-// }
 
-Channel::~Channel(){
-	// for(std::map<int, Client *>::iterator it = users.begin(); it != users.end(); it++) {
-	// 	delete it->second;
-	// }
-	// users.clear();
-}
-
+Channel::~Channel(){ }
 Channel &Channel::operator=(const Channel &origin) {
 	if (this != &origin) {
 		_name = origin._name;
@@ -99,3 +90,15 @@ std::string		Channel::listAllUsers() const {
 	}
 	return (AllUsers);
 }
+
+int Channel::getByName(std::string const &name) const {
+	std::map<int, Client *>::const_iterator it = users.begin();
+	while (it != users.end()){
+		if (it->second->get_nick() == name)
+			return it->first;
+		it++;
+	}
+	return 0;
+}
+
+std::map<int, Client *>	const &Channel::getOperators() const{ return operators;}
