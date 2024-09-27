@@ -108,12 +108,12 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		createChannel(channelName, fd);
 	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
 	if (this->clients[fd]->get_isOperator() == true)
-				this->channels[channelName]->addOperator(getClient(fd));
+		this->channels[channelName]->addOperator(getClient(fd));
 	else
 		this->channels[channelName]->addUser(getClient(fd));
 	print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
-	sendCode(fd, "332", clients[fd]->get_nick(), channelName + " :Welcome to " + channelName);
+	sendCode(fd, "332", clients[fd]->get_nick(), channelName + this->channels[channelName]->getTopic());
 	sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
 	sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 	_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
@@ -296,7 +296,7 @@ void Server::handleInvite(int fd, std::istringstream &command){
 		sendCode(fd, "401", clients[fd]->get_nick(), user + " :No such nick/channel");
 		return ;
 	}
-		if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end()){
+	if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end()){
 		sendCode(fd, "482", clients[fd]->get_nick(), channelName + " :You're not channel operator");
 		return ;
 	}
@@ -310,4 +310,29 @@ void Server::handleInvite(int fd, std::istringstream &command){
 	}
 	print_client(user_fd, clients[fd]->get_mask() + "INVITE " + user + " " + channelName + "\r\n");
 	print_client(fd, clients[fd]->get_mask() + "INVITE " + user + " " + channelName + "\r\n");
+}
+
+void Server::handleTopic(int fd, std::istringstream &command){
+	std::string channelName, topic;
+	command >> channelName;
+	std::getline(command, topic);
+	if (channelName.empty()){
+		sendCode(fd, "461", "", "Not enough parameters");
+		return ;
+	}
+	if (channels.find(channelName) == channels.end()){
+		sendCode(fd, "401", clients[fd]->get_nick(), channelName + " :No such nick/channel");
+		return ;
+	}
+	if (channels[channelName]->getUsers().find(fd) == channels[channelName]->getUsers().end()){
+		sendCode(fd, "442", clients[fd]->get_nick(), channelName + " :You're not on that channel");
+		return ;
+	}
+	if (topic.empty()){
+		sendCode(fd, "331", clients[fd]->get_nick(), channelName + " :No topic is set");
+		return ;
+	}
+	channels[channelName]->setTopic(topic);
+	sendCode(fd, "332", clients[fd]->get_nick(), channelName + topic);
+	_ToAll(channels[channelName], fd, "TOPIC " + channelName + " :" + topic + "\r\n");
 }

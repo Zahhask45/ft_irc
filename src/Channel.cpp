@@ -6,6 +6,7 @@ Channel::Channel(const std::string name): _name(name), users(){}
 
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
 	this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
+	this->_topic = " :Welcome to " + _name;
 }
 
 Channel::~Channel(){ }
@@ -50,7 +51,9 @@ void Channel::removeOper(std::string oper){
 	}
 }
 
-std::string const &Channel::getName(void) const {return _name;}
+std::string const &Channel::getName(void) const { return _name; }
+
+std::string const &Channel::getTopic() const{ return _topic; }
 
 std::map<int, Client*>& Channel::getUsers() {
         return users;
@@ -59,6 +62,17 @@ std::map<int, Client*>& Channel::getUsers() {
 std::map<int, Client*> const & Channel::getOperators() const {
         return operators;
 }
+
+int Channel::getByName(std::string const &name) const {
+	std::map<int, Client *>::const_iterator it = users.begin();
+	while (it != users.end()){
+		if (it->second->get_nick() == name)
+			return it->first;
+		it++;
+	}
+	return 0;
+}
+
 /* //TODO: CHANGE THIS
 	std::map< std::string, std::pair<std::string,std::string> >::const_iterator it = users.find(user);
 	if (it != users.end())
@@ -74,6 +88,8 @@ void Channel::setUser(int const &id, Client *client) {
 		users.insert(std::make_pair(id, client));
 	}
 }
+
+void Channel::setTopic(std::string const &topic) {this->_topic = topic;}
 
 std::string		Channel::listAllUsers() const {
 	std::string		AllUsers(":");
@@ -91,14 +107,4 @@ std::string		Channel::listAllUsers() const {
 	return (AllUsers);
 }
 
-int Channel::getByName(std::string const &name) const {
-	std::map<int, Client *>::const_iterator it = users.begin();
-	while (it != users.end()){
-		if (it->second->get_nick() == name)
-			return it->first;
-		it++;
-	}
-	return 0;
-}
 
-std::map<int, Client *>	const &Channel::getOperators() const{ return operators;}

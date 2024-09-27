@@ -209,8 +209,8 @@ void Server::handleCommands(int fd, const std::string &command){
 			handleKick(fd, iss);
 		else if (cmd == "INVITE")
 			handleInvite(fd, iss);
-		// else if (cmd == "TOPIC")
-		// 	handleTopic(fd, iss);
+		else if (cmd == "TOPIC")
+			handleTopic(fd, iss);
 	}
 }
 
