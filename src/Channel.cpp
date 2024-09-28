@@ -7,6 +7,7 @@ Channel::Channel(const std::string name): _name(name), users(){}
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
 	this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
 	this->_topic = " :Welcome to " + _name;
+	this->_inviteChannel = false;
 }
 
 Channel::~Channel(){ }
@@ -25,8 +26,8 @@ void Channel::addUser(Client &client){
 }
 
 void Channel::addOperator( Client &op ){
-	if (this->users.find(op.get_client_fd()) == this->users.end())
-		this->users.insert(std::pair<int, Client *>(op.get_client_fd(), &op));
+	if (this->operators.find(op.get_client_fd()) == this->operators.end())
+		this->operators.insert(std::pair<int, Client *>(op.get_client_fd(), &op));
 }
 
 void Channel::removeUser(std::string user_name){
@@ -63,6 +64,12 @@ std::map<int, Client*> const & Channel::getOperators() const {
         return operators;
 }
 
+std::map<int, Client*> const & Channel::getInviteList() const {
+		return inviteList;
+}
+
+bool const &Channel::getInviteChannel() const {return _inviteChannel;}
+
 int Channel::getByName(std::string const &name) const {
 	std::map<int, Client *>::const_iterator it = users.begin();
 	while (it != users.end()){
@@ -72,6 +79,7 @@ int Channel::getByName(std::string const &name) const {
 	}
 	return 0;
 }
+
 
 /* //TODO: CHANGE THIS
 	std::map< std::string, std::pair<std::string,std::string> >::const_iterator it = users.find(user);
@@ -107,4 +115,9 @@ std::string		Channel::listAllUsers() const {
 	return (AllUsers);
 }
 
+void Channel::setInviteChannel(bool const &invitechannel) {this->_inviteChannel = invitechannel;}
 
+void Channel::addInvite(int fd, Client *client) {
+	if (this->inviteList.find(fd) == this->inviteList.end())
+		this->inviteList.insert(std::pair<int, Client *>(fd, &client[fd]));
+}

@@ -116,5 +116,6 @@
     "csignal": "cpp",
     "complex": "cpp",
     "fstream": "cpp"
-  }
+  },
+  "github.copilot.editor.enableCodeActions": false
 }

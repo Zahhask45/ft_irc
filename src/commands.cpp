@@ -106,11 +106,20 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		channelName = "#" + channelName;
 	if (getChannel(channelName) == NULL)
 		createChannel(channelName, fd);
+	if ((this->channels[channelName]->getInviteChannel() == true && this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
+	&& this->clients[fd]->get_isOperator() == false){
+		sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i)");
+		return ;
+	}
+
 	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
+	
 	if (this->clients[fd]->get_isOperator() == true)
 		this->channels[channelName]->addOperator(getClient(fd));
 	else
 		this->channels[channelName]->addUser(getClient(fd));
+	
+	
 	print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
 	sendCode(fd, "332", clients[fd]->get_nick(), channelName + this->channels[channelName]->getTopic());
@@ -308,6 +317,11 @@ void Server::handleInvite(int fd, std::istringstream &command){
 		sendCode(fd, "443", clients[fd]->get_nick(), user + " :is already on channel");
 		return ;
 	}
+	if (channels[channelName]->getInviteList().find(user_fd) != channels[channelName]->getInviteList().end()){
+		sendCode(fd, "443", clients[fd]->get_nick(), user + " :is already invited");
+		return ;
+	}
+	channels[channelName]->addInvite(user_fd, this->clients[user_fd]);
 	print_client(user_fd, clients[fd]->get_mask() + "INVITE " + user + " " + channelName + "\r\n");
 	print_client(fd, clients[fd]->get_mask() + "INVITE " + user + " " + channelName + "\r\n");
 }
@@ -324,6 +338,10 @@ void Server::handleTopic(int fd, std::istringstream &command){
 		sendCode(fd, "401", clients[fd]->get_nick(), channelName + " :No such nick/channel");
 		return ;
 	}
+	if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end()){
+		sendCode(fd, "482", clients[fd]->get_nick(), channelName + " :You're not channel operator");
+		return ;
+	}
 	if (channels[channelName]->getUsers().find(fd) == channels[channelName]->getUsers().end()){
 		sendCode(fd, "442", clients[fd]->get_nick(), channelName + " :You're not on that channel");
 		return ;
@@ -335,4 +353,62 @@ void Server::handleTopic(int fd, std::istringstream &command){
 	channels[channelName]->setTopic(topic);
 	sendCode(fd, "332", clients[fd]->get_nick(), channelName + topic);
 	_ToAll(channels[channelName], fd, "TOPIC " + channelName + " :" + topic + "\r\n");
+}
+
+void Server::handleMode(int fd, std::istringstream &command){
+	std::string target, mode, arg;
+	command >> target >> mode >> arg;
+	//int user_fd = channels[target]->getByName(arg);
+	if (target.empty() || mode.empty()){
+		sendCode(fd, "461", "", "Not enough parameters");
+		return ;
+	}
+	if (target[0] == '#'){
+		if (channels.find(target) == channels.end()){
+			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
+			return ;
+		}
+		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
+			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
+			return ;
+		}
+		if (channels[target]->getOperators().find(fd) == channels[target]->getOperators().end()){
+			sendCode(fd, "482", clients[fd]->get_nick(), target + " :You're not channel operator");
+			return ;
+		}
+		if (mode == "+i"){ // Invite only
+			channels[target]->setInviteChannel(true);
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " +i " + arg);
+			_ToAll(channels[target], fd, "MODE " + target + " +i " + arg + "\r\n");
+		}
+		else if (mode == "-i"){ // Remove Invite only
+			channels[target]->setInviteChannel(false);
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " -i " + arg);
+			_ToAll(channels[target], fd, "MODE " + target + " -i " + arg + "\r\n");
+		}
+/* 		else if (mode == "+o"){ // Give operator
+			channels[target]->addOperator(getClient(user_fd));
+			_ToAll(channels[target], fd, "MODE " + target + " +o " + arg + "\r\n");
+		}
+		else if (mode == "-o"){ // Remove operator
+			channels[target]->removeOper(arg);
+			_ToAll(channels[target], fd, "MODE " + target + " -o " + arg + "\r\n");
+		}
+		else if (mode == "+k"){ // Set key
+			channels[target]->setKey(arg);
+			_ToAll(channels[target], fd, "MODE " + target + " +k " + arg + "\r\n");
+		}
+		else if (mode == "-k"){ // Remove key
+			channels[target]->setKey("");
+			_ToAll(channels[target], fd, "MODE " + target + " -k " + arg + "\r\n");
+		}
+		else if (mode == "+l"){ // Set limit
+			channels[target]->setLimit(std::stoi(arg));
+			_ToAll(channels[target], fd, "MODE " + target + " +l " + arg + "\r\n");
+		}
+		else if (mode == "-l"){ // Remove limit
+			channels[target]->setLimit(0);
+			_ToAll(channels[target], fd, "MODE " + target + " -l " + arg + "\r\n");
+		} */
+	}
 }

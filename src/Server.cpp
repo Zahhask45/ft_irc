@@ -203,8 +203,8 @@ void Server::handleCommands(int fd, const std::string &command){
 		// else if (cmd == "PING"){
 		//	handlePing(fd, iss);
 		// }
-		// else if (cmd == "MODE")
-		// 	handleMode(fd, iss);
+		else if (cmd == "MODE")
+			handleMode(fd, iss);
 		else if (cmd == "KICK")
 			handleKick(fd, iss);
 		else if (cmd == "INVITE")
