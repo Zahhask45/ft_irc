@@ -219,39 +219,6 @@ void Server::handleOper(int fd){
 	this->clients[fd]->set_isOperator(true);
 }
 
-// TODO: Implement this function
-/* void Server::handleMode(int fd, std::istringstream &command){
-	std::string target, mode, arg;
-	command >> target >> mode >> arg;
-	int user_fd = channels[target]->getByName(arg);
-	if (target.empty() || mode.empty()){
-		sendCode(fd, "461", "", "Not enough parameters");
-		return ;
-	}
-	if (target[0] == '#'){
-		if (channels.find(target) == channels.end()){
-			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
-			return ;
-		}
-		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
-			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
-			return ;
-		}
-		if (mode == "+o"){
-			channels[target]->addOperator(*clients[fd]);
-			_ToAll(channels[target], fd, "MODE " + target + " +o " + clients[fd]->get_nick() + "\r\n");
-		}
-		else if (mode == "-o"){
-			channels[target]->removeOper(clients[fd]->get_nick());
-			_ToAll(channels[target], fd, "MODE " + target + " -o " + clients[fd]->get_nick() + "\r\n");
-		}
-	}
-	else{
-		sendCode(fd, "501", clients[fd]->get_nick(), ": Unknown MODE flag");
-	}
-}
- */
-
 void Server::handleKick(int fd, std::istringstream &command){
 	std::string channelName, user;
 	command >> channelName >> user;
@@ -355,12 +322,15 @@ void Server::handleTopic(int fd, std::istringstream &command){
 	_ToAll(channels[channelName], fd, "TOPIC " + channelName + " :" + topic + "\r\n");
 }
 
+//MODE <#canal> <+modos> [parâmetros]: Para definir modos em canais
+//porque ao fazer /join canal ele entra aqui???
 void Server::handleMode(int fd, std::istringstream &command){
 	std::string target, mode, arg;
 	command >> target >> mode >> arg;
-	//int user_fd = channels[target]->getByName(arg);
-	if (target.empty() || mode.empty()){
-		sendCode(fd, "461", "", "Not enough parameters");
+	int user_fd = channels[target]->getByName(arg);
+	if (target.empty() || mode.empty() || arg.empty()){
+		std::cout << "passei aqui" << std::endl;
+		sendCode(fd, "461", "", "Not enough parameters in MODE");
 		return ;
 	}
 	if (target[0] == '#'){
@@ -386,7 +356,7 @@ void Server::handleMode(int fd, std::istringstream &command){
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " -i " + arg);
 			_ToAll(channels[target], fd, "MODE " + target + " -i " + arg + "\r\n");
 		}
-/* 		else if (mode == "+o"){ // Give operator
+ 		else if (mode == "+o"){ // Give operator
 			channels[target]->addOperator(getClient(user_fd));
 			_ToAll(channels[target], fd, "MODE " + target + " +o " + arg + "\r\n");
 		}
@@ -394,7 +364,7 @@ void Server::handleMode(int fd, std::istringstream &command){
 			channels[target]->removeOper(arg);
 			_ToAll(channels[target], fd, "MODE " + target + " -o " + arg + "\r\n");
 		}
-		else if (mode == "+k"){ // Set key
+/*		else if (mode == "+k"){ // Set key
 			channels[target]->setKey(arg);
 			_ToAll(channels[target], fd, "MODE " + target + " +k " + arg + "\r\n");
 		}

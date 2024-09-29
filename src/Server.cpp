@@ -198,8 +198,8 @@ void Server::handleCommands(int fd, const std::string &command){
 			handlePart(fd, iss);
 		else if (cmd == "QUIT")
 			handleQuit(fd, iss);
-		else if (cmd == "OPER")
-			handleOper(fd);
+		//else if (cmd == "OPER")
+		//	handleOper(fd);
 		// else if (cmd == "PING"){
 		//	handlePing(fd, iss);
 		// }
