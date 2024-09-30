@@ -3,6 +3,7 @@
 
 #include "colors.hpp"
 #include "Channel.hpp"
+#include <string>
 
 class Client;
 class Channel;
@@ -41,6 +42,8 @@ public:
 	int const &get_socket() const;
 	Channel *getChannel(const std::string name);
 	Client &getClient(int fd);
+
+	void setPass(std::string pass);
 	void funct_NewClient(int i);
 	void funct_NotNewClient(int i);
 

@@ -11,6 +11,8 @@ private:
     Client *    _creator;
     std::string _name;
     std::string _topic;
+    std::string _key;
+    int         _limit;
     bool        _inviteChannel;
 	//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
     std::map<int, Client *> users;
@@ -29,9 +31,11 @@ public:
 
     std::string const &getName(void) const;
     std::string const &getTopic(void) const;
+    std::string const &getKey(void) const;
+    int const &getLimit(void) const;
     bool const &getInviteChannel(void) const;
 	
-    std::map<int, Client*>& getUsers();
+    std::map<int, Client*> &getUsers();
     std::map<int, Client *>	const &getOperators() const;
     std::map<int, Client *>	const &getInviteList() const;
 
@@ -45,6 +49,8 @@ public:
     void setUser(int const &id, Client *client);
     void setTopic(std::string const &topic);
     void setInviteChannel(bool const &invite);
+    void setKey(std::string const &key);
+    void setLimit(int const &limit);
     
     std::string	listAllUsers() const;
     
