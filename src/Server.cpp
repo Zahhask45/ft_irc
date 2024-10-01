@@ -200,9 +200,9 @@ void Server::handleCommands(int fd, const std::string &command){
 			handleQuit(fd, iss);
 		//else if (cmd == "OPER")
 		//	handleOper(fd);
-		// else if (cmd == "PING"){
-		//	handlePing(fd, iss);
-		// }
+		else if (cmd == "PING"){
+			handlePing(fd, iss);
+		}
 		else if (cmd == "MODE")
 			handleMode(fd, iss);
 		else if (cmd == "KICK")

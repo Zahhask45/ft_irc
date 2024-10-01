@@ -21,7 +21,7 @@ CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
 DEBUG				= -g -fsanitize=address #-fno-limit-debug-info
 
-NAME		=	ircserv_M
+NAME		=	ircserv
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	./obj/
