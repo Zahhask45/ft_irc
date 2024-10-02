@@ -3,13 +3,13 @@
 Client::Client(): _client_fd(), _user(), _nick() {
 	_auth = false;
 	_isOperator = false;
-	_host = "GenericHost";
+	_host = "TerracotaHost";
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_auth = false;
 	_isOperator = false;
-	_host = "GenericHost";
+	_host = "TerracotaHost";
 }
 
 Client::~Client(){}

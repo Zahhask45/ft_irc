@@ -69,9 +69,9 @@ public: // Handdle Commands
 	void handleKick(int fd, std::istringstream &command);
 	void handleInvite(int fd, std::istringstream &command);
 	void handleTopic(int fd, std::istringstream &command);
+	void handleList(int fd, std::istringstream &command);
 	
 	void handleNames(int fd, std::istringstream &command);
-	void handleList(int fd, std::istringstream &command);
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
