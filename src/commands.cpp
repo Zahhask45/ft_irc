@@ -109,14 +109,17 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	if ((this->channels[channelName]->getInviteChannel() == true 
 	&& this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
 	&& this->clients[fd]->get_isOperator() == false){
-		sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i)");
+		sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only");
 		return ;
 	}
 	if (!this->channels[channelName]->getKey().empty() && this->channels[channelName]->getKey() != key){
-		sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k)");
+		sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key");
 		return ;
 	}
-
+	if (this->channels[channelName]->getUsers().size() >= this->channels[channelName]->getLimit() ){
+		sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached");
+		return ;
+	}
 	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
 	
 	if (this->clients[fd]->get_isOperator() == true){
@@ -334,13 +337,13 @@ void Server::handleTopic(int fd, std::istringstream &command){
 void Server::handleMode(int fd, std::istringstream &command){
 	std::string target, mode, arg;
 	command >> target >> mode >> arg;
-	int user_fd = channels[target]->getByName(arg);
 	if (target.empty() || mode.empty()){
 		std::cout << "passei aqui" << std::endl;
 		sendCode(fd, "461", "", "Not enough parameters in MODE");
 		return ;
 	}
 	if (target[0] == '#'){
+		int user_fd = channels[target]->getByName(arg);
 		if (channels.find(target) == channels.end()){
 			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
 			return ;
@@ -381,18 +384,20 @@ void Server::handleMode(int fd, std::istringstream &command){
 		else if (mode == "-k" && arg.empty()){ // Remove key
 			channels[target]->setKey("");
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " -k ");
-			_ToAll(channels[target], fd, "MODE " + target + " -k " + arg + "\r\n");
+			_ToAll(channels[target], fd, "MODE " + target + " -k " + "\r\n");
 		}
 		else if (mode == "+l" && !arg.empty()){ // Set limit
 		    std::stringstream ss(arg);
 		    int limit;
 		    ss >> limit;
 		    channels[target]->setLimit(limit);
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " +l " + arg);
 		    _ToAll(channels[target], fd, "MODE " + target + " +l " + arg + "\r\n");
 		}
 		else if (mode == "-l" && arg.empty()){ // Remove limit
 			channels[target]->setLimit(10000);
-			_ToAll(channels[target], fd, "MODE " + target + " -l " + arg + "\r\n");
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " -l ");
+			_ToAll(channels[target], fd, "MODE " + target + " -l " + "\r\n");
 		}
 		else{
 			sendCode(fd, "472", clients[fd]->get_nick(), target + " :is unknown mode char to me");

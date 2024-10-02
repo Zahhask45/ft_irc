@@ -61,7 +61,7 @@ std::string const &Channel::getTopic() const{ return _topic; }
 
 std::string const &Channel::getKey() const {return _key;}
 
-int const &Channel::getLimit() const {return _limit;}
+long unsigned int const &Channel::getLimit() const {return _limit;}
 
 std::map<int, Client*>& Channel::getUsers() {return users;}
 

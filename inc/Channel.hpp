@@ -12,7 +12,7 @@ private:
     std::string _name;
     std::string _topic;
     std::string _key;
-    int         _limit;
+    long unsigned int         _limit;
     bool        _inviteChannel;
 	//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
     std::map<int, Client *> users;
@@ -32,7 +32,7 @@ public:
     std::string const &getName(void) const;
     std::string const &getTopic(void) const;
     std::string const &getKey(void) const;
-    int const &getLimit(void) const;
+    long unsigned int const &getLimit(void) const;
     bool const &getInviteChannel(void) const;
 	
     std::map<int, Client*> &getUsers();
