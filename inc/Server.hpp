@@ -104,6 +104,10 @@ public: // Handdle Commands
 	void handleIson(int fd, std::istringstream &command);
 	void handleCap(int fd, std::istringstream &command);
 	void handleSasl(int fd, std::istringstream &command);
+
+
+	//checkMode
+	int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
 };
 
 #include "Client.hpp"
