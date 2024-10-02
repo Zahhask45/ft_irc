@@ -50,7 +50,7 @@ void Server::binding(){
 		exit (-1);
 	}
 	for (tmp = serverinfo; tmp != NULL; tmp = tmp->ai_next){
-		this->_socket_Server = socket(tmp->ai_family, tmp->ai_socktype | O_NONBLOCK, tmp->ai_protocol);
+		this->_socket_Server = socket(tmp->ai_family, tmp->ai_socktype | SOCK_NONBLOCK, tmp->ai_protocol);
 		if (this->_socket_Server < 0)
 			continue;
 		setsockopt(this->_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -75,9 +75,9 @@ void Server::binding(){
 	}
 
 	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN; //! | EPOLLET;
+	_events[0].events = EPOLLIN | EPOLLET; //! EPOLLET sets edge-triggered mode, which implies non-blocking behavior
 	
-	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
+	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_events[0]) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
 		close(_socket_Server);
 		exit(EXIT_FAILURE);
@@ -109,14 +109,14 @@ void Server::loop(){
 void Server::funct_NewClient(int i){
 	struct sockaddr_storage client_addr;
 	socklen_t client_len = sizeof(client_addr);
+	// int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
 	int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
 	if (newsocket == -1) {
 		std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
 	}
-	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
 	_events[i].data.fd = newsocket;
-	_events[i].events = EPOLLIN; //!| EPOLLET;
+	_events[i].events = EPOLLIN | EPOLLET; //! EPOLLET sets edge-triggered mode, which implies non-blocking behavior
 	this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
 
