@@ -19,7 +19,7 @@ CXX_WARNINGS 		= -Wall -Wextra -Werror
 CXX_RESTRICTION 	= -std=c++98 -pedantic
 CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
-DEBUG				= -g -fsanitize=address #-fno-limit-debug-info
+DEBUG				= -g -fno-limit-debug-info #-fsanitize=address
 
 NAME		=	ircserv_M
 

@@ -337,12 +337,19 @@ void Server::handleTopic(int fd, std::istringstream &command){
 void Server::handleMode(int fd, std::istringstream &command){
 	std::string target, mode, arg;
 	command >> target >> mode >> arg;
-	if (target.empty() || mode.empty()){
-		std::cout << "passei aqui" << std::endl;
+	if (target.empty() && !mode.empty()){ // /MODE <+modos>
 		sendCode(fd, "461", "", "Not enough parameters in MODE");
 		return ;
 	}
-	if (target[0] == '#'){
+	if (!target.empty() && target[0] == '#' && mode.empty() && arg.empty()){ //MODE <#canal>  
+		if (channels.find(target) == channels.end()){
+			sendCode(fd, "403", clients[fd]->get_nick(), target + " :No such channel");
+			return ;
+		}
+		sendCode(fd, "324", clients[fd]->get_nick(), target + " " + channels[target]->getModes());
+		return ;
+	}
+	if (!target.empty() && target[0] == '#'){
 		int user_fd = channels[target]->getByName(arg);
 		if (channels.find(target) == channels.end()){
 			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
@@ -360,31 +367,37 @@ void Server::handleMode(int fd, std::istringstream &command){
 			channels[target]->setInviteChannel(true);
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " +i ");
 			_ToAll(channels[target], fd, "MODE " + target + " +i " + "\r\n");
+			this->channels[target]->addModes("i");
 		}
 		else if (mode == "-i" && arg.empty()){ // Remove Invite only
 			channels[target]->setInviteChannel(false);
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " -i ");
 			_ToAll(channels[target], fd, "MODE " + target + " -i " + "\r\n");
+			this->channels[target]->removeModes("i");
 		}
  		else if (mode == "+o" && !arg.empty()){ // Give operator
 			channels[target]->addOperator(getClient(user_fd));
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " +o " + arg);
 			_ToAll(channels[target], fd, "MODE " + target + " +o " + arg + "\r\n");
+			this->channels[target]->addModes("o");
 		}
 		else if (mode == "-o" && !arg.empty()){ // Remove operator
 			channels[target]->removeOper(arg);
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " -o " + arg);
 			_ToAll(channels[target], fd, "MODE " + target + " -o " + arg + "\r\n");
+			this->channels[target]->removeModes("o");
 		}
 		else if (mode == "+k" && !arg.empty()){ // Set key
 			channels[target]->setKey(arg);
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " +k " + arg);
 			_ToAll(channels[target], fd, "MODE " + target + " +k " + arg + "\r\n");
+			this->channels[target]->addModes("k");
 		}
 		else if (mode == "-k" && arg.empty()){ // Remove key
 			channels[target]->setKey("");
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " -k ");
 			_ToAll(channels[target], fd, "MODE " + target + " -k " + "\r\n");
+			this->channels[target]->removeModes("k");
 		}
 		else if (mode == "+l" && !arg.empty()){ // Set limit
 		    std::stringstream ss(arg);
@@ -393,14 +406,17 @@ void Server::handleMode(int fd, std::istringstream &command){
 		    channels[target]->setLimit(limit);
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " +l " + arg);
 		    _ToAll(channels[target], fd, "MODE " + target + " +l " + arg + "\r\n");
+			this->channels[target]->addModes("l");
 		}
 		else if (mode == "-l" && arg.empty()){ // Remove limit
 			channels[target]->setLimit(10000);
 			sendCode(fd, "324", clients[fd]->get_nick(), target + " -l ");
 			_ToAll(channels[target], fd, "MODE " + target + " -l " + "\r\n");
+			this->channels[target]->removeModes("l");
 		}
 		else{
 			sendCode(fd, "472", clients[fd]->get_nick(), target + " :is unknown mode char to me");
 		}
 	}
 }
+

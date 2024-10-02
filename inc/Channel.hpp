@@ -18,6 +18,8 @@ private:
     std::map<int, Client *> users;
     std::map<int, Client *>	operators;
     std::map<int, Client *>	inviteList;
+	std::vector<std::string> _modes;
+
     //TODO: BANNED USERS
     
     Channel(const Channel &cp);
@@ -34,7 +36,8 @@ public:
     std::string const &getKey(void) const;
     long unsigned int const &getLimit(void) const;
     bool const &getInviteChannel(void) const;
-	
+	std::string getModes();
+
     std::map<int, Client*> &getUsers();
     std::map<int, Client *>	const &getOperators() const;
     std::map<int, Client *>	const &getInviteList() const;
@@ -42,6 +45,9 @@ public:
     void addUser(Client &client);
 	void addOperator( Client &op );
     
+	void addModes(std::string mode);
+	void removeModes(std::string mode);
+
     void removeUser(std::string user);
     void removeOper(std::string oper);
     

@@ -89,6 +89,7 @@ void Server::loop(){
 	while(true){
 		std::cout << "Waiting for connections..." << std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
+
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);

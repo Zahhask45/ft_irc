@@ -47,6 +47,7 @@ public:
 	void funct_NewClient(int i);
 	void funct_NotNewClient(int i);
 
+
 //* Auxiliar functions
 	void _ToAll(int ori_fd, std::string message);
 	void _ToAll(Channel *channel, int ori_fd, std::string message);
