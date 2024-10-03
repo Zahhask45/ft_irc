@@ -50,7 +50,7 @@ void Server::binding(){
 		exit (-1);
 	}
 	for (tmp = serverinfo; tmp != NULL; tmp = tmp->ai_next){
-		this->_socket_Server = socket(tmp->ai_family, tmp->ai_socktype | SOCK_NONBLOCK, tmp->ai_protocol);
+		this->_socket_Server = socket(tmp->ai_family, tmp->ai_socktype, tmp->ai_protocol);
 		if (this->_socket_Server < 0)
 			continue;
 		setsockopt(this->_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
@@ -75,9 +75,9 @@ void Server::binding(){
 	}
 
 	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN | EPOLLET; //! EPOLLET sets edge-triggered mode, which implies non-blocking behavior
+	_events[0].events = EPOLLIN;
 	
-	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_events[0]) == -1){
+	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
 		close(_socket_Server);
 		exit(EXIT_FAILURE);
@@ -89,6 +89,7 @@ void Server::loop(){
 	while(true){
 		std::cout << "Waiting for connections..." << std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
+
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
@@ -109,14 +110,14 @@ void Server::loop(){
 void Server::funct_NewClient(int i){
 	struct sockaddr_storage client_addr;
 	socklen_t client_len = sizeof(client_addr);
-	// int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
 	int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
 	if (newsocket == -1) {
 		std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
 	}
+	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
 	_events[i].data.fd = newsocket;
-	_events[i].events = EPOLLIN | EPOLLET; //! EPOLLET sets edge-triggered mode, which implies non-blocking behavior
+	_events[i].events = EPOLLIN;
 	this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
 
@@ -198,21 +199,19 @@ void Server::handleCommands(int fd, const std::string &command){
 			handlePart(fd, iss);
 		else if (cmd == "QUIT")
 			handleQuit(fd, iss);
-		else if (cmd == "OPER")
-			handleOper(fd);
+		//else if (cmd == "OPER")
+		//	handleOper(fd);
 		else if (cmd == "PING"){
 			handlePing(fd, iss);
 		}
-		// else if (cmd == "MODE")
-		// 	handleMode(fd, iss);
+		else if (cmd == "MODE")
+			handleMode(fd, iss);
 		else if (cmd == "KICK")
 			handleKick(fd, iss);
 		else if (cmd == "INVITE")
 			handleInvite(fd, iss);
-		// else if (cmd == "TOPIC")
-		// 	handleTopic(fd, iss);
-		else if (cmd == "LIST")
-			handleList(fd, iss);
+		else if (cmd == "TOPIC")
+			handleTopic(fd, iss);
 	}
 }
 
@@ -221,6 +220,7 @@ void Server::createChannel(const std::string &channelName, int fd){
 	if (it == channels.end()){
 		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
+		
 	}
 /* 	else{
 		if (this->clients[fd]->get_isOperator() == true)

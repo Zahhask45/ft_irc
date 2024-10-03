@@ -8,62 +8,32 @@ void Server::handleAuth(int fd){
 		return;
 	}
 	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
-		sendCode(fd, "001", clients[fd]->get_nick(), "Welcome to the Internet Relay Network");
-		sendCode(fd, "002", clients[fd]->get_nick(), "Your host is " + clients[fd]->get_host() + ", running version 1.0");
-		sendCode(fd, "003", clients[fd]->get_nick(), "This server was created " + clients[fd]->get_host());
-		sendCode(fd, "004", clients[fd]->get_nick(), "BANANANA 1.0 BANANUDO ENTRAR_E_USAR " + clients[fd]->get_host());
-		sendCode(fd, "005", clients[fd]->get_nick(), "This server was created " + clients[fd]->get_host());
-		sendCode(fd, "371", clients[fd]->get_nick(), "User is Authenticated");
-		sendCode(fd, "375", clients[fd]->get_nick(), "Message of the day - " + clients[fd]->get_host());
-		sendCode(fd, "372", clients[fd]->get_nick(), "Message of the day - " + clients[fd]->get_host());
-		sendCode(fd, "376", clients[fd]->get_nick(), "End of MOTD command");
+		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the Internet Relay Network " + clients[fd]->get_mask());
+		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
+		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + clients[fd]->get_host());
+		sendCode(fd, "004", clients[fd]->get_nick(), ":BANANANA 1.0 BANANUDO ENTRAR_E_USAR ");
+		//sendCode(fd, "005", clients[fd]->get_nick(), ":This server was created " + clients[fd]->get_host());
+		sendCode(fd, "371", clients[fd]->get_nick(), ":User is Authenticated");
+		sendCode(fd, "375", clients[fd]->get_nick(), ":Message of the day - " + clients[fd]->get_host());
+		sendCode(fd, "372", clients[fd]->get_nick(), ":Message of the day - " + clients[fd]->get_host());
+		sendCode(fd, "376", clients[fd]->get_nick(), ":End of MOTD command");
 		clients[fd]->set_auth(true);
 		return ;
 	}
 }
 
-// void Server::handleAuth(int fd)
-// {
-// 	// std::cout << "PASS SERVER: " << _pass << std::endl;
-// 	// std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
-// 	std::string pass = clients[fd]->get_pass();
-// 	std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
-// 	if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-// 		sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
-void Server::handleAuth(int fd){
-	if (clients[fd] && (clients[fd]->get_user().empty() 
-		|| clients[fd]->get_pass().empty() 
-		|| clients[fd]->get_nick().empty())){
-		sendCode(fd, "461", "", "Not enough parameters");
-		return;
-	}
-	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
-		sendCode(fd, "001", clients[fd]->get_nick(), "Welcome to the Internet Relay Network");
-		sendCode(fd, "002", clients[fd]->get_nick(), "Your host is " + clients[fd]->get_host() + ", running version 1.0");
-		sendCode(fd, "003", clients[fd]->get_nick(), "This server was created " + clients[fd]->get_host());
-		sendCode(fd, "004", clients[fd]->get_nick(), "BANANANA 1.0 BANANUDO ENTRAR_E_USAR " + clients[fd]->get_host());
-		sendCode(fd, "005", clients[fd]->get_nick(), "This server was created " + clients[fd]->get_host());
-		sendCode(fd, "371", clients[fd]->get_nick(), "User is Authenticated");
-		sendCode(fd, "375", clients[fd]->get_nick(), "Message of the day - " + clients[fd]->get_host());
-		sendCode(fd, "372", clients[fd]->get_nick(), "Message of the day - " + clients[fd]->get_host());
-		sendCode(fd, "376", clients[fd]->get_nick(), "End of MOTD command");
+/* void Server::handleAuth(int fd)
+{
+	// std::cout << "PASS SERVER: " << _pass << std::endl;
+	// std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
+	std::string pass = clients[fd]->get_pass();
+	std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
+	if (strcmp(pass.c_str(), _pass.c_str()) == 0){
+		sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
 		clients[fd]->set_auth(true);
 		return ;
 	}
-}
-
-// void Server::handleAuth(int fd)
-// {
-// 	// std::cout << "PASS SERVER: " << _pass << std::endl;
-// 	// std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
-// 	std::string pass = clients[fd]->get_pass();
-// 	std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
-// 	if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-// 		sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
-// 		clients[fd]->set_auth(true);
-// 		return ;
-// 	}
-// }
+} */
 
 void Server::handlePass(int fd, std::istringstream &command){
 	std::string pass;
@@ -120,8 +90,8 @@ void Server::handleUser(int fd, std::istringstream &command){
 }
 
 void Server::handleJoin(int fd, std::istringstream &command){
-	std::string channelName;
-	command >> channelName;
+	std::string channelName, key;
+	command >> channelName >> key;
 
 	if (clients[fd]->get_auth() == false){
 		print_client(fd, "Need to Auth the user\n");
@@ -136,14 +106,34 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		channelName = "#" + channelName;
 	if (getChannel(channelName) == NULL)
 		createChannel(channelName, fd);
+	if ((this->channels[channelName]->getInviteChannel() == true 
+	&& this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
+	&& this->clients[fd]->get_isOperator() == false){
+		sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only");
+		return ;
+	}
+	if (!this->channels[channelName]->getKey().empty() && this->channels[channelName]->getKey() != key){
+		sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key");
+		return ;
+	}
+	if (this->channels[channelName]->getUsers().size() >= this->channels[channelName]->getLimit() ){
+		sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached");
+		return ;
+	}
+
 	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
-	if (this->clients[fd]->get_isOperator() == true)
-				this->channels[channelName]->addOperator(getClient(fd));
+	
+	if (this->clients[fd]->get_isOperator() == true){
+		this->channels[channelName]->addOperator(getClient(fd));
+		this->channels[channelName]->addUser(getClient(fd));
+	}
 	else
 		this->channels[channelName]->addUser(getClient(fd));
+	
+	
 	print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
-	sendCode(fd, "332", clients[fd]->get_nick(), channelName + " :Welcome to " + channelName);
+	sendCode(fd, "332", clients[fd]->get_nick(), channelName + this->channels[channelName]->getTopic());
 	sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
 	sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 	_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
@@ -240,39 +230,6 @@ void Server::handleOper(int fd){
 	this->clients[fd]->set_isOperator(true);
 }
 
-// TODO: Implement this function
-/* void Server::handleMode(int fd, std::istringstream &command){
-	std::string target, mode, arg;
-	command >> target >> mode >> arg;
-	int user_fd = channels[target]->getByName(arg);
-	if (target.empty() || mode.empty()){
-		sendCode(fd, "461", "", "Not enough parameters");
-		return ;
-	}
-	if (target[0] == '#'){
-		if (channels.find(target) == channels.end()){
-			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
-			return ;
-		}
-		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
-			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
-			return ;
-		}
-		if (mode == "+o"){
-			channels[target]->addOperator(*clients[fd]);
-			_ToAll(channels[target], fd, "MODE " + target + " +o " + clients[fd]->get_nick() + "\r\n");
-		}
-		else if (mode == "-o"){
-			channels[target]->removeOper(clients[fd]->get_nick());
-			_ToAll(channels[target], fd, "MODE " + target + " -o " + clients[fd]->get_nick() + "\r\n");
-		}
-	}
-	else{
-		sendCode(fd, "501", clients[fd]->get_nick(), ": Unknown MODE flag");
-	}
-}
- */
-
 void Server::handleKick(int fd, std::istringstream &command){
 	std::string channelName, user;
 	command >> channelName >> user;
@@ -326,7 +283,7 @@ void Server::handleInvite(int fd, std::istringstream &command){
 		sendCode(fd, "401", clients[fd]->get_nick(), user + " :No such nick/channel");
 		return ;
 	}
-		if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end()){
+	if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end()){
 		sendCode(fd, "482", clients[fd]->get_nick(), channelName + " :You're not channel operator");
 		return ;
 	}
@@ -338,74 +295,125 @@ void Server::handleInvite(int fd, std::istringstream &command){
 		sendCode(fd, "443", clients[fd]->get_nick(), user + " :is already on channel");
 		return ;
 	}
+	if (channels[channelName]->getInviteList().find(user_fd) != channels[channelName]->getInviteList().end()){
+		sendCode(fd, "443", clients[fd]->get_nick(), user + " :is already invited");
+		return ;
+	}
+	channels[channelName]->addInvite(user_fd, this->clients[user_fd]);
 	print_client(user_fd, clients[fd]->get_mask() + "INVITE " + user + " " + channelName + "\r\n");
 	print_client(fd, clients[fd]->get_mask() + "INVITE " + user + " " + channelName + "\r\n");
 }
 
-void Server::handleList(int fd, std::istringstream &command){
-	std::string channelName;
-	std::stringstream ss;
+void Server::handleTopic(int fd, std::istringstream &command){
+	std::string channelName, topic;
 	command >> channelName;
+	std::getline(command, topic);
 	if (channelName.empty()){
-		sendCode(fd, "321", clients[fd]->get_nick(), "Channel :Users Name");
-		for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
-			ss << it->second->getUsers().size();
-			sendCode(fd, "322", clients[fd]->get_nick(), it->first + " " + ss.str() + " :" + it->second->listAllUsers());
-		}
-		sendCode(fd, "323", clients[fd]->get_nick(), ":End of /LIST");
+		sendCode(fd, "461", "", "Not enough parameters");
+		return ;
 	}
-	else{
-		if (channels.find(channelName) == channels.end()){
-			sendCode(fd, "401", clients[fd]->get_nick(), channelName + " :No such nick/channel");
+	if (channels.find(channelName) == channels.end()){
+		sendCode(fd, "401", clients[fd]->get_nick(), channelName + " :No such nick/channel");
+		return ;
+	}
+	if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end()){
+		sendCode(fd, "482", clients[fd]->get_nick(), channelName + " :You're not channel operator");
+		return ;
+	}
+	if (channels[channelName]->getUsers().find(fd) == channels[channelName]->getUsers().end()){
+		sendCode(fd, "442", clients[fd]->get_nick(), channelName + " :You're not on that channel");
+		return ;
+	}
+	if (topic.empty()){
+		sendCode(fd, "331", clients[fd]->get_nick(), channelName + " :No topic is set");
+		return ;
+	}
+	channels[channelName]->setTopic(topic);
+	sendCode(fd, "332", clients[fd]->get_nick(), channelName + topic);
+	_ToAll(channels[channelName], fd, "TOPIC " + channelName + " :" + topic + "\r\n");
+}
+
+//MODE <#canal> <+modos> [parâmetros]: Para definir modos em canais
+//porque ao fazer /join canal ele entra aqui???
+void Server::handleMode(int fd, std::istringstream &command){
+	std::string target, mode, arg;
+	command >> target >> mode >> arg;
+	int user_fd = channels[target]->getByName(arg);
+	if (target.empty() || mode.empty()){
+		std::cout << "passei aqui" << std::endl;
+		sendCode(fd, "461", "", "Not enough parameters in MODE");
+		return ;
+	}
+	if (target[0] == '#'){
+		if (channels.find(target) == channels.end()){
+			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
 			return ;
 		}
-		ss << channels[channelName]->getUsers().size();
-		sendCode(fd, "321", clients[fd]->get_nick(), "Channel :Users Name");
-		sendCode(fd, "322", clients[fd]->get_nick(), channelName + " " + ss.str() + " :" + channels[channelName]->listAllUsers());
-		sendCode(fd, "323", clients[fd]->get_nick(), ":End of /LIST");
+		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
+			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
+			return ;
+		}
+		if (channels[target]->getOperators().find(fd) == channels[target]->getOperators().end()){
+			sendCode(fd, "482", clients[fd]->get_nick(), target + " :You're not channel operator");
+			return ;
+		}
+		if (mode == "+i" && arg.empty()){ // Invite only
+			channels[target]->setInviteChannel(true);
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " +i ");
+			_ToAll(channels[target], fd, "MODE " + target + " +i " + "\r\n");
+		}
+		else if (mode == "-i" && arg.empty()){ // Remove Invite only
+			channels[target]->setInviteChannel(false);
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " -i ");
+			_ToAll(channels[target], fd, "MODE " + target + " -i " + "\r\n");
+		}
+ 		else if (mode == "+o" && !arg.empty()){ // Give operator
+			channels[target]->addOperator(getClient(user_fd));
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " +o " + arg);
+			_ToAll(channels[target], fd, "MODE " + target + " +o " + arg + "\r\n");
+		}
+		else if (mode == "-o" && !arg.empty()){ // Remove operator
+			channels[target]->removeOper(arg);
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " -o " + arg);
+			_ToAll(channels[target], fd, "MODE " + target + " -o " + arg + "\r\n");
+		}
+		else if (mode == "+k" && !arg.empty()){ // Set key
+			channels[target]->setKey(arg);
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " +k " + arg);
+			_ToAll(channels[target], fd, "MODE " + target + " +k " + arg + "\r\n");
+		}
+		else if (mode == "-k" && arg.empty()){ // Remove key
+			channels[target]->setKey("");
+			sendCode(fd, "324", clients[fd]->get_nick(), target + " -k ");
+			_ToAll(channels[target], fd, "MODE " + target + " -k " + arg + "\r\n");
+		}
+		else if (mode == "+l" && !arg.empty()){ // Set limit
+		    std::stringstream ss(arg);
+		    int limit;
+		    ss >> limit;
+		    channels[target]->setLimit(limit);
+		    _ToAll(channels[target], fd, "MODE " + target + " +l " + arg + "\r\n");
+		}
+		else if (mode == "-l" && arg.empty()){ // Remove limit
+			channels[target]->setLimit(10000);
+			_ToAll(channels[target], fd, "MODE " + target + " -l " + arg + "\r\n");
+		}
+		else{
+			sendCode(fd, "472", clients[fd]->get_nick(), target + " :is unknown mode char to me");
+		}
 	}
 }
 
 void Server::handlePing(int fd, std::istringstream &command){
-	std::string server;
-	command >> server;
-	if (server.empty()){
-		sendCode(fd, "409", "", "No origin specified");
-		return ;
-	}
-	sendCode(fd, "PONG", server, "");
+    std::string server;
+    command >> server;
+    if (server.empty()){
+        sendCode(fd, "409", "", "No origin specified");
+        return ;
+    }
+    sendCode(fd, "PONG", server, "");
 }
 
-void Server::handleList(int fd, std::istringstream &command){
-	std::string channelName;
-	std::stringstream ss;
-	command >> channelName;
-	if (channelName.empty()){
-		sendCode(fd, "321", clients[fd]->get_nick(), "Channel :Users Name");
-		for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
-			ss << it->second->getUsers().size();
-			sendCode(fd, "322", clients[fd]->get_nick(), it->first + " " + ss.str() + " :" + it->second->listAllUsers());
-		}
-		sendCode(fd, "323", clients[fd]->get_nick(), ":End of /LIST");
-	}
-	else{
-		if (channels.find(channelName) == channels.end()){
-			sendCode(fd, "401", clients[fd]->get_nick(), channelName + " :No such nick/channel");
-			return ;
-		}
-		ss << channels[channelName]->getUsers().size();
-		sendCode(fd, "321", clients[fd]->get_nick(), "Channel :Users Name");
-		sendCode(fd, "322", clients[fd]->get_nick(), channelName + " " + ss.str() + " :" + channels[channelName]->listAllUsers());
-		sendCode(fd, "323", clients[fd]->get_nick(), ":End of /LIST");
-	}
-}
 
-void Server::handlePing(int fd, std::istringstream &command){
-	std::string server;
-	command >> server;
-	if (server.empty()){
-		sendCode(fd, "409", "", "No origin specified");
-		return ;
-	}
-	sendCode(fd, "PONG", server, "");
-}
+
+

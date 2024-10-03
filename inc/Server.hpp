@@ -3,6 +3,7 @@
 
 #include "colors.hpp"
 #include "Channel.hpp"
+#include <string>
 
 class Client;
 class Channel;
@@ -41,8 +42,11 @@ public:
 	int const &get_socket() const;
 	Channel *getChannel(const std::string name);
 	Client &getClient(int fd);
+
+	void setPass(std::string pass);
 	void funct_NewClient(int i);
 	void funct_NotNewClient(int i);
+
 
 //* Auxiliar functions
 	void _ToAll(int ori_fd, std::string message);
@@ -69,9 +73,9 @@ public: // Handdle Commands
 	void handleKick(int fd, std::istringstream &command);
 	void handleInvite(int fd, std::istringstream &command);
 	void handleTopic(int fd, std::istringstream &command);
-	void handleList(int fd, std::istringstream &command);
 	
 	void handleNames(int fd, std::istringstream &command);
+	void handleList(int fd, std::istringstream &command);
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
@@ -100,6 +104,10 @@ public: // Handdle Commands
 	void handleIson(int fd, std::istringstream &command);
 	void handleCap(int fd, std::istringstream &command);
 	void handleSasl(int fd, std::istringstream &command);
+
+
+	//checkMode
+	int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
 };
 
 #include "Client.hpp"

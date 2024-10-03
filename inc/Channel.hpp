@@ -10,9 +10,16 @@ private:
 
     Client *    _creator;
     std::string _name;
+    std::string _topic;
+    std::string _key;
+    long unsigned int         _limit;
+    bool        _inviteChannel;
 	//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
     std::map<int, Client *> users;
     std::map<int, Client *>	operators;
+    std::map<int, Client *>	inviteList;
+	std::vector<std::string> _modes;
+
     //TODO: BANNED USERS
     
     Channel(const Channel &cp);
@@ -24,19 +31,38 @@ public:
     Channel(const std::string name, Client *Creator);
     ~Channel();
 
+    std::string const &getName(void) const;
+    std::string const &getTopic(void) const;
+    std::string const &getKey(void) const;
+    long unsigned int const &getLimit(void) const;
+    bool const &getInviteChannel(void) const;
+	std::string getModes();
+
+    std::map<int, Client*> &getUsers();
+    std::map<int, Client *>	const &getOperators() const;
+    std::map<int, Client *>	const &getInviteList() const;
+
     void addUser(Client &client);
 	void addOperator( Client &op );
+    
+	void addModes(std::string mode);
+	void removeModes(std::string mode);
+
     void removeUser(std::string user);
     void removeOper(std::string oper);
+    
     void setName(std::string const &name);
     void setUser(int const &id, Client *client);
+    void setTopic(std::string const &topic);
+    void setInviteChannel(bool const &invite);
+    void setKey(std::string const &key);
+    void setLimit(int const &limit);
     
     std::string	listAllUsers() const;
     
-    std::string const &getName(void) const;
-	std::map<int, Client*>& getUsers();
-    std::map<int, Client *>	const &getOperators() const;
     int getByName(std::string const &name) const;
+
+    void addInvite(int fd, Client *client);
 
 };
 

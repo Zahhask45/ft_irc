@@ -14,8 +14,8 @@ _WHITE		=	\e[1;37m
 
 _GONE		=	\e[2K\r
 
-# CXX					= clang++ ## em casa
-CXX					= c++ ## na escola
+CXX					= clang++ ## em casa
+# CXX					= c++ ## na escola
 CXX_WARNINGS 		= -Wall -Wextra -Werror
 CXX_RESTRICTION 	= -std=c++98 -pedantic-errors
 CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
