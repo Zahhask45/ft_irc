@@ -1,5 +1,14 @@
 #include "Server.hpp"
 
+static std::string serverTimestamp(){
+	time_t now = time(0);
+	struct tm tstruct;
+	char buf[80];
+	tstruct = *localtime(&now);
+	strftime(buf, sizeof(buf), "%Y-%m-%d %X", &tstruct);
+	return buf;
+}
+
 void Server::handleAuth(int fd){
 	if (clients[fd] && (clients[fd]->get_user().empty() 
 		|| clients[fd]->get_pass().empty() 
@@ -8,15 +17,23 @@ void Server::handleAuth(int fd){
 		return;
 	}
 	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
-		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the Internet Relay Network " + clients[fd]->get_mask());
+		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
-		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + clients[fd]->get_host());
-		sendCode(fd, "004", clients[fd]->get_nick(), ":BANANANA 1.0 BANANUDO ENTRAR_E_USAR ");
+		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + serverTimestamp());
+		sendCode(fd, "004", clients[fd]->get_nick(), clients[fd]->get_host() + " 1.0 BORTWcghiorswx ACIJKMNOPQRSTYabcegiklmnopqrstv :IJYabeghkloqv"); //! Explicacao no arquivo explain.txt
+
 		//sendCode(fd, "005", clients[fd]->get_nick(), ":This server was created " + clients[fd]->get_host());
 		sendCode(fd, "371", clients[fd]->get_nick(), ":User is Authenticated");
-		sendCode(fd, "375", clients[fd]->get_nick(), ":Message of the day - " + clients[fd]->get_host());
-		sendCode(fd, "372", clients[fd]->get_nick(), ":Message of the day - " + clients[fd]->get_host());
-		sendCode(fd, "376", clients[fd]->get_nick(), ":End of MOTD command");
+		sendCode(fd, "375", clients[fd]->get_nick(), ":" + clients[fd]->get_host() + " Message of the day");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":    ▟██▛╗██▛███   ");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":  ▟██▛╔═╝█▛ ▟█▛╗");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":▟██▛╔═╝   ╚▟▛╔═╝");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":████████╗▟█▛ ▟█╗ █▀█ █▀█ █▀█ ▀█▀ █▀█");
+		sendCode(fd, "372", clients[fd]->get_nick(), ": ╚═══███║███▟██║ █▀▀ █▄█ █▀▄  █  █▄█");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":     ███║ ╚════╝ ");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":      ╚═╝			By: - bmonteir jodos-sa mamaral-");
+		sendCode(fd, "376", clients[fd]->get_nick(), ":End of message of the day.");
+		sendCode(fd, "396", clients[fd]->get_nick(), clients[fd]->get_host() + " :is now your displayed host");
 		clients[fd]->set_auth(true);
 		return ;
 	}
