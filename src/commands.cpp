@@ -161,7 +161,7 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 	_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
 }
-
+// Apartir daqui.
 void Server::handlePrivmsg(int fd, std::istringstream &command){
 	std::string target, message;
 	command >> target;
