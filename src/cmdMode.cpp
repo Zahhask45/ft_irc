@@ -43,19 +43,20 @@ void Server::handleMode(int fd, std::istringstream &command){
 	if (checkMode(fd, target, mode, arg) == -1)
 		return ;
 	int user_fd = channels[target]->getByName(arg);
+
 	if (mode == "+i" && arg.empty()){ // Invite only
 		channels[target]->setInviteChannel(true);
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " +i ");
+		sendCode(fd, "324", clients[fd]->get_nick(), target + " :+i ");
 		_ToAll(channels[target], fd, "MODE " + target + " +i " + "\r\n");
 		this->channels[target]->addModes("i");
 	}
 	else if (mode == "-i" && arg.empty()){ // Remove Invite only
 		channels[target]->setInviteChannel(false);
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " -i ");
+		sendCode(fd, "324", clients[fd]->get_nick(), target + " :-i ");
 		_ToAll(channels[target], fd, "MODE " + target + " -i " + "\r\n");
 		this->channels[target]->removeModes("i");
 	}
-	
+
  	else if (mode == "+o" && !arg.empty()){ // Give operator
 		channels[target]->addOperator(getClient(user_fd));
 		sendCode(fd, "324", clients[fd]->get_nick(), target + " +o " + arg);

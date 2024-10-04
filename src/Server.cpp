@@ -199,8 +199,6 @@ void Server::handleCommands(int fd, const std::string &command){
 			handlePart(fd, iss);
 		else if (cmd == "QUIT")
 			handleQuit(fd, iss);
-		//else if (cmd == "OPER")
-		//	handleOper(fd);
 		// else if (cmd == "PING"){
 		//	handlePing(fd, iss);
 		// }
@@ -265,26 +263,6 @@ std::string Server::extract_value(const std::string& line) {
 
 	return value;
 }
-
-// void Server::broadcast_to_channel(const std::string &channelName, int last_fd) {
-// 	// Check if the channel exists
-// 	if (channels.find(channelName) != channels.end()) {
-// 		Channel* channel = channels[channelName];
-
-// 		// Iterate through all users in the channel
-// 		std::map<int, Client*>::iterator it;
-// 		for (it = channel->getUsers().begin(); it != channel->getUsers().end(); ++it) {
-// 			int client_fd = it->first;
-// 			std::string response = ":" + clients[last_fd]->get_nick() + "!" + clients[last_fd]->get_user() + "@" + clients[last_fd]->get_host() + " JOIN :" + channelName + "\r\n";
-// 			std::string response2 = ":" + clients[client_fd]->get_nick() + "!" + clients[client_fd]->get_user() + "@" + clients[client_fd]->get_host() + " JOIN :" + channelName + "\r\n";
-
-// 			if (client_fd != last_fd) {
-// 				print_client(client_fd, response);
-// 				print_client(last_fd, response2);
-// 			}
-// 		}
-// 	}
-// }
 
 //Essa funcao recebe o fd e a mensagem a ser enviada para todos os clientes conectados no mesmo canal que o usuario do fd.
 // é auxiliada pela função findInChannel que retorna o nome do canal em que o usuário está conectado.

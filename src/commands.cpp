@@ -36,6 +36,12 @@ void Server::handleNick(int fd, std::istringstream &command){
 		sendCode(fd, "431", "", "No nickname given");
 		return;
 	}
+	for(std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++){
+		if (it->second->get_nick() == nick){
+			sendCode(fd, "433", nick, ":Nickname is already in use");
+			return;
+		}
+	}
 	if (this->clients[fd]->get_nick().empty())
 		this->clients[fd]->set_nick(nick);
 	else{
@@ -197,5 +203,3 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
 	print_client(fd, response);
 }
-
-
