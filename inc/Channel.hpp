@@ -13,6 +13,7 @@ private:
     std::string _topic;
     std::string _key;
     long unsigned int         _limit;
+    int         _creationTime;
     bool        _inviteChannel;
 	//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
     std::map<int, Client *> users;
@@ -37,6 +38,7 @@ public:
     long unsigned int const &getLimit(void) const;
     bool const &getInviteChannel(void) const;
 	std::string getModes();
+    int const &getCreationTime() const;
 
     std::map<int, Client*> &getUsers();
     std::map<int, Client *>	const &getOperators() const;

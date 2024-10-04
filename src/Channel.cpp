@@ -11,6 +11,7 @@ Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _n
 	this->_inviteChannel = false;
 	this->addModes("+");
 	this->_limit = 10;//alterar isto
+	this->_creationTime = time(NULL);
 }
 
 Channel::~Channel(){}
@@ -136,4 +137,9 @@ void Channel::removeModes(std::string mode){
 	std::vector<std::string>::iterator it = std::find(_modes.begin(), _modes.end(), mode);
 	if (it != _modes.end())
 		_modes.erase(it);
+}
+
+//Channel::getCreationTime
+int const &Channel::getCreationTime() const{
+	return this->_creationTime;
 }

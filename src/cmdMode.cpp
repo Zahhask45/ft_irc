@@ -15,6 +15,9 @@ int	Server::checkMode(int fd, std::string &target, std::string &mode, std::strin
 			return -1;
 		}
 		sendCode(fd, "324", clients[fd]->get_nick(), target + " " + channels[target]->getModes());
+		std::stringstream ss;
+		ss << channels[target]->getCreationTime();
+		sendCode(fd, "329", clients[fd]->get_nick(), target + " " + ss.str());
 		return -1;
 	}
 	if (!target.empty() && target[0] == '#'){
@@ -97,7 +100,27 @@ void Server::handleMode(int fd, std::istringstream &command){
 		_ToAll(channels[target], fd, "MODE " + target + " -l " + "\r\n");
 		this->channels[target]->removeModes("l");
 	}
-	else{
-		sendCode(fd, "472", clients[fd]->get_nick(), target + " :is unknown mode char to me");
+	else if (mode == "+t" && arg.empty()){ // Set topic
+		channels[target]->addModes("t");
+		sendCode(fd, "324", clients[fd]->get_nick(), target + " +t ");
+		_ToAll(channels[target], fd, "MODE " + target + " +t " + "\r\n");
 	}
+	else if (mode == "-t" && arg.empty()){ // Remove topic
+		channels[target]->removeModes("t");
+		sendCode(fd, "324", clients[fd]->get_nick(), target + " -t ");
+		_ToAll(channels[target], fd, "MODE " + target + " -t " + "\r\n");
+	}
+	else if (mode == "+n" && arg.empty()){ // Set no external messages
+		channels[target]->addModes("n");
+		sendCode(fd, "324", clients[fd]->get_nick(), target + " +n ");
+		_ToAll(channels[target], fd, "MODE " + target + " +n " + "\r\n");
+	}
+	else if (mode == "-n" && arg.empty()){ // Remove no external messages
+		channels[target]->removeModes("n");
+		sendCode(fd, "324", clients[fd]->get_nick(), target + " -n ");
+		_ToAll(channels[target], fd, "MODE " + target + " -n " + "\r\n");
+	}
+	else{
+		sendCode(fd, "472", clients[fd]->get_nick(), target + " :Unknown mode flag");
+	} 
 }
