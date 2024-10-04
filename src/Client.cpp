@@ -30,6 +30,8 @@ std::string const &Client::get_host() const { return _host; }
 
 std::string const &Client::get_mask() const{ return _mask; }
 
+std::string const &Client::get_realname() const{ return _realname; }
+
 void Client::set_addr(struct sockaddr_storage value){
 	_client_addr = value;
 }

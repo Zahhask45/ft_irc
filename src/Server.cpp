@@ -201,9 +201,8 @@ void Server::handleCommands(int fd, const std::string &command){
 			handleQuit(fd, iss);
 		//else if (cmd == "OPER")
 		//	handleOper(fd);
-		else if (cmd == "PING"){
+		else if (cmd == "PING")
 			handlePing(fd, iss);
-		}
 		else if (cmd == "MODE")
 			handleMode(fd, iss);
 		else if (cmd == "KICK")
@@ -212,6 +211,12 @@ void Server::handleCommands(int fd, const std::string &command){
 			handleInvite(fd, iss);
 		else if (cmd == "TOPIC")
 			handleTopic(fd, iss);
+		else if (cmd == "WHO")
+			handleWho(fd, iss);
+		else if (cmd == "WHOIS")
+			handleWhois(fd, iss);
+		else if (cmd == "LIST")
+			handleList(fd);
 	}
 }
 
@@ -356,4 +361,12 @@ int Server::_sendall(int destfd, std::string message)
 		bytesleft -= b;
 	}
 	return (b == -1 ? -1 : 0);
+}
+
+bool Server::findNick(std::string nick){
+	for(std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++){
+		if (it->second->get_nick() == nick)
+			return true;
+	}
+	return false;
 }

@@ -1,6 +1,5 @@
 ircserv
 *.o
 *.d
-*.txt
-ircserv_mamaral
+
 ircserv_M

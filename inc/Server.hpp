@@ -14,7 +14,7 @@ private:
 	int _socket_Server;
 	int _port;
 	std::string _pass;
-	struct sockaddr_storage _addr;
+	// struct sockaddr_storage _addr;
 	std::map<std::string, Channel *> channels;
 	std::map<int, Client *> clients;
 	// std::vector<std::string> user;
@@ -47,7 +47,6 @@ public:
 	void funct_NewClient(int i);
 	void funct_NotNewClient(int i);
 
-
 //* Auxiliar functions
 	void _ToAll(int ori_fd, std::string message);
 	void _ToAll(Channel *channel, int ori_fd, std::string message);
@@ -73,11 +72,11 @@ public: // Handdle Commands
 	void handleKick(int fd, std::istringstream &command);
 	void handleInvite(int fd, std::istringstream &command);
 	void handleTopic(int fd, std::istringstream &command);
-	
-	void handleNames(int fd, std::istringstream &command);
-	void handleList(int fd, std::istringstream &command);
+	void handleList(int fd);
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
+	
+	void handleNames(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
 	void handleAway(int fd, std::istringstream &command);
 	void handlePing(int fd, std::istringstream &command);
@@ -108,6 +107,8 @@ public: // Handdle Commands
 
 	//checkMode
 	int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
+	
+	bool findNick(std::string nick);
 };
 
 #include "Client.hpp"

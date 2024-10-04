@@ -33,6 +33,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "372", clients[fd]->get_nick(), ":     ███║ ╚════╝ ");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":      ╚═╝			By: - bmonteir jodos-sa mamaral-");
 		sendCode(fd, "376", clients[fd]->get_nick(), ":End of message of the day.");
+		sendCode(fd, "374", clients[fd]->get_nick(), ":Now you can join channels and chat with other users");
 		sendCode(fd, "396", clients[fd]->get_nick(), clients[fd]->get_host() + " :is now your displayed host");
 		clients[fd]->set_auth(true);
 		return ;
@@ -51,15 +52,15 @@ void Server::handleAuth(int fd){
 		return ;
 	}
 } */
-
+//! PASS should come before NICK and USER, maybe we should create a function to force the others commands to come only after PASS.
 void Server::handlePass(int fd, std::istringstream &command){
 	std::string pass;
 	command >> pass;
 	pass = extract_value(pass);
 	if (pass.empty())
-		sendCode(fd, "461", "", "Not enough parameters");
+		sendCode(fd, "461", "", "Not enough parameters"); //ERR_NEEDMOREPARAMS
 	else if (clients[fd]->get_auth() == true)
-		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reregister");
+		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reregister"); // ERR_ALREADYREGISTRED
 	else if (_pass != pass)
 		sendCode(fd, "464", clients[fd]->get_nick(), ": Password incorrect");
 	else {
@@ -72,9 +73,12 @@ void Server::handleNick(int fd, std::istringstream &command){
 	std::string nick;
 	command >> nick;
 	if (nick.empty()){
-		sendCode(fd, "431", "", "No nickname given");
+		sendCode(fd, "431", "", "No nickname given"); // ERR_NONICKNAMEGIVEN
 		return;
 	}
+	// ERR_NICKNAMEINUSE
+	if (findNick(nick))
+		sendCode(fd, "433", nick, ":Nickname is already in use"); // ERR_NICKNAMEINUSE
 	if (this->clients[fd]->get_nick().empty())
 		this->clients[fd]->set_nick(nick);
 	else{
@@ -92,7 +96,7 @@ void Server::handleUser(int fd, std::istringstream &command){
 	command >> username >> hostname >> servername; // user 5 * :realname de fato 
 	std::getline(command, realname); // Get the rest of the line
 	if (username.empty()){
-		sendCode(fd, "461", "", "Not enough parameters");
+		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return;
 	}
 	if (clients[fd]->get_user().empty()){
@@ -102,7 +106,7 @@ void Server::handleUser(int fd, std::istringstream &command){
 			clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 	}
 	else{
-		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reregister");
+		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reregister"); // ERR_ALREADYREGISTRED
 	}
 }
 
@@ -112,29 +116,31 @@ void Server::handleJoin(int fd, std::istringstream &command){
 
 	if (clients[fd]->get_auth() == false){
 		print_client(fd, "Need to Auth the user\n");
-		sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
+		sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered"); // ERR_NOTREGISTERED
 		return ;
 	}
 	if (channelName.empty()){
-		print_client(fd, "Channel name is empty\n");
+		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return ;
 	}
-	if (channelName[0] != '#')
-		channelName = "#" + channelName;
+	if (channelName[0] != '#'){
+		sendCode(fd, "403", clients[fd]->get_nick(), channelName + " :No such channel"); // ERR_NOSUCHCHANNEL
+		return ;
+	}
 	if (getChannel(channelName) == NULL)
 		createChannel(channelName, fd);
 	if ((this->channels[channelName]->getInviteChannel() == true 
 	&& this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
 	&& this->clients[fd]->get_isOperator() == false){
-		sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only");
+		sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only"); // ERR_INVITEONLYCHAN
 		return ;
 	}
 	if (!this->channels[channelName]->getKey().empty() && this->channels[channelName]->getKey() != key){
-		sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key");
+		sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key"); // ERR_BADCHANNELKEY
 		return ;
 	}
 	if (this->channels[channelName]->getUsers().size() >= this->channels[channelName]->getLimit() ){
-		sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached");
+		sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached"); // ERR_CHANNELISFULL
 		return ;
 	}
 
@@ -147,10 +153,9 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	else
 		this->channels[channelName]->addUser(getClient(fd));
 	
-	
 	print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
-	sendCode(fd, "332", clients[fd]->get_nick(), channelName + this->channels[channelName]->getTopic());
+	// sendCode(fd, "332", clients[fd]->get_nick(), channelName + this->channels[channelName]->getTopic());
 	sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
 	sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 	_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
@@ -199,8 +204,6 @@ void Server::handlePart(int fd, std::istringstream &command){
 		print_client(fd, "Channel name is empty\n");
 		return ;
 	}
-	// if (channelName[0] != '#')
-	// 	channelName = "#" + channelName;
 	if (channels.find(channelName) == channels.end()){
 		print_client(fd, "Channel does not exist\n");
 		return ;
@@ -428,9 +431,51 @@ void Server::handlePing(int fd, std::istringstream &command){
         sendCode(fd, "409", "", "No origin specified");
         return ;
     }
-    sendCode(fd, "PONG", server, "");
+    sendCode(fd, "PONG", clients[fd]->get_host(), server);
 }
 
-
-
-
+// handleWho(fd, iss);
+void Server::handleWho(int fd, std::istringstream &command){
+	std::string mask;
+	command >> mask;
+	if (mask.empty()){
+		sendCode(fd, "461", "", "Not enough parameters");
+		return ;
+	}
+	std::map<int, Client *>::iterator it = clients.begin();
+	while (it != clients.end()){
+		if (it->second->get_mask().find(mask) != std::string::npos){
+			sendCode(fd, "352", clients[fd]->get_nick(), mask + " " + it->second->get_user() + " " + it->second->get_host() + " " + it->second->get_host() + " " + it->second->get_nick() + " H :0 " + it->second->get_realname());
+		}
+		it++;
+	}
+	sendCode(fd, "315", clients[fd]->get_nick(), mask + " :End of /WHO list");
+}
+// handleWhois(fd, iss);
+void Server::handleWhois(int fd, std::istringstream &command){
+	std::string mask;
+	command >> mask;
+	if (mask.empty()){
+		sendCode(fd, "461", "", "Not enough parameters");
+		return ;
+	}
+	std::map<int, Client *>::iterator it = clients.begin();
+	while (it != clients.end()){
+		if (it->second->get_mask().find(mask) != std::string::npos){
+			sendCode(fd, "311", clients[fd]->get_nick(), mask + " " + it->second->get_user() + " " + it->second->get_host() + " * :" + it->second->get_realname());
+			sendCode(fd, "312", clients[fd]->get_nick(), mask + " " + it->second->get_host() + " :42Porto");
+			sendCode(fd, "319", clients[fd]->get_nick(), mask + " :");
+		}
+		it++;
+	}
+	sendCode(fd, "318", clients[fd]->get_nick(), mask + " :End of /WHOIS list");
+}
+// handleList(fd, iss);
+void Server::handleList(int fd){
+	std::stringstream ss;
+	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
+	ss << it->second->getUsers().size();
+		sendCode(fd, "322", clients[fd]->get_nick(), it->first + " " + ss.str() + " :");
+	}
+	sendCode(fd, "323", clients[fd]->get_nick(), ":End of /LIST");
+}
