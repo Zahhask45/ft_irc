@@ -9,7 +9,6 @@ Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _n
 	this->_creator->set_isOperator(true);
 	this->_topic = " :Welcome to " + _name;
 	this->_inviteChannel = false;
-	this->addModes("+");
 	this->_limit = 10;//alterar isto
 	this->_creationTime = time(NULL);
 }
@@ -122,24 +121,46 @@ void Channel::addInvite(int fd, Client *client) {
 }
 
 std::string Channel::getModes(){
-	std::string modes;
-	for (std::vector<std::string>::iterator it = _modes.begin(); it != _modes.end(); it++){
-		modes += *it;
+	std::string modes = "+";
+	std::stringstream str;
+	char elem[6] = { 'i', 'k', 'l', 'o', 't', 'n'};
+
+	for (int i = 0; i < 6; i++){
+		for (std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
+			if (*it == elem[i])
+				modes += *it;
+		} 
+	}
+	if (_key != "")
+	{
+		if (modes.find('l') != std::string::npos){
+			str << _limit;
+			modes += " " + _key + " :" + str.str();
+		}
+		else
+			modes += " :" + _key;
+	}
+	else if (modes.find('l') != std::string::npos){
+		str << _limit;
+		modes += " :" + str.str();
 	}
 	return modes;
 }
 
-void Channel::addModes(std::string mode){
+bool Channel::addModes(char mode){
+	for(std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
+		if (*it == mode)
+			return false;
+	}
 	_modes.push_back(mode);
+	return true;
 }
 
-void Channel::removeModes(std::string mode){
-	std::vector<std::string>::iterator it = std::find(_modes.begin(), _modes.end(), mode);
-	if (it != _modes.end())
+bool Channel::removeModes(char mode){
+	std::vector<char>::iterator it = std::find(_modes.begin(), _modes.end(), mode);
+	if (it != _modes.end()){
 		_modes.erase(it);
-}
-
-//Channel::getCreationTime
-int const &Channel::getCreationTime() const{
-	return this->_creationTime;
+		return true;
+	}
+	return false;
 }

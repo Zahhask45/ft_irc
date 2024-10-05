@@ -19,7 +19,7 @@ private:
     std::map<int, Client *> users;
     std::map<int, Client *>	operators;
     std::map<int, Client *>	inviteList;
-	std::vector<std::string> _modes;
+	std::vector<char> _modes;
 
     //TODO: BANNED USERS
     
@@ -47,8 +47,8 @@ public:
     void addUser(Client &client);
 	void addOperator( Client &op );
     
-	void addModes(std::string mode);
-	void removeModes(std::string mode);
+	bool addModes(char mode);
+	bool removeModes(char mode);
 
     void removeUser(std::string user);
     void removeOper(std::string oper);

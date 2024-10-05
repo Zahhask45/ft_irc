@@ -1,19 +1,6 @@
 #include "Server.hpp"
 
-bool isStringDigit(const std::string& str) {
-    for (std::string::const_iterator it = str.begin(); it != str.end(); ++it) {
-        if (!isdigit(*it)) {
-            return false;
-        }
-    }
-    return true;
-}
-
 int	Server::checkMode(int fd, std::string &target, std::string &mode, std::string &arg){
-	if (!target.empty() && (target[0] == '+' || target[0] == '-')){
-		sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
-		return -1;
-	}
 	if (!target.empty() && target[0] != '#' && mode.empty() ){
 		sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
 		return -1;
@@ -28,9 +15,6 @@ int	Server::checkMode(int fd, std::string &target, std::string &mode, std::strin
 			return -1;
 		}
 		sendCode(fd, "324", clients[fd]->get_nick(), target + " " + channels[target]->getModes());
-		std::stringstream ss;
-		ss << channels[target]->getCreationTime();
-		sendCode(fd, "329", clients[fd]->get_nick(), target + " " + ss.str());
 		return -1;
 	}
 	if (!target.empty() && target[0] == '#'){
@@ -50,6 +34,20 @@ int	Server::checkMode(int fd, std::string &target, std::string &mode, std::strin
 	return 0;
 }
 
+void	Server::genericSendMode(int fd, std::string target, char mode, std::string arg, char sign){
+	bool flag = false;
+	if (sign == '+')
+		flag = this->channels[target]->addModes(mode);
+	else if (sign == '-')
+		flag = this->channels[target]->removeModes(mode);
+	if (flag == true || mode == 'l' || mode == 'k' || mode == 'o'){
+		print_client(fd, clients[fd]->get_mask() + "MODE " + target + " " + sign + mode + " " + arg + "\r\n");
+		//sendCode(fd, "324", clients[fd]->get_nick(), target + " :" + mode + " " + arg);
+		_ToAll(channels[target], fd, "MODE " + target + " " + sign + mode + " " + arg + "\r\n");
+	}
+}
+
+
 //MODE <#canal> <+modos> [parâmetros]: Para definir modos em canais
 void Server::handleMode(int fd, std::istringstream &command){
 	std::string target, mode, arg;
@@ -57,140 +55,88 @@ void Server::handleMode(int fd, std::istringstream &command){
 	if (checkMode(fd, target, mode, arg) == -1)
 		return ;
 	int user_fd = channels[target]->getByName(arg);
-	if (!arg.empty()){
-		if (mode == "+o" )
-			channels[target]->addOperator(getClient(user_fd));
-		else if (mode == "-o" )
-			channels[target]->removeOper(arg);
-		else if (mode == "+i")
-			channels[target]->setInviteChannel(true);
-		else if (mode == "-i")
-			channels[target]->setInviteChannel(false);
-		else if (mode == "+k")
-			channels[target]->setKey(arg);
-		else if (mode == "-k")
-			channels[target]->setKey("");
-		else if (mode == "+l"){
-			std::stringstream ss(arg);
-			int limit;
-			ss >> limit;
-			channels[target]->setLimit(limit);
+
+	if (mode[0] == '+'){
+		for (size_t i = mode.size() - 1; i > 0; i--){
+			if (mode[i] == 'i' && arg.empty()){ // Invite only
+				channels[target]->setInviteChannel(true);
+				genericSendMode(fd, target, mode[i], arg, '+');
+			}
+			else if (mode[i] == 'o' ){ // Give operator
+				if (arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " +o " + arg + " :You must specify a parameter for the operator mode. Syntax: <nickname>");
+					continue;
+				}
+				channels[target]->addOperator(getClient(user_fd));
+				genericSendMode(fd, target, mode[i], arg, '+');
+			}
+			else if (mode[i] == 'k'){ // Set key
+				if(arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " +k " + arg + " :You must specify a parameter for the key mode. Syntax: <key>");
+					continue;
+				}
+				channels[target]->setKey(arg);
+				genericSendMode(fd, target, mode[i], arg, '+');
+			}
+			else if (mode[i] == 'l' ){ // Set limit
+				if(arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " +l " + arg + " :You must specify a parameter for the limit mode. Syntax: <limit>");
+					continue;
+				}
+			    std::stringstream ss(arg);
+			    double limit;
+			    ss >> limit;
+				if (limit < 1 || limit > MAX_CLIENTS){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " l " + arg + " :Invalid limit mode parameter. Syntax: <limit>");
+				}
+				else{
+			    	channels[target]->setLimit(limit);
+					genericSendMode(fd, target, mode[i], arg, '+');
+				}
+			}
+			else if (mode[i] == 't'){ // Set topic
+				genericSendMode(fd, target, mode[i], arg, '+');
+			}
+			else if (mode[i] == 'n'){ // Set no external messages
+				genericSendMode(fd, target, mode[i], arg, '+');
+			}
 		}
-		else if (mode == "-l")
-			channels[target]->setLimit(10000);
-		else if (mode == "+t") ;
-		else if (mode == "-t") ;
-		else if (mode == "+n") ;
-		else if (mode == "-n") ;
-		else {
-			sendCode(fd, "472", clients[fd]->get_nick(), target + " :is unknown mode char to me");
-			return;
-		}
-		// sendCode(fd, "324", clients[fd]->get_nick(), target + " " + mode + " :" + arg);
-		print_client(fd, clients[fd]->get_mask() + "MODE " + target + " " + mode + " :" + arg + "\r\n");
-		_ToAll(channels[target], fd, "MODE " + target + " " + mode + " :" + arg + "\r\n");
 	}
-	else{
-		if (mode == "+i")
-			channels[target]->setInviteChannel(true);
-		else if (mode == "-i")
-			channels[target]->setInviteChannel(false);
-		else if (mode == "-k")
-			channels[target]->setKey("");
-		else if (mode == "-l")
-			channels[target]->setLimit(10000);
-		else if (mode == "+t") ;
-		else if (mode == "-t") ;
-		else if (mode == "+n") ;
-		else if (mode == "-n") ;
-		else {
-			sendCode(fd, "472", clients[fd]->get_nick(), target + " :is unknown mode char to me");
-			return;
+	else if (mode[0] == '-'){
+		for (size_t i = mode.size() - 1; i > 0; i--){
+			if (mode[i] == 'i' && arg.empty()){ // Remove Invite only
+				channels[target]->setInviteChannel(false);
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+			else if (mode[i] == 'o' ){ // Remove operator
+				if (arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " -o " + arg + " :You must specify a parameter for the operator mode. Syntax: <nickname>");
+					continue;
+				}
+				channels[target]->removeOper(arg);
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+			else if (mode[i] == 'k' ){ // Remove key
+				if (arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " -k " + arg + " :You must specify a parameter for the key mode. Syntax: <key>");
+					continue;
+				}
+				channels[target]->setKey("");
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+			else if (mode[i] == 'l' && arg.empty()){ // Remove limit
+				channels[target]->setLimit(MAX_CLIENTS);
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+			else if (mode[i] == 't' ){ // Remove topic
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+			else if (mode[i] == 'n'){ // Remove no external messages
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
 		}
-		// sendCode(fd, "324", clients[fd]->get_nick(), target + " :" + mode);
-		print_client(fd, clients[fd]->get_mask() + "MODE " + target + " :" + mode + "\r\n");
-		_ToAll(channels[target], fd, "MODE " + target + " :" + mode + "\r\n");
 	}
-	if (mode[0] == '+')
-		this->channels[target]->addModes(mode.substr(1));
-	else if (mode[0] == '-')
-		this->channels[target]->removeModes(mode.substr(1));
+
+	else
+		sendCode(fd, "472", clients[fd]->get_nick(), target + " :is not a recognised channel mode");
 }
-
-	// if (mode == "+i" && arg.empty()){ // Invite only
-	// 	channels[target]->setInviteChannel(true);
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " :+i ");
-	// 	_ToAll(channels[target], fd, "MODE " + target + " +i " + "\r\n");
-	// 	this->channels[target]->addModes("i");
-	// }
-	// else if (mode == "-i" && arg.empty()){ // Remove Invite only
-	// 	channels[target]->setInviteChannel(false);
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " :-i ");
-	// 	_ToAll(channels[target], fd, "MODE " + target + " -i " + "\r\n");
-	// 	this->channels[target]->removeModes("i");
-	// }
-	
- 	// else if (mode == "+o" && !arg.empty()){ // Give operator
-	// 	channels[target]->addOperator(getClient(user_fd));
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " +o " + arg);
-	// 	_ToAll(channels[target], fd, "MODE " + target + " +o " + arg + "\r\n");
-	// 	this->channels[target]->addModes("o");
-	// }
-	// else if (mode == "-o" && !arg.empty()){ // Remove operator
-	// 	channels[target]->removeOper(arg);
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " -o " + arg);
-	// 	_ToAll(channels[target], fd, "MODE " + target + " -o " + arg + "\r\n");
-	// 	this->channels[target]->removeModes("o");
-	// }
-
-	// else if (mode == "+k" && !arg.empty()){ // Set key
-	// 	channels[target]->setKey(arg);
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " +k :" + arg);
-	// 	_ToAll(channels[target], fd, "MODE " + target + " +k :" + arg + "\r\n");
-	// 	this->channels[target]->addModes("k");
-	// }
-	// else if (mode == "-k" && arg.empty()){ // Remove key
-	// 	channels[target]->setKey("");
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " :-k ");
-	// 	_ToAll(channels[target], fd, "MODE " + target + " :-k " + "\r\n");
-	// 	this->channels[target]->removeModes("k");
-	// }
-
-	// else if (mode == "+l" && !arg.empty()){ // Set limit
-	//     std::stringstream ss(arg);
-	//     int limit;
-	//     ss >> limit;
-	//     channels[target]->setLimit(limit);
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " +l :" + arg);
-	//     _ToAll(channels[target], fd, "MODE " + target + " +l :" + arg + "\r\n");
-	// 	this->channels[target]->addModes("l");
-	// }
-	// else if (mode == "-l" && arg.empty()){ // Remove limit
-	// 	channels[target]->setLimit(10000);
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " -l :");
-	// 	_ToAll(channels[target], fd, "MODE " + target + " -l :" + "\r\n");
-	// 	this->channels[target]->removeModes("l");
-	// }
-	// else if (mode == "+t" && arg.empty()){ // Set topic
-	// 	channels[target]->addModes("t");
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " :+t ");
-	// 	_ToAll(channels[target], fd, "MODE " + target + " :+t " + "\r\n");
-	// }
-	// else if (mode == "-t" && arg.empty()){ // Remove topic
-	// 	channels[target]->removeModes("t");
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " :-t ");
-	// 	_ToAll(channels[target], fd, "MODE " + target + " :-t " + "\r\n");
-	// }
-	// else if (mode == "+n" && arg.empty()){ // Set no external messages
-	// 	channels[target]->addModes("n");
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " :+n ");
-	// 	_ToAll(channels[target], fd, "MODE " + target + " :+n " + "\r\n");
-	// }
-	// else if (mode == "-n" && arg.empty()){ // Remove no external messages
-	// 	channels[target]->removeModes("n");
-	// 	sendCode(fd, "324", clients[fd]->get_nick(), target + " :-n ");
-	// 	_ToAll(channels[target], fd, "MODE " + target + " :-n " + "\r\n");
-	// }
-	// else{
-	// 	sendCode(fd, "472", clients[fd]->get_nick(), target + " :is unknown mode char to me");
-	// }

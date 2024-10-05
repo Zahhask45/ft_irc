@@ -4,6 +4,9 @@
 #include "colors.hpp"
 #include "Channel.hpp"
 #include <string>
+#include <climits>
+
+#define MAX_CLIENTS 100
 
 class Client;
 class Channel;
@@ -107,7 +110,7 @@ public: // Handdle Commands
 
 	//checkMode
 	int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
-	
+	void genericSendMode(int fd, std::string target, char mode, std::string arg, char sign);
 	bool findNick(std::string nick);
 };
 

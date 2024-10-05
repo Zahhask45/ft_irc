@@ -221,8 +221,8 @@ void Server::createChannel(const std::string &channelName, int fd){
 	if (it == channels.end()){
 		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
-		channels[channelName]->addModes("n");
-		channels[channelName]->addModes("t");
+		channels[channelName]->addModes('n');
+		channels[channelName]->addModes('t');
 	}
 /* 	else{
 		if (this->clients[fd]->get_isOperator() == true)

@@ -12,7 +12,7 @@ void Server::handleTopic(int fd, std::istringstream &command){
 		sendCode(fd, "401", clients[fd]->get_nick(), channelName + " :No such nick/channel");
 		return ;
 	}
-	if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end()){
+	if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end() && channels[channelName]->getModes().find('t') != std::string::npos){
 		sendCode(fd, "482", clients[fd]->get_nick(), channelName + " :You're not channel operator");
 		return ;
 	}

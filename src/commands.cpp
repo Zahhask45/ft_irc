@@ -142,8 +142,8 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	
 	print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
-	if (!this->channels[channelName]->getTopic().empty())
-		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " :" + this->channels[channelName]->getTopic());
+	// if (!this->channels[channelName]->getTopic().empty())
+		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic());
 	sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
 	sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 	_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
@@ -229,14 +229,14 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	print_client(fd, response);
 }
 
-void Server::handleOper(int fd){
-	if (clients[fd]->get_auth() == false){
-		print_client(fd, "Need to Auth the user\n");
-		sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
-		return ;
-	}
-	this->clients[fd]->set_isOperator(true);
-}
+// void Server::handleOper(int fd){
+// 	if (clients[fd]->get_auth() == false){
+// 		print_client(fd, "Need to Auth the user\n");
+// 		sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
+// 		return ;
+// 	}
+// 	this->clients[fd]->set_isOperator(true);
+// }
 
 void Server::handlePing(int fd, std::istringstream &command){
     std::string server;
