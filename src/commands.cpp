@@ -27,11 +27,11 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "375", clients[fd]->get_nick(), ":" + clients[fd]->get_host() + " Message of the day");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":    ▟██▛╗██▛███   ");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":  ▟██▛╔═╝█▛ ▟█▛╗");
-		sendCode(fd, "372", clients[fd]->get_nick(), ":▟██▛╔═╝   ╚▟▛╔═╝");
-		sendCode(fd, "372", clients[fd]->get_nick(), ":████████╗▟█▛ ▟█╗ █▀█ █▀█ █▀█ ▀█▀ █▀█");
-		sendCode(fd, "372", clients[fd]->get_nick(), ": ╚═══███║███▟██║ █▀▀ █▄█ █▀▄  █  █▄█");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":▟██▛╔═╝   ╚▟▛╔═╝                       ▝▜▉▛▘█▀▜▉▐▛▀▜");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":████████╗▟█▛ ▟█╗ █▀█ █▀█ █▀█ ▀█▀ █▀█    ▐▉▌ █▄▟▛▐▌");
+		sendCode(fd, "372", clients[fd]->get_nick(), ": ╚═══███║███▟██║ █▀▀ █▄█ █▀▄  █  █▄█ ▁▁▗▟▉▙▖▉ ▐▙▐▙▄▟");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":     ███║ ╚════╝ ");
-		sendCode(fd, "372", clients[fd]->get_nick(), ":      ╚═╝			By: - bmonteir jodos-sa mamaral-");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":      ╚═╝			By: bmonteir; jodos-sa; mamaral-");
 		sendCode(fd, "376", clients[fd]->get_nick(), ":End of message of the day.");
 		sendCode(fd, "374", clients[fd]->get_nick(), ":Now you can join channels and chat with other users");
 		sendCode(fd, "396", clients[fd]->get_nick(), clients[fd]->get_host() + " :is now your displayed host");
@@ -251,7 +251,6 @@ void Server::handleOper(int fd){
 	this->clients[fd]->set_isOperator(true);
 }
 
-
 void Server::handlePing(int fd, std::istringstream &command){
     std::string server;
     command >> server;
@@ -262,7 +261,6 @@ void Server::handlePing(int fd, std::istringstream &command){
     sendCode(fd, "PONG", clients[fd]->get_host(), server);
 }
 
-// handleWho(fd, iss);
 void Server::handleWho(int fd, std::istringstream &command){
 	std::string mask;
 	command >> mask;
@@ -279,7 +277,7 @@ void Server::handleWho(int fd, std::istringstream &command){
 	}
 	sendCode(fd, "315", clients[fd]->get_nick(), mask + " :End of /WHO list");
 }
-// handleWhois(fd, iss);
+
 void Server::handleWhois(int fd, std::istringstream &command){
 	std::string mask;
 	command >> mask;
@@ -298,7 +296,7 @@ void Server::handleWhois(int fd, std::istringstream &command){
 	}
 	sendCode(fd, "318", clients[fd]->get_nick(), mask + " :End of /WHOIS list");
 }
-// handleList(fd, iss);
+
 void Server::handleList(int fd){
 	std::stringstream ss;
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
