@@ -9,7 +9,7 @@ Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _n
 	this->_creator->set_isOperator(true);
 	this->_topic = " :Welcome to " + _name;
 	this->_inviteChannel = false;
-	this->addModes("+");
+	this->addModes('+');
 	this->_limit = 10;//alterar isto
 }
 
@@ -122,18 +122,26 @@ void Channel::addInvite(int fd, Client *client) {
 
 std::string Channel::getModes(){
 	std::string modes;
-	for (std::vector<std::string>::iterator it = _modes.begin(); it != _modes.end(); it++){
+	for (std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
 		modes += *it;
 	}
 	return modes;
 }
 
-void Channel::addModes(std::string mode){
+bool Channel::addModes(char mode){
+	for(std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
+		if (*it == mode)
+			return false;
+	}
 	_modes.push_back(mode);
+	return true;
 }
 
-void Channel::removeModes(std::string mode){
-	std::vector<std::string>::iterator it = std::find(_modes.begin(), _modes.end(), mode);
-	if (it != _modes.end())
+bool Channel::removeModes(char mode){
+	std::vector<char>::iterator it = std::find(_modes.begin(), _modes.end(), mode);
+	if (it != _modes.end()){
 		_modes.erase(it);
+		return true;
+	}
+	return false;
 }

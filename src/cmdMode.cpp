@@ -34,6 +34,17 @@ int	Server::checkMode(int fd, std::string &target, std::string &mode, std::strin
 	return 0;
 }
 
+void	Server::genericSendMode(int fd, std::string target, char mode, std::string arg, char sign){
+	bool flag = false;
+	if (sign == '+')
+		flag = this->channels[target]->addModes(mode);
+	else if (sign == '-')
+		flag = this->channels[target]->removeModes(mode);
+	if (flag == true || mode == 'l' || mode == 'k' || mode == 'o'){
+		sendCode(fd, "324", clients[fd]->get_nick(), target + " :" + mode + " " + arg);
+		_ToAll(channels[target], fd, "MODE " + target + " " + mode + " " + arg + "\r\n");
+	}
+}
 
 
 //MODE <#canal> <+modos> [parâmetros]: Para definir modos em canais
@@ -44,61 +55,88 @@ void Server::handleMode(int fd, std::istringstream &command){
 		return ;
 	int user_fd = channels[target]->getByName(arg);
 
-	if (mode == "+i" && arg.empty()){ // Invite only
-		channels[target]->setInviteChannel(true);
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " :+i ");
-		_ToAll(channels[target], fd, "MODE " + target + " +i " + "\r\n");
-		this->channels[target]->addModes("i");
+	if (mode[0] == '+'){
+		for (size_t i = mode.size() - 1; i > 0; i--){
+			if (mode[i] == 'i' && arg.empty()){ // Invite only
+				channels[target]->setInviteChannel(true);
+				genericSendMode(fd, target, mode[i], arg, '+');
+			}
+			else if (mode[i] == 'o' ){ // Give operator
+				if (arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " +o " + arg + " :You must specify a parameter for the operator mode. Syntax: <nickname>");
+					continue;
+				}
+				channels[target]->addOperator(getClient(user_fd));
+				genericSendMode(fd, target, mode[i], arg, '+');
+			}
+			else if (mode[i] == 'k'){ // Set key
+				if(arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " +k " + arg + " :You must specify a parameter for the key mode. Syntax: <key>");
+					continue;
+				}
+				channels[target]->setKey(arg);
+				genericSendMode(fd, target, mode[i], arg, '+');
+			}
+			else if (mode[i] == 'l' ){ // Set limit
+				if(arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " +l " + arg + " :You must specify a parameter for the limit mode. Syntax: <limit>");
+					continue;
+				}
+			    std::stringstream ss(arg);
+			    double limit;
+			    ss >> limit;
+				if (limit < 1 || limit > MAX_CLIENTS){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " l " + arg + " :Invalid limit mode parameter. Syntax: <limit>");
+				}
+				else{
+			    	channels[target]->setLimit(limit);
+					genericSendMode(fd, target, mode[i], arg, '+');
+				}
+			}
+
+		}
 	}
-	else if (mode == "-i" && arg.empty()){ // Remove Invite only
-		channels[target]->setInviteChannel(false);
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " :-i ");
-		_ToAll(channels[target], fd, "MODE " + target + " -i " + "\r\n");
-		this->channels[target]->removeModes("i");
+	else if (mode[0] == '-'){
+		for (size_t i = mode.size() - 1; i > 0; i--){
+			if (mode[i] == 'i' && arg.empty()){ // Remove Invite only
+				channels[target]->setInviteChannel(false);
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+			else if (mode[i] == 'o' ){ // Remove operator
+				if (arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " -o " + arg + " :You must specify a parameter for the operator mode. Syntax: <nickname>");
+					continue;
+				}
+				channels[target]->removeOper(arg);
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+			else if (mode[i] == 'k' ){ // Remove key
+				if (arg.empty()){
+					sendCode(fd, "696", clients[fd]->get_nick(), target + " -k " + arg + " :You must specify a parameter for the key mode. Syntax: <key>");
+					continue;
+				}
+				channels[target]->setKey("");
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+			else if (mode[i] == 'l' && arg.empty()){ // Remove limit
+				channels[target]->setLimit(MAX_CLIENTS);
+				genericSendMode(fd, target, mode[i], arg, '-');
+			}
+		}
 	}
 
- 	else if (mode == "+o" && !arg.empty()){ // Give operator
-		channels[target]->addOperator(getClient(user_fd));
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " +o " + arg);
-		_ToAll(channels[target], fd, "MODE " + target + " +o " + arg + "\r\n");
-		this->channels[target]->addModes("o");
-	}
-	else if (mode == "-o" && !arg.empty()){ // Remove operator
-		channels[target]->removeOper(arg);
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " -o " + arg);
-		_ToAll(channels[target], fd, "MODE " + target + " -o " + arg + "\r\n");
-		this->channels[target]->removeModes("o");
-	}
-
-	else if (mode == "+k" && !arg.empty()){ // Set key
-		channels[target]->setKey(arg);
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " +k " + arg);
-		_ToAll(channels[target], fd, "MODE " + target + " +k " + arg + "\r\n");
-		this->channels[target]->addModes("k");
-	}
-	else if (mode == "-k" && arg.empty()){ // Remove key
-		channels[target]->setKey("");
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " -k ");
-		_ToAll(channels[target], fd, "MODE " + target + " -k " + "\r\n");
-		this->channels[target]->removeModes("k");
-	}
-
-	else if (mode == "+l" && !arg.empty()){ // Set limit
-	    std::stringstream ss(arg);
-	    int limit;
-	    ss >> limit;
-	    channels[target]->setLimit(limit);
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " +l " + arg);
-	    _ToAll(channels[target], fd, "MODE " + target + " +l " + arg + "\r\n");
-		this->channels[target]->addModes("l");
-	}
-	else if (mode == "-l" && arg.empty()){ // Remove limit
-		channels[target]->setLimit(10000);
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " -l ");
-		_ToAll(channels[target], fd, "MODE " + target + " -l " + "\r\n");
-		this->channels[target]->removeModes("l");
-	}
-	else{
-		sendCode(fd, "472", clients[fd]->get_nick(), target + " :is unknown mode char to me");
-	}
+	else
+		sendCode(fd, "472", clients[fd]->get_nick(), target + " :is not a recognised channel mode");
 }
+
+//No spotchat
+// pelo botao
+//<< MODE #meucanal +l 5
+//<< MODE #meucanal
+//>> @time=2024-10-05T07:46:05.940Z :a!~andre@SpotChat-2ro.k9p.92.185.IP MODE #meucanal +l :5
+//>> @time=2024-10-05T07:46:05.978Z :lamia.uk.SpotChat.org 324 a #meucanal +l :5
+//>> @time=2024-10-05T07:46:05.978Z :lamia.uk.SpotChat.org 329 a #meucanal :1728111326 - é o tempo que o canal foi criado
+
+// pelo comando
+//<< MODE #meucanal +l 8
+//>> @time=2024-10-05T07:46:17.680Z :a!~andre@SpotChat-2ro.k9p.92.185.IP MODE #meucanal +l :8
