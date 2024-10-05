@@ -41,7 +41,8 @@ void	Server::genericSendMode(int fd, std::string target, char mode, std::string 
 	else if (sign == '-')
 		flag = this->channels[target]->removeModes(mode);
 	if (flag == true || mode == 'l' || mode == 'k' || mode == 'o'){
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " :" + mode + " " + arg);
+		print_client(fd, clients[fd]->get_mask() + "MODE " + target + " :" + sign + mode + " " + arg + "\r\n");
+		//sendCode(fd, "324", clients[fd]->get_nick(), target + " :" + mode + " " + arg);
 		_ToAll(channels[target], fd, "MODE " + target + " " + mode + " " + arg + "\r\n");
 	}
 }
@@ -128,15 +129,3 @@ void Server::handleMode(int fd, std::istringstream &command){
 	else
 		sendCode(fd, "472", clients[fd]->get_nick(), target + " :is not a recognised channel mode");
 }
-
-//No spotchat
-// pelo botao
-//<< MODE #meucanal +l 5
-//<< MODE #meucanal
-//>> @time=2024-10-05T07:46:05.940Z :a!~andre@SpotChat-2ro.k9p.92.185.IP MODE #meucanal +l :5
-//>> @time=2024-10-05T07:46:05.978Z :lamia.uk.SpotChat.org 324 a #meucanal +l :5
-//>> @time=2024-10-05T07:46:05.978Z :lamia.uk.SpotChat.org 329 a #meucanal :1728111326 - é o tempo que o canal foi criado
-
-// pelo comando
-//<< MODE #meucanal +l 8
-//>> @time=2024-10-05T07:46:17.680Z :a!~andre@SpotChat-2ro.k9p.92.185.IP MODE #meucanal +l :8
