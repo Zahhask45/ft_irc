@@ -10,6 +10,10 @@ bool isStringDigit(const std::string& str) {
 }
 
 int	Server::checkMode(int fd, std::string &target, std::string &mode, std::string &arg){
+	if (!target.empty() && (target[0] == '+' || target[0] == '-')){
+		sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
+		return -1;
+	}
 	if (!target.empty() && target[0] != '#' && mode.empty() ){
 		sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
 		return -1;

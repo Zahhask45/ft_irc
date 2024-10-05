@@ -40,18 +40,6 @@ void Server::handleAuth(int fd){
 	}
 }
 
-/* void Server::handleAuth(int fd)
-{
-	// std::cout << "PASS SERVER: " << _pass << std::endl;
-	// std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
-	std::string pass = clients[fd]->get_pass();
-	std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
-	if (strcmp(pass.c_str(), _pass.c_str()) == 0){
-		sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
-		clients[fd]->set_auth(true);
-		return ;
-	}
-} */
 //! PASS should come before NICK and USER, maybe we should create a function to force the others commands to come only after PASS.
 void Server::handlePass(int fd, std::istringstream &command){
 	std::string pass;
@@ -76,7 +64,6 @@ void Server::handleNick(int fd, std::istringstream &command){
 		sendCode(fd, "431", "", "No nickname given"); // ERR_NONICKNAMEGIVEN
 		return;
 	}
-	// ERR_NICKNAMEINUSE
 	if (findNick(nick))
 		sendCode(fd, "433", nick, ":Nickname is already in use"); // ERR_NICKNAMEINUSE
 	if (this->clients[fd]->get_nick().empty())
@@ -93,8 +80,8 @@ void Server::handleNick(int fd, std::istringstream &command){
 
 void Server::handleUser(int fd, std::istringstream &command){
 	std::string username, hostname, servername, realname;
-	command >> username >> hostname >> servername; // user 5 * :realname de fato 
-	std::getline(command, realname); // Get the rest of the line
+	command >> username >> hostname >> servername; 
+	std::getline(command, realname); 
 	if (username.empty()){
 		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return;
