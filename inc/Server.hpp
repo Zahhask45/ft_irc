@@ -20,6 +20,7 @@ private:
 	struct sockaddr_storage _addr;
 	std::map<std::string, Channel *> channels;
 	std::map<int, Client *> clients;
+
 	// std::vector<std::string> user;
 
 	//! DONT KNOW WHERE TO PUT THIS YET

@@ -6,11 +6,13 @@ void Server::handleAuth(int fd)
 	// std::cout << "GET PASS: " << clients[fd]->get_pass() << std::endl;
 	std::string pass = clients[fd]->get_pass();
 	std::cout << strcmp(pass.c_str(), _pass.c_str()) << std::endl;
-	if (strcmp(pass.c_str(), _pass.c_str()) == 0){
+	if (strcmp(pass.c_str(), _pass.c_str()) == 0 && !clients[fd]->get_nick().empty()){
 		sendCode(fd, "371", clients[fd]->get_nick(), ": User is Authenticated");
 		clients[fd]->set_auth(true);
 		return ;
 	}
+	else
+		sendCode(fd, "372", clients[fd]->get_nick(), ": User is not Authenticated");
 }
 
 void Server::handlePass(int fd, std::istringstream &command){
@@ -32,17 +34,22 @@ void Server::handlePass(int fd, std::istringstream &command){
 void Server::handleNick(int fd, std::istringstream &command){
 	std::string nick;
 	command >> nick;
+	
 	if (nick.empty()){
 		sendCode(fd, "431", "", "No nickname given");
+		clients[fd]->set_nick("\0");
 		return;
 	}
-	for(std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++){
+	std::map<int, Client *>::iterator it;
+	for(it = clients.begin(); it != clients.end(); it++){
 		if (it->second->get_nick() == nick){
 			sendCode(fd, "433", nick, ":Nickname is already in use");
+			this->clients[fd]->set_nick(nick);
+			clients[fd]->set_flagNick(true);
 			return;
 		}
 	}
-	if (this->clients[fd]->get_nick().empty())
+	if (this->clients[fd]->get_nick().empty() && clients[fd]->get_flagNick() == false)
 		this->clients[fd]->set_nick(nick);
 	else{
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";

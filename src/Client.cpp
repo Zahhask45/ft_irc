@@ -4,12 +4,14 @@ Client::Client(): _client_fd(), _user(), _nick() {
 	_auth = false;
 	_isOperator = false;
 	_host = "GenericHost";
+	_flagNick = false;
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_auth = false;
 	_isOperator = false;
 	_host = "GenericHost";
+	_flagNick = false;
 }
 
 Client::~Client(){}
@@ -17,6 +19,8 @@ Client::~Client(){}
 bool const &Client::get_auth() const{ return _auth; }
 
 bool const &Client::get_isOperator() const{ return _isOperator; }
+
+bool const &Client::get_flagNick() const{ return _flagNick; }
 
 int const &Client::get_client_fd() const{ return _client_fd; }
 
@@ -64,6 +68,10 @@ void Client::set_mask(const std::string &mask){
 
 void Client::set_realname(std::string const &realname){
 	this->_realname = realname;
+}
+
+void Client::set_flagNick(bool value){
+	this->_flagNick = value;
 }
 
 void Client::addChannel(const std::string &channelName, Channel &channel){
