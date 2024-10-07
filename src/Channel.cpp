@@ -10,6 +10,7 @@ Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _n
 	this->_topic = " :Welcome to " + _name;
 	this->_inviteChannel = false;
 	this->_limit = 10;//alterar isto
+	this->_creationTime = time(NULL);
 }
 
 Channel::~Channel(){}
@@ -61,7 +62,7 @@ std::string const &Channel::getTopic() const{ return _topic; }
 
 std::string const &Channel::getKey() const {return _key;}
 
-int const &Channel::getLimit() const {return _limit;}
+long unsigned int const &Channel::getLimit() const {return _limit;}
 
 std::map<int, Client*>& Channel::getUsers() {return users;}
 
@@ -117,4 +118,49 @@ std::string		Channel::listAllUsers() const {
 void Channel::addInvite(int fd, Client *client) {
 	if (this->inviteList.find(fd) == this->inviteList.end())
 		this->inviteList.insert(std::pair<int, Client *>(fd, &client[fd]));
+}
+
+std::string Channel::getModes(){
+	std::string modes = "+";
+	std::stringstream str;
+	char elem[6] = { 'i', 'k', 'l', 'o', 't', 'n'};
+
+	for (int i = 0; i < 6; i++){
+		for (std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
+			if (*it == elem[i])
+				modes += *it;
+		} 
+	}
+	if (_key != "")
+	{
+		if (modes.find('l') != std::string::npos){
+			str << _limit;
+			modes += " " + _key + " :" + str.str();
+		}
+		else
+			modes += " :" + _key;
+	}
+	else if (modes.find('l') != std::string::npos){
+		str << _limit;
+		modes += " :" + str.str();
+	}
+	return modes;
+}
+
+bool Channel::addModes(char mode){
+	for(std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
+		if (*it == mode)
+			return false;
+	}
+	_modes.push_back(mode);
+	return true;
+}
+
+bool Channel::removeModes(char mode){
+	std::vector<char>::iterator it = std::find(_modes.begin(), _modes.end(), mode);
+	if (it != _modes.end()){
+		_modes.erase(it);
+		return true;
+	}
+	return false;
 }

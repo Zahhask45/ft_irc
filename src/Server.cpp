@@ -1,5 +1,4 @@
 #include "Server.hpp"
-#include <errno.h>
 
 Server::Server(){}
 
@@ -77,7 +76,7 @@ void Server::binding(){
 	_events[0].data.fd = _socket_Server;
 	_events[0].events = EPOLLIN;
 	
-	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
+	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_events[0]) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
 		close(_socket_Server);
 		exit(EXIT_FAILURE);
@@ -89,6 +88,7 @@ void Server::loop(){
 	while(true){
 		std::cout << "Waiting for connections..." << std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
+
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
@@ -102,7 +102,6 @@ void Server::loop(){
 				}
 			}
 		}
-		//std::cout << "Number of clients: " << _cur_online << std::endl;
 	}
 }
 
@@ -146,7 +145,7 @@ void Server::funct_NotNewClient(int i){
 			command.erase(command.end() - 1);
 		}
 		handleCommands(_events[i].data.fd, command);
-		std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
+		// std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 	}
 	memset(_buffer, 0, 1024);
 }
@@ -198,11 +197,8 @@ void Server::handleCommands(int fd, const std::string &command){
 			handlePart(fd, iss);
 		else if (cmd == "QUIT")
 			handleQuit(fd, iss);
-		//else if (cmd == "OPER")
-		//	handleOper(fd);
-		else if (cmd == "PING"){
+		else if (cmd == "PING")
 			handlePing(fd, iss);
-		}
 		else if (cmd == "MODE")
 			handleMode(fd, iss);
 		else if (cmd == "KICK")
@@ -211,6 +207,12 @@ void Server::handleCommands(int fd, const std::string &command){
 			handleInvite(fd, iss);
 		else if (cmd == "TOPIC")
 			handleTopic(fd, iss);
+		else if (cmd == "WHO")
+			handleWho(fd, iss);
+		else if (cmd == "WHOIS")
+			handleWhois(fd, iss);
+		else if (cmd == "LIST")
+			handleList(fd);
 	}
 }
 
@@ -219,7 +221,8 @@ void Server::createChannel(const std::string &channelName, int fd){
 	if (it == channels.end()){
 		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
-		
+		channels[channelName]->addModes('n');
+		channels[channelName]->addModes('t');
 	}
 /* 	else{
 		if (this->clients[fd]->get_isOperator() == true)
@@ -265,28 +268,6 @@ std::string Server::extract_value(const std::string& line) {
 	return value;
 }
 
-// void Server::broadcast_to_channel(const std::string &channelName, int last_fd) {
-// 	// Check if the channel exists
-// 	if (channels.find(channelName) != channels.end()) {
-// 		Channel* channel = channels[channelName];
-
-// 		// Iterate through all users in the channel
-// 		std::map<int, Client*>::iterator it;
-// 		for (it = channel->getUsers().begin(); it != channel->getUsers().end(); ++it) {
-// 			int client_fd = it->first;
-// 			std::string response = ":" + clients[last_fd]->get_nick() + "!" + clients[last_fd]->get_user() + "@" + clients[last_fd]->get_host() + " JOIN :" + channelName + "\r\n";
-// 			std::string response2 = ":" + clients[client_fd]->get_nick() + "!" + clients[client_fd]->get_user() + "@" + clients[client_fd]->get_host() + " JOIN :" + channelName + "\r\n";
-
-// 			if (client_fd != last_fd) {
-// 				print_client(client_fd, response);
-// 				print_client(last_fd, response2);
-// 			}
-// 		}
-// 	}
-// }
-
-//Essa funcao recebe o fd e a mensagem a ser enviada para todos os clientes conectados no mesmo canal que o usuario do fd.
-// é auxiliada pela função findInChannel que retorna o nome do canal em que o usuário está conectado.
 void Server::_ToAll(int ori_fd, std::string message){
 	std::set<std::string> channelList = findInChannel(ori_fd);
 	while (!channelList.empty()){
@@ -332,7 +313,7 @@ std::set<std::string> Server::findInChannel(int fd){
 
 void Server::print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), 0);
-	std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
+	// std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
 }
 
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
@@ -355,4 +336,12 @@ int Server::_sendall(int destfd, std::string message)
 		bytesleft -= b;
 	}
 	return (b == -1 ? -1 : 0);
+}
+
+bool Server::findNick(std::string nick){
+	for(std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++){
+		if (it->second->get_nick() == nick)
+			return true;
+	}
+	return false;
 }

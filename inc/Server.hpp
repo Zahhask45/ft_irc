@@ -3,7 +3,8 @@
 
 #include "colors.hpp"
 #include "Channel.hpp"
-#include <string>
+
+#define MAX_CLIENTS 100
 
 class Client;
 class Channel;
@@ -14,7 +15,7 @@ private:
 	int _socket_Server;
 	int _port;
 	std::string _pass;
-	struct sockaddr_storage _addr;
+	// struct sockaddr_storage _addr;
 	std::map<std::string, Channel *> channels;
 	std::map<int, Client *> clients;
 	// std::vector<std::string> user;
@@ -72,11 +73,11 @@ public: // Handdle Commands
 	void handleKick(int fd, std::istringstream &command);
 	void handleInvite(int fd, std::istringstream &command);
 	void handleTopic(int fd, std::istringstream &command);
-	
-	void handleNames(int fd, std::istringstream &command);
-	void handleList(int fd, std::istringstream &command);
+	void handleList(int fd);
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
+	
+	void handleNames(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
 	void handleAway(int fd, std::istringstream &command);
 	void handlePing(int fd, std::istringstream &command);
@@ -103,6 +104,12 @@ public: // Handdle Commands
 	void handleIson(int fd, std::istringstream &command);
 	void handleCap(int fd, std::istringstream &command);
 	void handleSasl(int fd, std::istringstream &command);
+
+
+	//checkMode
+	int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
+	void genericSendMode(int fd, std::string target, char mode, std::string arg, char sign);
+	bool findNick(std::string nick);
 };
 
 #include "Client.hpp"

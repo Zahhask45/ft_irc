@@ -39,6 +39,7 @@ public: //GETTERS
 	bool const &get_isOperator() const;
 	std::string const &get_host() const;
 	std::string const &get_mask() const;
+	std::string const &get_realname() const;
 
 public: //SETTERS
 	void set_addr(struct sockaddr_storage value);

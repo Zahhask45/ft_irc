@@ -3,13 +3,13 @@
 Client::Client(): _client_fd(), _user(), _nick() {
 	_auth = false;
 	_isOperator = false;
-	_host = "GenericHost";
+	_host = "Terracota";
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_auth = false;
 	_isOperator = false;
-	_host = "GenericHost";
+	_host = "Terracota";
 }
 
 Client::~Client(){}
@@ -29,6 +29,8 @@ std::string const &Client::get_nick() const{ return _nick; }
 std::string const &Client::get_host() const { return _host; }
 
 std::string const &Client::get_mask() const{ return _mask; }
+
+std::string const &Client::get_realname() const{ return _realname; }
 
 void Client::set_addr(struct sockaddr_storage value){
 	_client_addr = value;
