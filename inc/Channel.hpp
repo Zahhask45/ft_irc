@@ -65,7 +65,7 @@ public:
     int getByName(std::string const &name) const;
 
     void addInvite(int fd, Client *client);
-
+    int getCreatorFD() const;
 };
 
 #include "Client.hpp"

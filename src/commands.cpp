@@ -16,6 +16,10 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "461", "", "Not enough parameters");
 		return;
 	}
+	if (clients[fd]->get_auth() == true){
+		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reauth"); // ERR_ALREADYREGISTRED
+		return;
+	}
 	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
 		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
@@ -109,56 +113,61 @@ void Server::handleUser(int fd, std::istringstream &command){
 }
 
 void Server::handleJoin(int fd, std::istringstream &command){
-	std::string channelName, key;
-	command >> channelName >> key;
+	std::string channelName, key, line;
+	command >> line >> key;
+	std::stringstream ss(line);
 
 	if (clients[fd]->get_auth() == false){
 		print_client(fd, "Need to Auth the user\n");
 		sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered"); // ERR_NOTREGISTERED
 		return ;
 	}
-	if (channelName.empty()){
+	if (line.empty()){
 		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return ;
 	}
-	if (channelName[0] != '#'){
-		sendCode(fd, "403", clients[fd]->get_nick(), channelName + " :No such channel"); // ERR_NOSUCHCHANNEL
-		return ;
-	}
-	if (getChannel(channelName) == NULL)
-		createChannel(channelName, fd);
-	if ((this->channels[channelName]->getInviteChannel() == true 
-	&& this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
-	&& this->clients[fd]->get_isOperator() == false){
-		sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only"); // ERR_INVITEONLYCHAN
-		return ;
-	}
-	if (!this->channels[channelName]->getKey().empty() && this->channels[channelName]->getKey() != key){
-		sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key"); // ERR_BADCHANNELKEY
-		return ;
-	}
-	if (this->channels[channelName]->getUsers().size() >= this->channels[channelName]->getLimit() ){
-		sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached"); // ERR_CHANNELISFULL
-		return ;
-	}
-	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
-	
-	if (this->clients[fd]->get_isOperator() == true){
-		this->channels[channelName]->addOperator(getClient(fd));
-		this->channels[channelName]->addUser(getClient(fd));
-	}
-	else
-		this->channels[channelName]->addUser(getClient(fd));
-	
-	print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
-	// if (!this->channels[channelName]->getTopic().empty())
-		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic());
-	sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
-	sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
-	_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
+	while (std::getline(ss, channelName, ',')){
+		if (channelName[0] != '#'){
+			sendCode(fd, "403", clients[fd]->get_nick(), channelName + " :No such channel"); // ERR_NOSUCHCHANNEL
+			return ;
+		}
+		if (getChannel(channelName) == NULL)
+			createChannel(channelName, fd);
+		if ((this->channels[channelName]->getInviteChannel() == true 
+		&& this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
+		&& this->channels[channelName]->getOperators().find(fd) == this->channels[channelName]->getOperators().end()){
+			sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only"); // ERR_INVITEONLYCHAN
+			return ;
+		}
+		if (!this->channels[channelName]->getKey().empty() && this->channels[channelName]->getKey() != key){
+			sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key"); // ERR_BADCHANNELKEY
+			return ;
+		}
+		if (this->channels[channelName]->getUsers().size() >= this->channels[channelName]->getLimit() ){
+			sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached"); // ERR_CHANNELISFULL
+			return ;
+		}
+
+		this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
+		
+		if (this->clients[fd]->get_client_fd() == this->channels[channelName]->getCreatorFD()){
+			this->channels[channelName]->addOperator(getClient(fd));
+			this->channels[channelName]->addUser(getClient(fd));
+		}
+		else
+			this->channels[channelName]->addUser(getClient(fd));
+		
+		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
+
+		// if (!this->channels[channelName]->getTopic().empty())
+			sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic());
+		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
+		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
+		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
+	}
 }
-// Apartir daqui.
+
 void Server::handlePrivmsg(int fd, std::istringstream &command){
 	std::string target, message;
 	command >> target;
@@ -249,13 +258,13 @@ void Server::handleQuit(int fd, std::istringstream &command){
 // }
 
 void Server::handlePing(int fd, std::istringstream &command){
-    std::string server;
-    command >> server;
-    if (server.empty()){
-        sendCode(fd, "409", "", "No origin specified");
-        return ;
-    }
-    sendCode(fd, "PONG", clients[fd]->get_host(), server);
+	std::string server;
+	command >> server;
+	if (server.empty()){
+		sendCode(fd, "409", "", "No origin specified");
+		return ;
+	}
+	sendCode(fd, "PONG", clients[fd]->get_host(), server);
 }
 
 void Server::handleWho(int fd, std::istringstream &command){
@@ -295,8 +304,8 @@ void Server::handleWhois(int fd, std::istringstream &command){
 }
 
 void Server::handleList(int fd){
-	std::stringstream ss;
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
+		std::stringstream ss;
 		ss << it->second->getUsers().size();
 		sendCode(fd, "322", clients[fd]->get_nick(), it->first + " " + ss.str() + " :" + it->second->getTopic());
 	}
