@@ -9,7 +9,7 @@
       "stopAtEntry": false,
       "externalConsole": false,
       "cwd": "${workspaceFolder}/",
-      "program": "${workspaceFolder}/ircserv_M",
+      "program": "${workspaceFolder}/ircserv",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [

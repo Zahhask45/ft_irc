@@ -6,8 +6,9 @@ Channel::Channel(const std::string name): _name(name), users(){}
 
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
 	//this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
-	this->_creator->set_isOperator(true);
-	this->_topic = " :Welcome to " + _name;
+	//this->_creator->set_isOperator(true);
+	this->addOperator(*Creator);
+	this->_topic = ":Welcome to " + _name;
 	this->_inviteChannel = false;
 	this->_limit = 10;//alterar isto
 	this->_creationTime = time(NULL);
@@ -50,6 +51,7 @@ void Channel::removeOper(std::string oper){
 	while (it != operators.end()){
 		if (it->second->get_nick() == oper){
 			operators.erase(it);
+			it->second->set_isOperator(false);
 			break;
 		}
 		it++;

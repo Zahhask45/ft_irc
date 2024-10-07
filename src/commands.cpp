@@ -24,7 +24,10 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
 		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + serverTimestamp());
-		sendCode(fd, "004", clients[fd]->get_nick(), clients[fd]->get_host() + " 1.0 BORTWcghiorswx ACIJKMNOPQRSTYacgiklmnopqrstv :IJYaghkloqv"); //! Explicacao no arquivo explain.txt
+		sendCode(fd, "004", clients[fd]->get_nick(), clients[fd]->get_host() + " InspIRCd-3 BDHIORSTWcdghikorswxz ACIJKMNOPQRSTYabceghiklmnopqrstvz :IJYabeghkloqv"); //! Explicacao no arquivo explain.txt
+		
+		sendCode(fd, "005", clients[fd]->get_nick(), "CHANMODES=Ibeg,k,Jl,ACKMNOPQRSTiprstz :are supported by this server");
+
 
 		//sendCode(fd, "005", clients[fd]->get_nick(), ":This server was created " + clients[fd]->get_host());
 		sendCode(fd, "371", clients[fd]->get_nick(), ":User is Authenticated");
@@ -151,17 +154,12 @@ void Server::handleJoin(int fd, std::istringstream &command){
 
 		this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
 		
-		if (this->clients[fd]->get_client_fd() == this->channels[channelName]->getCreatorFD()){
-			this->channels[channelName]->addOperator(getClient(fd));
-			this->channels[channelName]->addUser(getClient(fd));
-		}
-		else
-			this->channels[channelName]->addUser(getClient(fd));
+		this->channels[channelName]->addUser(getClient(fd));
 		
 		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
 		// if (!this->channels[channelName]->getTopic().empty())
-			sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic());
+		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic());
 		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
 		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
