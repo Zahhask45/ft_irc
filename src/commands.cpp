@@ -13,10 +13,13 @@ void Server::handleAuth(int fd){
 	if (clients[fd] && (clients[fd]->get_user().empty() 
 		|| clients[fd]->get_pass().empty() 
 		|| clients[fd]->get_nick().empty())){
-		sendCode(fd, "461", "", "Not enough parameters");
+		sendCode(fd, "461", "", "Not enough parameters"); //ERR_NEEDMOREPARAMS
 		return;
 	}
-	
+	if (clients[fd]->get_auth() == true){
+		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reauth"); // ERR_ALREADYREGISTRED
+		return;
+	}
 	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
 		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
@@ -99,7 +102,8 @@ void Server::handleUser(int fd, std::istringstream &command){
 }
 
 void Server::handleJoin(int fd, std::istringstream &command){
-	std::string channelName, key;
+	std::string channelName, key, line;
+	std::stringstream ss(channelName);
 	command >> channelName >> key;
 
 	if (clients[fd]->get_auth() == false){
@@ -111,43 +115,46 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return ;
 	}
-	if (channelName[0] != '#'){
-		sendCode(fd, "403", clients[fd]->get_nick(), channelName + " :No such channel"); // ERR_NOSUCHCHANNEL
-		return ;
-	}
-	if (getChannel(channelName) == NULL)
-		createChannel(channelName, fd);
-	if ((this->channels[channelName]->getInviteChannel() == true 
-	&& this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
-	&& this->clients[fd]->get_isOperator() == false){
-		sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only"); // ERR_INVITEONLYCHAN
-		return ;
-	}
-	if (!this->channels[channelName]->getKey().empty() && this->channels[channelName]->getKey() != key){
-		sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key"); // ERR_BADCHANNELKEY
-		return ;
-	}
-	if (this->channels[channelName]->getUsers().size() >= this->channels[channelName]->getLimit() ){
-		sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached"); // ERR_CHANNELISFULL
-		return ;
-	}
 
-	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
-	
-	if (this->clients[fd]->get_isOperator() == true){
-		this->channels[channelName]->addOperator(getClient(fd));
-		this->channels[channelName]->addUser(getClient(fd));
-	}
-	else
-		this->channels[channelName]->addUser(getClient(fd));
-	
-	print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
+	while (std::getline(ss, line, ',')){
+		if (channelName[0] != '#'){
+			sendCode(fd, "403", clients[fd]->get_nick(), channelName + " :No such channel"); // ERR_NOSUCHCHANNEL
+			return ;
+		}
+		if (getChannel(channelName) == NULL)
+			createChannel(channelName, fd);
+		if ((this->channels[channelName]->getInviteChannel() == true 
+		&& this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
+		&& this->clients[fd]->get_isOperator() == false){
+			sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only"); // ERR_INVITEONLYCHAN
+			return ;
+		}
+		if (!this->channels[channelName]->getKey().empty() && this->channels[channelName]->getKey() != key){
+			sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key"); // ERR_BADCHANNELKEY
+			return ;
+		}
+		if (this->channels[channelName]->getUsers().size() >= this->channels[channelName]->getLimit() ){
+			sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached"); // ERR_CHANNELISFULL
+			return ;
+		}
 
-	// if (!this->channels[channelName]->getTopic().empty())
-		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic());
-	sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
-	sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
-	_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
+		this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
+		
+		if (this->clients[fd]->get_isOperator() == true){
+			this->channels[channelName]->addOperator(getClient(fd));
+			this->channels[channelName]->addUser(getClient(fd));
+		}
+		else
+			this->channels[channelName]->addUser(getClient(fd));
+		
+		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
+
+		// if (!this->channels[channelName]->getTopic().empty())
+			sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic());
+		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
+		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
+		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
+	}
 }
 // Apartir daqui.
 void Server::handlePrivmsg(int fd, std::istringstream &command){

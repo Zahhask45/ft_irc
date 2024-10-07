@@ -164,3 +164,7 @@ bool Channel::removeModes(char mode){
 	}
 	return false;
 }
+
+int Channel::getCreatorFD() const {
+	return _creator->get_client_fd();
+}
