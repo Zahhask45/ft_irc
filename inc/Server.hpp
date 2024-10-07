@@ -18,6 +18,7 @@ private:
 	// struct sockaddr_storage _addr;
 	std::map<std::string, Channel *> channels;
 	std::map<int, Client *> clients;
+
 	// std::vector<std::string> user;
 
 	//! DONT KNOW WHERE TO PUT THIS YET
@@ -47,6 +48,7 @@ public:
 	void setPass(std::string pass);
 	void funct_NewClient(int i);
 	void funct_NotNewClient(int i);
+
 
 //* Auxiliar functions
 	void _ToAll(int ori_fd, std::string message);

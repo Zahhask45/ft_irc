@@ -38,6 +38,8 @@ void Server::handleAuth(int fd){
 		clients[fd]->set_auth(true);
 		return ;
 	}
+	else
+		sendCode(fd, "372", clients[fd]->get_nick(), ": User is not Authenticated");
 }
 
 //! PASS should come before NICK and USER, maybe we should create a function to force the others commands to come only after PASS.
@@ -60,13 +62,22 @@ void Server::handlePass(int fd, std::istringstream &command){
 void Server::handleNick(int fd, std::istringstream &command){
 	std::string nick;
 	command >> nick;
+	
 	if (nick.empty()){
 		sendCode(fd, "431", "", "No nickname given"); // ERR_NONICKNAMEGIVEN
+		clients[fd]->set_nick("\0");
 		return;
 	}
-	if (findNick(nick))
-		sendCode(fd, "433", nick, ":Nickname is already in use"); // ERR_NICKNAMEINUSE
-	if (this->clients[fd]->get_nick().empty())
+	std::map<int, Client *>::iterator it;
+	for(it = clients.begin(); it != clients.end(); it++){
+		if (it->second->get_nick() == nick){
+			sendCode(fd, "433", nick, ":Nickname is already in use");
+			this->clients[fd]->set_nick(nick);
+			clients[fd]->set_flagNick(true);
+			return;
+		}
+	}
+	if (this->clients[fd]->get_nick().empty() && clients[fd]->get_flagNick() == false)
 		this->clients[fd]->set_nick(nick);
 	else{
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
@@ -130,7 +141,6 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached"); // ERR_CHANNELISFULL
 		return ;
 	}
-
 	this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
 	
 	if (this->clients[fd]->get_isOperator() == true){
