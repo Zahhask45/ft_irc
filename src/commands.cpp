@@ -16,6 +16,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "461", "", "Not enough parameters");
 		return;
 	}
+	
 	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
 		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
@@ -28,7 +29,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "372", clients[fd]->get_nick(), ":    ▟██▛╗██▛███   ");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":  ▟██▛╔═╝█▛ ▟█▛╗");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":▟██▛╔═╝   ╚▟▛╔═╝                       ▝▜▉▛▘█▀▜▉▐▛▀▜");
-		sendCode(fd, "372", clients[fd]->get_nick(), ":████████╗▟█▛ ▟█╗ █▀█ █▀█ █▀█ ▀█▀ █▀█    ▐▉▌ █▄▟▛▐▌");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":████████╗▟█▛ ▟█╗ █▀█ █▀█ █▀█ ▀█▀ █▀█    ▐▉▌ █▄▟▀▐▌");
 		sendCode(fd, "372", clients[fd]->get_nick(), ": ╚═══███║███▟██║ █▀▀ █▄█ █▀▄  █  █▄█ ▁▁▗▟▉▙▖▉ ▐▙▐▙▄▟");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":     ███║ ╚════╝ ");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":      ╚═╝			By: bmonteir; jodos-sa; mamaral-");
