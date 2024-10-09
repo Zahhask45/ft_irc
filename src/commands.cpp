@@ -84,7 +84,7 @@ void Server::handleNick(int fd, std::istringstream &command){
 			return;
 		}
 	}
-	if (this->clients[fd]->get_nick().empty() && clients[fd]->get_flagNick() == false)
+	if (this->clients[fd]->get_nick().empty())
 		this->clients[fd]->set_nick(nick);
 	else{
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
@@ -132,7 +132,7 @@ void Server::handleJoin(int fd, std::istringstream &command){
 
 	while (std::getline(ss, channelName, ',')){
 		if (channelName[0] != '#'){
-			sendCode(fd, "403", clients[fd]->get_nick(), channelName + " :No such channel"); // ERR_NOSUCHCHANNEL
+			sendCode(fd, "476", clients[fd]->get_nick(), channelName + " :Invalid channel name"); // ERR_BADCHANMASK
 			return ;
 		}
 		if (getChannel(channelName) == NULL)
@@ -222,6 +222,10 @@ void Server::handlePart(int fd, std::istringstream &command){
 	_ToAll(channel, fd, "PART " + channelName + "\r\n");
 	channel->removeUser(clients[fd]->get_nick());
 	channel->removeOper(clients[fd]->get_nick());
+	if (this->channels[channelName]->listAllUsers() == ":"){
+		delete this->channels[channelName];
+		this->channels.erase(channelName);
+	}
 	clients[fd]->removeChannel(channelName);
 }
 
@@ -234,26 +238,25 @@ void Server::handleQuit(int fd, std::istringstream &command){
 		if (it->second->getUsers().find(fd) != it->second->getUsers().end()){
 			it->second->removeUser(clients[fd]->get_nick());
 			it->second->removeOper(clients[fd]->get_nick());
+			// if (it->second->listAllUsers() == ":"){
+			// 	delete it->second;
+			clients[fd]->removeChannel(it->first);
+			// 	this->channels.erase(it);
+			// }
+	// 		else
+			//clients[fd]->removeChannel(it->first);
 		}
 	}
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {
 		std::cerr << "Error removing socket from epoll(quit): " << strerror(errno) << std::endl;
 	}
 	close(clients[fd]->get_client_fd());
-	this->clients.erase(clients[fd]->get_client_fd());
+	delete clients[fd];
+	this->clients.erase(fd);
 	this->_cur_online--;
 	this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
 	print_client(fd, response);
 }
-
-// void Server::handleOper(int fd){
-// 	if (clients[fd]->get_auth() == false){
-// 		print_client(fd, "Need to Auth the user\n");
-// 		sendCode(fd, "451", clients[fd]->get_nick(), ": You have not registered");
-// 		return ;
-// 	}
-// 	this->clients[fd]->set_isOperator(true);
-// }
 
 void Server::handlePing(int fd, std::istringstream &command){
 	std::string server;
