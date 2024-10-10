@@ -128,12 +128,48 @@ void Server::funct_NewClient(int i){
 
 void Server::funct_NotNewClient(int i){
 	int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
-	if (bytes_received <= 0){
+	if (bytes_received == 0) {
+    // Client disconnected
+    if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
+        std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
+    } else {
+        close(_events[i].data.fd);
+        std::cerr << _RED << "Client disconnected. Current onlines: " << _cur_online << _END << std::endl;
+        this->clients.erase(_events[i].data.fd);
+        this->_cur_online--;
+    }
+} else if (bytes_received == -1) {
+    if (errno != EAGAIN && errno != EWOULDBLOCK) {
+        // Real error, remove the client
+        if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
+            std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
+        } else {
+            close(_events[i].data.fd);
+            std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online << _END << std::endl;
+            this->clients.erase(_events[i].data.fd);
+            this->_cur_online--;
+        }
+    } else {
+        // EAGAIN/EWOULDBLOCK: temporary non-fatal error, do nothing
+        std::cerr << _YELLOW << "Temporary recv() error: " << strerror(errno) << _END << std::endl;
+    }
+} else {
+    // Successfully received data
+    _buffer[bytes_received] = '\0';
+		std::string command(_buffer);
+		if (!command.empty() && command[command.size() - 1] == '\r') {
+			command.erase(command.end() - 1);
+		}
+		handleCommands(_events[i].data.fd, command);
+		std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
+}
+	/* if (bytes_received <= 0){
 		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-			std::cerr << "Error removing socket from epoll: " << strerror(errno) << std::endl;
+			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
 		}
 		else {
 			close(_events[i].data.fd);
+			std::cerr << _RED << "CURRENT ONLINES: "<< _cur_online << " I ENTERED HERE, WHERE I SHOULD HAVE NOT ERROR ERROR ERROR ERROR ERROR ERROR ERROR" << std::endl;
 			this->clients.erase(_events[i].data.fd);
 			this->_cur_online--;
 		}
@@ -145,8 +181,8 @@ void Server::funct_NotNewClient(int i){
 			command.erase(command.end() - 1);
 		}
 		handleCommands(_events[i].data.fd, command);
-		// std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
-	}
+		std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
+	} */
 	memset(_buffer, 0, 1024);
 }
 

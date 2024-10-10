@@ -26,5 +26,5 @@ void Server::handleTopic(int fd, std::istringstream &command){
 	}
 	channels[channelName]->setTopic(topic);
 	sendCode(fd, "332", clients[fd]->get_nick(), channelName + topic);
-	_ToAll(channels[channelName], fd, "TOPIC " + channelName + " :" + topic + "\r\n");
+	_ToAll(channels[channelName], fd, "TOPIC " + channelName + topic + "\r\n");
 }

@@ -83,14 +83,14 @@ void Server::handleMode(int fd, std::istringstream &command){
 					sendCode(fd, "696", clients[fd]->get_nick(), target + " +l " + arg + " :You must specify a parameter for the limit mode. Syntax: <limit>");
 					continue;
 				}
-			    std::stringstream ss(arg);
-			    double limit;
-			    ss >> limit;
+				std::stringstream ss(arg);
+				double limit;
+				ss >> limit;
 				if (limit < 1 || limit > MAX_CLIENTS){
 					sendCode(fd, "696", clients[fd]->get_nick(), target + " l " + arg + " :Invalid limit mode parameter. Syntax: <limit>");
 				}
 				else{
-			    	channels[target]->setLimit(limit);
+					channels[target]->setLimit(limit);
 					genericSendMode(fd, target, mode[i], arg, '+');
 				}
 			}
