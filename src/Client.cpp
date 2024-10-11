@@ -1,12 +1,12 @@
 #include "Client.hpp"
 
-Client::Client(): _client_fd(), _user(), _nick() {
+Client::Client(): _client_fd(), _user(), _nick(), bytes_received(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
 }
 
-Client::Client(int fd): _client_fd(fd), _user(), _nick() {
+Client::Client(int fd): _client_fd(fd), _user(), _nick(), bytes_received(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
@@ -17,6 +17,8 @@ Client::~Client(){}
 bool const &Client::get_auth() const{ return _auth; }
 
 bool const &Client::get_isOperator() const{ return _isOperator; }
+
+// bool const &Client::get_flagNick() const{ return _flagNick; }
 
 int const &Client::get_client_fd() const{ return _client_fd; }
 
@@ -31,8 +33,6 @@ std::string const &Client::get_host() const { return _host; }
 std::string const &Client::get_mask() const{ return _mask; }
 
 std::string const &Client::get_realname() const{ return _realname; }
-
-std::string const &Client::get_buffer() const{ return _buffer; }
 
 void Client::set_addr(struct sockaddr_storage value){
 	_client_addr = value;
@@ -70,14 +70,6 @@ void Client::set_realname(std::string const &realname){
 	this->_realname = realname;
 }
 
-void Client::set_buffer(const std::string &buffer){
-	this->_buffer.append(buffer);
-}
-
-void Client::resetBuffer(void)
-{
-	this->_buffer.clear();
-}
 // void Client::set_flagNick(bool value){
 // 	this->_flagNick = value;
 // }
