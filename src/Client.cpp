@@ -18,8 +18,6 @@ bool const &Client::get_auth() const{ return _auth; }
 
 bool const &Client::get_isOperator() const{ return _isOperator; }
 
-bool const &Client::get_flagNick() const{ return _flagNick; }
-
 int const &Client::get_client_fd() const{ return _client_fd; }
 
 std::string const &Client::get_user() const{ return _user; }
@@ -70,10 +68,6 @@ void Client::set_realname(std::string const &realname){
 	this->_realname = realname;
 }
 
-void Client::set_flagNick(bool value){
-	this->_flagNick = value;
-}
-
 void Client::addChannel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){
 		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
@@ -85,5 +79,3 @@ void Client::removeChannel(const std::string &channelName){
 		channels.erase(channelName);
 	}
 }
-
-

@@ -18,7 +18,6 @@ private:
 	std::string _realname;
 	bool _auth;
 	bool _isOperator;
-	bool _flagNick;
 
 	struct sockaddr_storage _client_addr;
 	socklen_t _client_len;

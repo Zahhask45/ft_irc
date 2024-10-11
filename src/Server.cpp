@@ -163,43 +163,8 @@ void Server::funct_NotNewClient(int i){
 		handleCommands(_events[i].data.fd, command);
 		std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 }
-	/* if (bytes_received <= 0){
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
-		}
-		else {
-			close(_events[i].data.fd);
-			std::cerr << _RED << "CURRENT ONLINES: "<< _cur_online << " I ENTERED HERE, WHERE I SHOULD HAVE NOT ERROR ERROR ERROR ERROR ERROR ERROR ERROR" << std::endl;
-			this->clients.erase(_events[i].data.fd);
-			this->_cur_online--;
-		}
-	}
-	else {
-		_buffer[bytes_received] = '\0';
-		std::string command(_buffer);
-		if (!command.empty() && command[command.size() - 1] == '\r') {
-			command.erase(command.end() - 1);
-		}
-		handleCommands(_events[i].data.fd, command);
-		std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
-	} */
 	memset(_buffer, 0, 1024);
 }
-
-
-// std::vector<std::string> Server::parser(const std::string &command){
-// 	 std::vector<std::string> result;
-//     std::stringstream ss(command);
-//     std::string item;
-    
-//     while (std::getline(ss, item, ' ')) {
-//         result.push_back(item);
-//     }
-// 	return result;
-// }
-
-
-
 
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void Server::handleCommands(int fd, const std::string &command){
@@ -260,12 +225,6 @@ void Server::createChannel(const std::string &channelName, int fd){
 		channels[channelName]->addModes('n');
 		channels[channelName]->addModes('t');
 	}
-/* 	else{
-		if (this->clients[fd]->get_isOperator() == true)
-			it->second->addOperator(getClient(fd));
-		else
-			it->second->addUser(getClient(fd));
-	} */
 }
 
 Channel *Server::getChannel(const std::string name)  {
