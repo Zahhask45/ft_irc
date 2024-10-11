@@ -14,14 +14,15 @@ _WHITE		=	\e[1;37m
 
 _GONE		=	\e[2K\r
 
-CXX					= c++
+CXX					= clang++ ## em casa
+# CXX					= c++ ## na escola
 CXX_WARNINGS 		= -Wall -Wextra -Werror
 CXX_RESTRICTION 	= -std=c++98 -pedantic-errors
 CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
-DEBUG				= -ggdb #-fsanitize=address -fno-limit-debug-info
+DEBUG				= -ggdb -fsanitize=address -fno-limit-debug-info
 
-NAME		=	ircserv
+NAME		=	ircserv_M
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	./obj/

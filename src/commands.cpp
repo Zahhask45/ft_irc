@@ -13,7 +13,7 @@ void Server::handleAuth(int fd){
 	if (clients[fd] && (clients[fd]->get_user().empty() 
 		|| clients[fd]->get_pass().empty() 
 		|| clients[fd]->get_nick().empty())){
-		sendCode(fd, "461", "", "Not enough parameters");
+		sendCode(fd, "461", "", "Not enough parameters"); //ERR_NEEDMOREPARAMS
 		return;
 	}
 	if (clients[fd]->get_auth() == true){
@@ -35,7 +35,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "372", clients[fd]->get_nick(), ":    ▟██▛╗██▛███   ");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":  ▟██▛╔═╝█▛ ▟█▛╗");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":▟██▛╔═╝   ╚▟▛╔═╝                       ▝▜▉▛▘█▀▜▉▐▛▀▜");
-		sendCode(fd, "372", clients[fd]->get_nick(), ":████████╗▟█▛ ▟█╗ █▀█ █▀█ █▀█ ▀█▀ █▀█    ▐▉▌ █▄▟▛▐▌");
+		sendCode(fd, "372", clients[fd]->get_nick(), ":████████╗▟█▛ ▟█╗ █▀█ █▀█ █▀█ ▀█▀ █▀█    ▐▉▌ █▄▟▀▐▌");
 		sendCode(fd, "372", clients[fd]->get_nick(), ": ╚═══███║███▟██║ █▀▀ █▄█ █▀▄  █  █▄█ ▁▁▗▟▉▙▖▉ ▐▙▐▙▄▟");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":     ███║ ╚════╝ ");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":      ╚═╝			By: bmonteir; jodos-sa; mamaral-");
@@ -80,7 +80,7 @@ void Server::handleNick(int fd, std::istringstream &command){
 		if (it->second->get_nick() == nick){
 			sendCode(fd, "433", nick, ":Nickname is already in use");
 			this->clients[fd]->set_nick(nick);
-			clients[fd]->set_flagNick(true);
+			// clients[fd]->set_flagNick(true);
 			return;
 		}
 	}

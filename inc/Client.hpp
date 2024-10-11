@@ -37,7 +37,7 @@ public: //GETTERS
 	std::string const &get_nick() const;
 	bool const &get_auth() const;
 	bool const &get_isOperator() const;
-	bool const &get_flagNick() const;
+	// bool const &get_flagNick() const;
 	std::string const &get_host() const;
 	std::string const &get_mask() const;
 	std::string const &get_realname() const;
@@ -52,7 +52,7 @@ public: //SETTERS
 	void set_nick(const std::string &nick);
 	void set_mask(const std::string &mask);
 	void set_realname(const std::string &realname);
-	void set_flagNick(bool value);
+	// void set_flagNick(bool value);
 
 	void addChannel(const std::string &channelName, Channel &channel);
 	void removeChannel(const std::string &channelName);
