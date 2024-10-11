@@ -127,9 +127,8 @@ void Server::funct_NewClient(int i){
 }
 
 void Server::funct_NotNewClient(int i){
-	int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
-	std::string message(_buffer);
-	if (bytes_received == 0) {
+	this->clients[_events[i].data.fd]->bytes_received += recv(_events[i].data.fd, this->clients[_events[i].data.fd]->_buffer + clients[_events[i].data.fd]->bytes_received, sizeof(this->clients[_events[i].data.fd]->_buffer) - clients[_events[i].data.fd]->bytes_received, 0);
+	if (this->clients[_events[i].data.fd]->bytes_received == 0) {
     // Client disconnected
 		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
@@ -140,7 +139,7 @@ void Server::funct_NotNewClient(int i){
 			this->_cur_online--;
 		}
 	} 
-	else if (bytes_received == -1) {
+	else if (this->clients[_events[i].data.fd]->bytes_received == -1) {
 		if (errno != EAGAIN && errno != EWOULDBLOCK) {
 			// Real error, remove the client
 			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
@@ -159,33 +158,36 @@ void Server::funct_NotNewClient(int i){
 	} 
 	else {
 		int extra_bytes = 0;
-		while (_buffer[bytes_received - 1] != '\n'){
-			extra_bytes = recv(_events[i].data.fd, _buffer + bytes_received, sizeof(_buffer) - bytes_received, 0);
+		while (this->clients[_events[i].data.fd]->_buffer[this->clients[_events[i].data.fd]->bytes_received - 1] != '\n'){
+			extra_bytes = recv(_events[i].data.fd, this->clients[_events[i].data.fd]->_buffer + this->clients[_events[i].data.fd]->bytes_received, sizeof(this->clients[_events[i].data.fd]->_buffer) - this->clients[_events[i].data.fd]->bytes_received, 0);
 			if (extra_bytes == -1){
 				if (errno == EAGAIN && errno == EWOULDBLOCK) {
 					//! some debug message
-					continue;
+					return;
 				}
 				else{
 					//! actual error message
+					return;
 				}
 			}
 			if (extra_bytes > 0)
-				bytes_received += extra_bytes;
+				clients[_events[i].data.fd]->bytes_received += extra_bytes;
 			else if(extra_bytes == 0){
+					return;
 				//! error message
 			}
 		}
 		// Successfully received data
-		_buffer[bytes_received] = '\0';
-			std::string command(_buffer);
+		this->clients[_events[i].data.fd]->_buffer[this->clients[_events[i].data.fd]->bytes_received] = '\0';
+			std::string command(this->clients[_events[i].data.fd]->_buffer);
 			if (!command.empty() && command[command.size() - 1] == '\r') {
 				command.erase(command.end() - 1);
 			}
 			handleCommands(_events[i].data.fd, command);
 			std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 		}
-	memset(_buffer, 0, 1024);
+	this->clients[_events[i].data.fd]->bytes_received = 0;
+	memset(this->clients[_events[i].data.fd]->_buffer, 0, 1024);
 }
 
 
