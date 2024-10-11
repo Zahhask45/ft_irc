@@ -117,8 +117,8 @@ void Server::handleUser(int fd, std::istringstream &command){
 
 void Server::handleJoin(int fd, std::istringstream &command){
 	std::string channelName, key, line;
-	std::stringstream ss(channelName);
-	command >> channelName >> key;
+	command >> line >> key;
+	std::stringstream ss(line);
 
 	if (clients[fd]->get_auth() == false){
 		print_client(fd, "Need to Auth the user\n");
