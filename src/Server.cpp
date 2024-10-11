@@ -127,8 +127,15 @@ void Server::funct_NewClient(int i){
 }
 
 void Server::funct_NotNewClient(int i){
-	int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
-	std::string message(_buffer);
+	char tmp[2048] = {0};
+	int bytes_received = recv(_events[i].data.fd, tmp, sizeof(tmp), 0);
+	std::string message(tmp);
+	if (message.find('\n') == std::string::npos) {
+		this->clients[_events[i].data.fd]->set_buffer(message);
+		return;
+	}
+	else
+		this->clients[_events[i].data.fd]->set_buffer(message);
 	if (bytes_received == 0) {
     // Client disconnected
 		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
@@ -158,34 +165,16 @@ void Server::funct_NotNewClient(int i){
 		}
 	} 
 	else {
-		int extra_bytes = 0;
-		while (_buffer[bytes_received - 1] != '\n'){
-			extra_bytes = recv(_events[i].data.fd, _buffer + bytes_received, sizeof(_buffer) - bytes_received, 0);
-			if (extra_bytes == -1){
-				if (errno == EAGAIN && errno == EWOULDBLOCK) {
-					//! some debug message
-					continue;
-				}
-				else{
-					//! actual error message
-				}
-			}
-			if (extra_bytes > 0)
-				bytes_received += extra_bytes;
-			else if(extra_bytes == 0){
-				//! error message
-			}
-		}
 		// Successfully received data
-		_buffer[bytes_received] = '\0';
-			std::string command(_buffer);
-			if (!command.empty() && command[command.size() - 1] == '\r') {
-				command.erase(command.end() - 1);
-			}
-			handleCommands(_events[i].data.fd, command);
-			std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
+		std::string command = this->clients[_events[i].data.fd]->get_buffer();
+		this->clients[_events[i].data.fd]->resetBuffer();
+		if (!command.empty() && command[command.size() - 1] == '\r') {
+			command.erase(command.end() - 1);
 		}
-	memset(_buffer, 0, 1024);
+		handleCommands(_events[i].data.fd, command);
+		std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
+	}
+	// memset(_buffer, 0, 1024);
 }
 
 
@@ -262,12 +251,6 @@ void Server::createChannel(const std::string &channelName, int fd){
 		channels[channelName]->addModes('n');
 		channels[channelName]->addModes('t');
 	}
-/* 	else{
-		if (this->clients[fd]->get_isOperator() == true)
-			it->second->addOperator(getClient(fd));
-		else
-			it->second->addUser(getClient(fd));
-	} */
 }
 
 Channel *Server::getChannel(const std::string name)  {
@@ -383,8 +366,3 @@ bool Server::findNick(std::string nick){
 	}
 	return false;
 }
-
-// void server::setBuffer(std::string buffer)
-// {
-// 	this->_buffer.append(buffer);
-// }

@@ -26,7 +26,7 @@ private:
 	int _epoll_fd;
 	int _nfds;
 	int _cur_online;
-	char _buffer[1024];
+	// char _buffer[1024];
 
 	Server(Server &cp);
 	Server &operator=(Server &cp);
