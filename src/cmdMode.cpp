@@ -2,7 +2,7 @@
 
 int	Server::checkMode(int fd, std::string &target, std::string &mode, std::string &arg){
 	if (!target.empty() && target[0] != '#' && mode.empty() ){
-		sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
+		sendCode(fd, "401", clients[fd]->getNick(), target + " :No such nick/channel");
 		return -1;
 	}
 	if (target.empty()){ // /MODE <+modos>
@@ -11,23 +11,23 @@ int	Server::checkMode(int fd, std::string &target, std::string &mode, std::strin
 	}
 	if (!target.empty() && target[0] == '#' && mode.empty() && arg.empty()){ //MODE <#canal>  
 		if (channels.find(target) == channels.end()){
-			sendCode(fd, "403", clients[fd]->get_nick(), target + " :No such channel");
+			sendCode(fd, "403", clients[fd]->getNick(), target + " :No such channel");
 			return -1;
 		}
-		sendCode(fd, "324", clients[fd]->get_nick(), target + " " + channels[target]->getModes());
+		sendCode(fd, "324", clients[fd]->getNick(), target + " " + channels[target]->getModes());
 		return -1;
 	}
 	if (!target.empty() && target[0] == '#'){
 		if (channels.find(target) == channels.end()){
-			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
+			sendCode(fd, "401", clients[fd]->getNick(), target + " :No such nick/channel");
 			return -1;
 		}
 		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
-			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
+			sendCode(fd, "404", clients[fd]->getNick(), target + " :Cannot send to channel");
 			return -1;
 		}
 		if (channels[target]->getOperators().find(fd) == channels[target]->getOperators().end()){
-			sendCode(fd, "482", clients[fd]->get_nick(), target + " :You're not channel operator");
+			sendCode(fd, "482", clients[fd]->getNick(), target + " :You're not channel operator");
 			return -1;
 		}
 	}
@@ -41,7 +41,7 @@ void	Server::genericSendMode(int fd, std::string target, char mode, std::string 
 	else if (sign == '-')
 		flag = this->channels[target]->removeModes(mode);
 	if (flag == true || mode == 'l' || mode == 'k' || mode == 'o'){
-		print_client(fd, clients[fd]->get_mask() + "MODE " + target + " " + sign + mode + " " + arg + "\r\n");
+		print_client(fd, clients[fd]->getMask() + "MODE " + target + " " + sign + mode + " " + arg + "\r\n");
 		//sendCode(fd, "324", clients[fd]->get_nick(), target + " :" + mode + " " + arg);
 		_ToAll(channels[target], fd, "MODE " + target + " " + sign + mode + " " + arg + "\r\n");
 	}
@@ -64,7 +64,7 @@ void Server::handleMode(int fd, std::istringstream &command){
 			}
 			else if (mode[i] == 'o' ){ // Give operator
 				if (arg.empty()){
-					sendCode(fd, "696", clients[fd]->get_nick(), target + " +o " + arg + " :You must specify a parameter for the operator mode. Syntax: <nickname>");
+					sendCode(fd, "696", clients[fd]->getNick(), target + " +o " + arg + " :You must specify a parameter for the operator mode. Syntax: <nickname>");
 					continue;
 				}
 				channels[target]->addOperator(getClient(user_fd));
@@ -72,7 +72,7 @@ void Server::handleMode(int fd, std::istringstream &command){
 			}
 			else if (mode[i] == 'k'){ // Set key
 				if(arg.empty()){
-					sendCode(fd, "696", clients[fd]->get_nick(), target + " +k " + arg + " :You must specify a parameter for the key mode. Syntax: <key>");
+					sendCode(fd, "696", clients[fd]->getNick(), target + " +k " + arg + " :You must specify a parameter for the key mode. Syntax: <key>");
 					continue;
 				}
 				channels[target]->setKey(arg);
@@ -80,14 +80,14 @@ void Server::handleMode(int fd, std::istringstream &command){
 			}
 			else if (mode[i] == 'l' ){ // Set limit
 				if(arg.empty()){
-					sendCode(fd, "696", clients[fd]->get_nick(), target + " +l " + arg + " :You must specify a parameter for the limit mode. Syntax: <limit>");
+					sendCode(fd, "696", clients[fd]->getNick(), target + " +l " + arg + " :You must specify a parameter for the limit mode. Syntax: <limit>");
 					continue;
 				}
 				std::stringstream ss(arg);
 				double limit;
 				ss >> limit;
 				if (limit < 1 || limit > MAX_CLIENTS){
-					sendCode(fd, "696", clients[fd]->get_nick(), target + " l " + arg + " :Invalid limit mode parameter. Syntax: <limit>");
+					sendCode(fd, "696", clients[fd]->getNick(), target + " l " + arg + " :Invalid limit mode parameter. Syntax: <limit>");
 				}
 				else{
 					channels[target]->setLimit(limit);
@@ -110,7 +110,7 @@ void Server::handleMode(int fd, std::istringstream &command){
 			}
 			else if (mode[i] == 'o' ){ // Remove operator
 				if (arg.empty()){
-					sendCode(fd, "696", clients[fd]->get_nick(), target + " -o " + arg + " :You must specify a parameter for the operator mode. Syntax: <nickname>");
+					sendCode(fd, "696", clients[fd]->getNick(), target + " -o " + arg + " :You must specify a parameter for the operator mode. Syntax: <nickname>");
 					continue;
 				}
 				channels[target]->removeOper(arg);
@@ -118,7 +118,7 @@ void Server::handleMode(int fd, std::istringstream &command){
 			}
 			else if (mode[i] == 'k' ){ // Remove key
 				if (arg.empty()){
-					sendCode(fd, "696", clients[fd]->get_nick(), target + " -k " + arg + " :You must specify a parameter for the key mode. Syntax: <key>");
+					sendCode(fd, "696", clients[fd]->getNick(), target + " -k " + arg + " :You must specify a parameter for the key mode. Syntax: <key>");
 					continue;
 				}
 				channels[target]->setKey("");
@@ -138,5 +138,5 @@ void Server::handleMode(int fd, std::istringstream &command){
 	}
 
 	else
-		sendCode(fd, "472", clients[fd]->get_nick(), target + " :is not a recognised channel mode");
+		sendCode(fd, "472", clients[fd]->getNick(), target + " :is not a recognised channel mode");
 }

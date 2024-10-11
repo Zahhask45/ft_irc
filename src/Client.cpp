@@ -1,12 +1,12 @@
 #include "Client.hpp"
 
-Client::Client(): _client_fd(), _user(), _nick(), bytes_received(0) {
+Client::Client(): _client_fd(), _user(), _nick(), bytes(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
 }
 
-Client::Client(int fd): _client_fd(fd), _user(), _nick(), bytes_received(0) {
+Client::Client(int fd): _client_fd(fd), _user(), _nick(), bytes(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
@@ -14,62 +14,86 @@ Client::Client(int fd): _client_fd(fd), _user(), _nick(), bytes_received(0) {
 
 Client::~Client(){}
 
-bool const &Client::get_auth() const{ return _auth; }
+bool const &Client::getAuth() const{ return _auth; }
 
-bool const &Client::get_isOperator() const{ return _isOperator; }
+bool const &Client::getIsOperator() const{ return _isOperator; }
 
 // bool const &Client::get_flagNick() const{ return _flagNick; }
 
 int const &Client::get_client_fd() const{ return _client_fd; }
 
-std::string const &Client::get_user() const{ return _user; }
+std::string const &Client::getUser() const{ return _user; }
 
-std::string const &Client::get_pass() const{ return _pass; }
+std::string const &Client::getPass() const{ return _pass; }
 
-std::string const &Client::get_nick() const{ return _nick; }
+std::string const &Client::getNick() const{ return _nick; }
 
-std::string const &Client::get_host() const { return _host; }
+std::string const &Client::getHost() const { return _host; }
 
-std::string const &Client::get_mask() const{ return _mask; }
+std::string const &Client::getMask() const{ return _mask; }
 
-std::string const &Client::get_realname() const{ return _realname; }
+std::string const &Client::getRealname() const{ return _realname; }
 
-void Client::set_addr(struct sockaddr_storage value){
+char *Client::getBuffer() { return _buffer; }
+
+int const &Client::getBytes() const{ return bytes; }
+
+void Client::setAddr(struct sockaddr_storage value){
 	_client_addr = value;
 }
 
-void Client::set_auth(bool value){
+void Client::setAuth(bool value){
 	this->_auth = value;
 }
 
-void Client::set_isOperator(bool value){
+void Client::setIsOperator(bool value){
 	this->_isOperator = value;
 }
 
-void Client::set_client_fd(int const &fd){
+void Client::setClientFd(int const &fd){
 	this->_client_fd = fd;
 }
 
-void Client::set_user(const std::string &user){
+void Client::setUser(const std::string &user){
 	this->_user = user;
 }
 
-void Client::set_nick(const std::string &nick){
+void Client::setNick(const std::string &nick){
 	this->_nick = nick;
 }
 
-void Client::set_pass(const std::string &pass){
+void Client::setPass(const std::string &pass){
 	this->_pass = pass;
 }
 
-void Client::set_mask(const std::string &mask){
+void Client::setMask(const std::string &mask){
 	this->_mask = mask;
 }
 
-void Client::set_realname(std::string const &realname){
+void Client::setRealname(std::string const &realname){
 	this->_realname = realname;
 }
 
+void Client::setBuffer(const char buffer[]){
+	strcpy(_buffer, buffer);
+}
+
+void Client::setBytes(int const &bytes){
+	this->bytes += bytes;
+}
+
+void Client::resetBuffer(){
+	memset(this->_buffer, 0, 1024);
+}
+
+void Client::setBufferChar(size_t index, char value) {
+	if (index < sizeof(_buffer))
+		_buffer[index] = value;
+}
+
+void Client::resetBytes(){
+	this->bytes = 0;
+}
 // void Client::set_flagNick(bool value){
 // 	this->_flagNick = value;
 // }

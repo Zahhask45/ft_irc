@@ -6,7 +6,7 @@ Channel::Channel(const std::string name): _name(name), users(){}
 
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
 	//this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
-	//this->_creator->set_isOperator(true);
+	//this->_creator->setIsOperator(true);
 	this->addOperator(*Creator);
 	this->_topic = ":Welcome to " + _name;
 	this->_inviteChannel = false;
@@ -38,7 +38,7 @@ void Channel::addOperator( Client &op ){
 void Channel::removeUser(std::string user_name){
 	std::map<int, Client *>::iterator it = users.begin();
 	while (it != users.end()){
-		if (it->second->get_nick() == user_name){
+		if (it->second->getNick() == user_name){
 			users.erase(it);
 			break;
 		}
@@ -49,8 +49,8 @@ void Channel::removeUser(std::string user_name){
 void Channel::removeOper(std::string oper){
 	std::map<int, Client *>::iterator it = operators.begin();
 	while (it != operators.end()){
-		if (it->second->get_nick() == oper){
-			it->second->set_isOperator(false);
+		if (it->second->getNick() == oper){
+			it->second->setIsOperator(false);
 			operators.erase(it);
 			break;
 		}
@@ -77,7 +77,7 @@ bool const &Channel::getInviteChannel() const {return _inviteChannel;}
 int Channel::getByName(std::string const &name) const {
 	std::map<int, Client *>::const_iterator it = users.begin();
 	while (it != users.end()){
-		if (it->second->get_nick() == name)
+		if (it->second->getNick() == name)
 			return it->first;
 		it++;
 	}
@@ -105,13 +105,13 @@ std::string		Channel::listAllUsers() const {
 	std::string		AllUsers(":");
 	std::map<int, Client *>::const_iterator it = this->operators.begin();
 	while (it != this->operators.end()){
-		AllUsers.append("@" + it->second->get_nick() + " ");
+		AllUsers.append("@" + it->second->getNick() + " ");
 		it++;
 	}
 	it = this->users.begin();
 	while (it != this->users.end())
 	{
-		AllUsers.append(it->second->get_nick() + " ");
+		AllUsers.append(it->second->getNick() + " ");
 		it++;
 	}
 	return (AllUsers);

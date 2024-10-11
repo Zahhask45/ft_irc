@@ -117,7 +117,7 @@ void Server::funct_NewClient(int i){
 	_events[i].data.fd = newsocket;
 	_events[i].events = EPOLLIN | EPOLLET;
 	this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
-	clients[newsocket]->set_addr(client_addr);
+	clients[newsocket]->setAddr(client_addr);
 
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[i]) == -1) {
 		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
@@ -159,7 +159,7 @@ void Server::funct_NotNewClient(int i){
 	else { */
 		int extra_bytes = 0;
 		//while (this->clients[_events[i].data.fd]->_buffer[this->clients[_events[i].data.fd]->bytes_received - 1] != '\n'){
-			extra_bytes = recv(_events[i].data.fd, this->clients[_events[i].data.fd]->_buffer + this->clients[_events[i].data.fd]->bytes_received, sizeof(this->clients[_events[i].data.fd]->_buffer) - this->clients[_events[i].data.fd]->bytes_received, 0);
+			extra_bytes = recv(_events[i].data.fd, clients[_events[i].data.fd]->getBuffer() + clients[_events[i].data.fd]->getBytes(), sizeof(clients[_events[i].data.fd]->getBuffer()) - clients[_events[i].data.fd]->getBytes(), 0);
 			if (extra_bytes == -1){
 				if (errno == EAGAIN && errno == EWOULDBLOCK) {
 					std::cerr << _YELLOW << "Temporary recv() error: " << strerror(errno) << _END << std::endl;
@@ -172,6 +172,7 @@ void Server::funct_NotNewClient(int i){
 					} else {
 					close(_events[i].data.fd);
 					std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online << _END << std::endl;
+					delete this->clients[_events[i].data.fd];
 					this->clients.erase(_events[i].data.fd);
 					this->_cur_online--;
 					}
@@ -179,31 +180,32 @@ void Server::funct_NotNewClient(int i){
 				}
 			}
 			if (extra_bytes > 0)
-				clients[_events[i].data.fd]->bytes_received += extra_bytes;
+				clients[_events[i].data.fd]->setBytes(extra_bytes);
 			else if(extra_bytes == 0){
 					if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 						std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
 					} else {
 					close(_events[i].data.fd);
 					std::cerr << _RED << "Client disconnected. Current onlines: " << _cur_online << _END << std::endl;
+					delete this->clients[_events[i].data.fd];
 					this->clients.erase(_events[i].data.fd);
 					this->_cur_online--;
 				}
 					return;
 			}
 		//}
-		if (this->clients[_events[i].data.fd]->_buffer[this->clients[_events[i].data.fd]->bytes_received - 1] != '\n')
+		if (this->clients[_events[i].data.fd]->getBuffer()[this->clients[_events[i].data.fd]->getBytes() - 1] != '\n')
 			return;
 		// Successfully received data
-		this->clients[_events[i].data.fd]->_buffer[this->clients[_events[i].data.fd]->bytes_received] = '\0';
-			std::string command(this->clients[_events[i].data.fd]->_buffer);
+		this->clients[_events[i].data.fd]->setBufferChar(this->clients[_events[i].data.fd]->getBytes(), '\0');
+			std::string command(this->clients[_events[i].data.fd]->getBuffer());
 			if (!command.empty() && command[command.size() - 1] == '\r') {
 				command.erase(command.end() - 1);
 			}
 			handleCommands(_events[i].data.fd, command);
 			std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
-		this->clients[_events[i].data.fd]->bytes_received = 0;
-		memset(this->clients[_events[i].data.fd]->_buffer, 0, 1024);
+		this->clients[_events[i].data.fd]->resetBytes();
+		this->clients[_events[i].data.fd]->resetBuffer();
 		}
 
 
@@ -281,7 +283,7 @@ void Server::createChannel(const std::string &channelName, int fd){
 		channels[channelName]->addModes('t');
 	}
 /* 	else{
-		if (this->clients[fd]->get_isOperator() == true)
+		if (this->clients[fd]->getIsOperator() == true)
 			it->second->addOperator(getClient(fd));
 		else
 			it->second->addUser(getClient(fd));
@@ -343,7 +345,7 @@ void Server::_ToAll(int ori_fd, std::string message){
 void Server::_ToAll(Channel *channel, int ori_fd, std::string message){
 	std::map<int, Client *> all_users = channel->getUsers();
 	std::map<int, Client *>::iterator it = all_users.begin();
-	std::string rep = this->clients[ori_fd]->get_mask();
+	std::string rep = this->clients[ori_fd]->getMask();
 	rep.append(message);
 	while (it != all_users.end()){
 		if (ori_fd != it->first)
@@ -396,7 +398,7 @@ int Server::_sendall(int destfd, std::string message)
 
 bool Server::findNick(std::string nick){
 	for(std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++){
-		if (it->second->get_nick() == nick)
+		if (it->second->getNick() == nick)
 			return true;
 	}
 	return false;
