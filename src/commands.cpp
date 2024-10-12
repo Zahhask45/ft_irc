@@ -62,7 +62,7 @@ void Server::handlePass(int fd, std::istringstream &command){
 		sendCode(fd, "464", clients[fd]->get_nick(), ": Password incorrect");
 	else {
 		clients[fd]->set_pass(pass);
-		sendCode(fd, "338", clients[fd]->get_nick(), ": Password accepted");
+		sendCode(fd, "338", clients[fd]->get_nick(), ": Password accepted"); // RPL_USERREGISTRATION
 	}
 }
 
@@ -78,7 +78,7 @@ void Server::handleNick(int fd, std::istringstream &command){
 	std::map<int, Client *>::iterator it;
 	for(it = clients.begin(); it != clients.end(); it++){
 		if (it->second->get_nick() == nick){
-			sendCode(fd, "433", nick, ":Nickname is already in use");
+			sendCode(fd, "433", nick, ":Nickname is already in use"); // ERR_NICKNAMEINUSE
 			this->clients[fd]->set_nick(nick);
 			// clients[fd]->set_flagNick(true);
 			return;
@@ -99,8 +99,8 @@ void Server::handleNick(int fd, std::istringstream &command){
 void Server::handleUser(int fd, std::istringstream &command){
 	std::string username, hostname, servername, realname;
 	command >> username >> hostname >> servername; 
-	std::getline(command, realname); 
-	if (username.empty()){
+	std::getline(command, realname);
+	if (username.empty() || hostname.empty() || servername.empty() || realname.empty()){
 		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return;
 	}
@@ -109,6 +109,7 @@ void Server::handleUser(int fd, std::istringstream &command){
 		this->clients[fd]->set_realname(realname.substr(2, realname.size() - 3));
 		if (clients[fd]->get_nick() != "\0")
 			clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
+		sendCode(fd, "338", clients[fd]->get_nick(), ": User registered"); // RPL_USERREGISTRATION
 	}
 	else{
 		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reregister"); // ERR_ALREADYREGISTRED
@@ -159,10 +160,10 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
 		// if (!this->channels[channelName]->getTopic().empty())
-		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic());
-		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers());
-		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
-		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
+		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic()); // RPL_TOPIC
+		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers()); // RPL_NAMREPLY
+		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list"); // RPL_ENDOFNAMES
+		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n"); 
 	}
 }
 
@@ -171,16 +172,16 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 	command >> target;
 	std::getline(command, message);
 	if (target.empty() || message.empty()){
-		sendCode(fd, "411", clients[fd]->get_nick(), ": No recipient given (PRIVMSG)");
+		sendCode(fd, "411", clients[fd]->get_nick(), ": No recipient given (PRIVMSG)"); // ERR_NORECIPIENT
 		return ;
 	}
 	if (target[0] == '#'){
 		if (channels.find(target) == channels.end()){
-			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
+			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel"); // ERR_NOSUCHNICK
 			return ;
 		}
 		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
-			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
+			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel"); // ERR_CANNOTSENDTOCHAN
 			return ;
 		}
 		_ToAll(channels[target], fd, "PRIVMSG " + target + " " + message + "\n");
@@ -238,13 +239,8 @@ void Server::handleQuit(int fd, std::istringstream &command){
 		if (it->second->getUsers().find(fd) != it->second->getUsers().end()){
 			it->second->removeUser(clients[fd]->get_nick());
 			it->second->removeOper(clients[fd]->get_nick());
-			// if (it->second->listAllUsers() == ":"){
-			// 	delete it->second;
+
 			clients[fd]->removeChannel(it->first);
-			// 	this->channels.erase(it);
-			// }
-	// 		else
-			//clients[fd]->removeChannel(it->first);
 		}
 	}
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {

@@ -30,6 +30,12 @@ public:
 	Client(int fd);
 	~Client();
 
+
+	//! CHANGE THIS TO PRIVATE, REMAKE THE FUCNTIONS WHERE THIS IS USED ON
+	char _buffer[1024];
+	unsigned long bytes_received;
+
+
 public: //GETTERS
 	int const &get_client_fd() const;
 	std::string const &get_user() const;

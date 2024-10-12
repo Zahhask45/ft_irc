@@ -4,12 +4,15 @@ Client::Client(): _client_fd(), _user(), _nick() {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
+	bytes_received = 0;
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick() {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
+
+	bytes_received = 0;
 }
 
 Client::~Client(){}
