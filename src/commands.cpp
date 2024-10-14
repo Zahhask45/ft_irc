@@ -99,8 +99,8 @@ void Server::handleNick(int fd, std::istringstream &command){
 void Server::handleUser(int fd, std::istringstream &command){
 	std::string username, hostname, servername, realname;
 	command >> username >> hostname >> servername; 
-	std::getline(command, realname); 
-	if (username.empty()){
+	std::getline(command, realname);
+	if (username.empty() || hostname.empty() || servername.empty() || realname.empty()){
 		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return;
 	}
@@ -241,10 +241,6 @@ void Server::handleQuit(int fd, std::istringstream &command){
 			// if (it->second->listAllUsers() == ":"){
 			// 	delete it->second;
 			clients[fd]->removeChannel(it->first);
-			// 	this->channels.erase(it);
-			// }
-	// 		else
-			//clients[fd]->removeChannel(it->first);
 		}
 	}
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {

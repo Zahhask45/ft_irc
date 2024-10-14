@@ -4,12 +4,15 @@ Client::Client(): _client_fd(), _user(), _nick(), bytes(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
+	bytes = 0;
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick(), bytes(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
+
+	bytes = 0;
 }
 
 Client::~Client(){}
@@ -36,7 +39,7 @@ std::string const &Client::getRealname() const{ return _realname; }
 
 char *Client::getBuffer() { return _buffer; }
 
-int const &Client::getBytes() const{ return bytes; }
+// int const &Client::getBytes() const{ return bytes; }
 
 void Client::setAddr(struct sockaddr_storage value){
 	_client_addr = value;
@@ -74,30 +77,6 @@ void Client::setRealname(std::string const &realname){
 	this->_realname = realname;
 }
 
-void Client::setBuffer(const char buffer[]){
-	strcpy(_buffer, buffer);
-}
-
-void Client::setBytes(int const &bytes){
-	this->bytes += bytes;
-}
-
-void Client::resetBuffer(){
-	memset(this->_buffer, 0, 1024);
-}
-
-void Client::setBufferChar(size_t index, char value) {
-	if (index < sizeof(_buffer))
-		_buffer[index] = value;
-}
-
-void Client::resetBytes(){
-	this->bytes = 0;
-}
-// void Client::set_flagNick(bool value){
-// 	this->_flagNick = value;
-// }
-
 void Client::addChannel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){
 		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
@@ -109,5 +88,3 @@ void Client::removeChannel(const std::string &channelName){
 		channels.erase(channelName);
 	}
 }
-
-

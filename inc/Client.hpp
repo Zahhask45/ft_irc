@@ -7,19 +7,17 @@
 
 class Client
 {
-	private:
-		//* STUFF ABOUT THE USER
-		int _client_fd;
-		std::string _user;
-		std::string _nick;
-		std::string _pass;
-		std::string _host;
-		std::string _mask;
-		std::string _realname;
-		bool _auth;
-		bool _isOperator;
-		char _buffer[1024];
-		int bytes;
+private:
+	//* STUFF ABOUT THE USER
+	int _client_fd;
+	std::string _user;
+	std::string _nick;
+	std::string _pass;
+	std::string _host;
+	std::string _mask;
+	std::string _realname;
+	bool _auth;
+	bool _isOperator;
 
 		struct sockaddr_storage _client_addr;
 		socklen_t _client_len;
@@ -33,7 +31,10 @@ class Client
 		~Client();
 
 
-		//! CHANGE THIS TO PRIVATE, REMAKE THE FUCNTIONS WHERE THIS IS USED ON
+	//! CHANGE THIS TO PRIVATE, REMAKE THE FUCNTIONS WHERE THIS IS USED ON
+	char _buffer[1024];
+	unsigned long bytes;
+
 
 	public: //GETTERS
 		int const &get_client_fd() const;
