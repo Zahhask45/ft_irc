@@ -38,35 +38,35 @@ private:
 
 	public: //GETTERS
 		int const &get_client_fd() const;
-		std::string const &getUser() const;
-		std::string const &getPass() const;
-		std::string const &getNick() const;
-		bool const &getAuth() const;
-		bool const &getIsOperator() const;
-		std::string const &getHost() const;
-		std::string const &getMask() const;
-		std::string const &getRealname() const;
-		char *getBuffer();
-		int const &getBytes() const;
+		std::string const &get_user() const;
+		std::string const &get_pass() const;
+		std::string const &get_nick() const;
+		bool const &get_auth() const;
+		bool const &get_is_operator() const;
+		std::string const &get_host() const;
+		std::string const &get_mask() const;
+		std::string const &get_realname() const;
+		char *get_buffer();
+		int const &get_bytes() const;
 
 	public: //SETTERS
 		void setAddr(struct sockaddr_storage value);
 		void setClientFd(const int &fd);
 		void setAuth(bool value);
-		void setIsOperator(bool value);
-		void setUser(const std::string &name);
-		void setPass(const std::string &pass);
-		void setNick(const std::string &nick);
-		void setMask(const std::string &mask);
-		void setRealname(const std::string &realname);
-		void setBuffer(const char buffer[]);
-		void setBytes(const int &bytes);
-		void setBufferChar(size_t index, char value);
+		void set_is_operator(bool value);
+		void set_user(const std::string &name);
+		void set_pass(const std::string &pass);
+		void set_nick(const std::string &nick);
+		void set_mask(const std::string &mask);
+		void set_realname(const std::string &realname);
+		void set_buffer(const char buffer[]);
+		void set_bytes(const int &bytes);
+		void set_buffer_char(size_t index, char value);
 
-		void addChannel(const std::string &channelName, Channel &channel);
-		void removeChannel(const std::string &channelName);
-		void resetBytes();
-		void resetBuffer();
+		void add_channel(const std::string &channelName, Channel &channel);
+		void remove_channel(const std::string &channelName);
+		void reset_bytes();
+		void reset_buffer();
 };
 
 #endif

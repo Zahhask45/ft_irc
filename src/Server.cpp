@@ -96,15 +96,15 @@ void Server::loop(){
 		for(int i = 0; i < _cur_online; i++){
 			if (_events[i].events & EPOLLIN) {
 				if(_events[i].data.fd == _socket_Server)
-					funct_NewClient(i); 
+					funct_new_client(i); 
 				else
-					funct_NotNewClient(i);
+					funct_not_new_client(i);
 			}
 		}
 	}
 }
 
-void Server::funct_NewClient(int i){
+void Server::funct_new_client(int i){
 	struct sockaddr_storage client_addr;
 	socklen_t client_len = sizeof(client_addr);
 	int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
@@ -124,7 +124,7 @@ void Server::funct_NewClient(int i){
 	this->_cur_online++;
 }
 
-void Server::funct_NotNewClient(int i){
+void Server::funct_not_new_client(int i){
 	/* this->clients[_events[i].data.fd]->bytes += recv(_events[i].data.fd, this->clients[_events[i].data.fd]->_buffer + clients[_events[i].data.fd]->bytes, sizeof(this->clients[_events[i].data.fd]->_buffer) - clients[_events[i].data.fd]->bytes, 0);
 	if (this->clients[_events[i].data.fd]->bytes == 0) {
     // Client disconnected
@@ -199,14 +199,14 @@ void Server::funct_NotNewClient(int i){
 	std::string command(this->clients[_events[i].data.fd]->_buffer);
 	if (!command.empty() && command[command.size() - 1] == '\r')
 		command.erase(command.end() - 1);
-	handleCommands(_events[i].data.fd, command);
+	handle_commands(_events[i].data.fd, command);
 	std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 	this->clients[_events[i].data.fd]->bytes = 0;
 	memset(this->clients[_events[i].data.fd]->_buffer, 0, 1024);
 }
 
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
-void Server::handleCommands(int fd, const std::string &command){
+void Server::handle_commands(int fd, const std::string &command){
 	// //TODO: CHANGE WAY TO RECEIVE COMMANDS
 	// std::vector<std::string> args = parser(command);
 	// for (std::size_t i = 0; i < args.size(); ++i) {
@@ -256,24 +256,24 @@ void Server::handleCommands(int fd, const std::string &command){
 	}
 }
 
-void Server::createChannel(const std::string &channelName, int fd){
+void Server::create_channel(const std::string &channelName, int fd){
 	std::map<std::string, Channel *>::iterator it = channels.find(channelName);
 	if (it == channels.end()){
 		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
-		channels[channelName]->addModes('n');
-		channels[channelName]->addModes('t');
+		channels[channelName]->add_modes('n');
+		channels[channelName]->add_modes('t');
 	}
 }
 
-Channel *Server::getChannel(const std::string name)  {
+Channel *Server::get_channel(const std::string name)  {
 	if (channels.find(name) != channels.end())
 		return channels[name];
 	return NULL;
 }
 
 
-Client &Server::getClient(int fd){
+Client &Server::get_client(int fd){
 	std::map<int, Client *>::iterator it = clients.find(fd);
 	return *it->second;
 }
@@ -306,7 +306,7 @@ void Server::_ToAll(int ori_fd, std::string message){
 	std::set<std::string> channelList = findInChannel(ori_fd);
 	while (!channelList.empty()){
 		std::string channelName = *channelList.begin();
-		std::map<int, Client *> all_users = channels[channelName]->getUsers();
+		std::map<int, Client *> all_users = channels[channelName]->get_users();
 		std::map<int, Client *>::iterator it = all_users.begin();
 		while (it != all_users.end()){
 			if (ori_fd != it->first){
@@ -319,9 +319,9 @@ void Server::_ToAll(int ori_fd, std::string message){
 }
 
 void Server::_ToAll(Channel *channel, int ori_fd, std::string message){
-	std::map<int, Client *> all_users = channel->getUsers();
+	std::map<int, Client *> all_users = channel->get_users();
 	std::map<int, Client *>::iterator it = all_users.begin();
-	std::string rep = this->clients[ori_fd]->getMask();
+	std::string rep = this->clients[ori_fd]->get_mask();
 	rep.append(message);
 	while (it != all_users.end()){
 		if (ori_fd != it->first)
@@ -336,7 +336,7 @@ std::set<std::string> Server::findInChannel(int fd){
 	std::set<std::string> channelList;
 	std::map<std::string, Channel *>::iterator it = channels.begin();
 	while (it != channels.end()){
-		std::map<int, Client *> users = it->second->getUsers();
+		std::map<int, Client *> users = it->second->get_users();
 		if (users.find(fd) != users.end()) {
 			channelList.insert(it->first);
 		}
@@ -374,13 +374,13 @@ int Server::_sendall(int destfd, std::string message)
 
 bool Server::findNick(std::string nick){
 	for(std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++){
-		if (it->second->getNick() == nick)
+		if (it->second->get_nick() == nick)
 			return true;
 	}
 	return false;
 }
 
-// void server::setBuffer(std::string buffer)
+// void server::set_buffer(std::string buffer)
 // {
 // 	this->_buffer.append(buffer);
 // }

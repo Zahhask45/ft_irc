@@ -6,8 +6,8 @@ Channel::Channel(const std::string name): _name(name), users(){}
 
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
 	//this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
-	//this->_creator->setIsOperator(true);
-	this->addOperator(*Creator);
+	//this->_creator->set_is_operator(true);
+	this->add_operator(*Creator);
 	this->_topic = ":Welcome to " + _name;
 	this->_inviteChannel = false;
 	this->_limit = 10;//alterar isto
@@ -25,20 +25,20 @@ Channel &Channel::operator=(const Channel &origin) {
 	return *this;
 }
 
-void Channel::addUser(Client &client){
+void Channel::add_user(Client &client){
 	if (this->users.find(client.get_client_fd()) == this->users.end())
 			this->users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
 }
 
-void Channel::addOperator( Client &op ){
+void Channel::add_operator( Client &op ){
 	if (this->operators.find(op.get_client_fd()) == this->operators.end())
 		this->operators.insert(std::pair<int, Client *>(op.get_client_fd(), &op));
 }
 
-void Channel::removeUser(std::string user_name){
+void Channel::remove_user(std::string user_name){
 	std::map<int, Client *>::iterator it = users.begin();
 	while (it != users.end()){
-		if (it->second->getNick() == user_name){
+		if (it->second->get_nick() == user_name){
 			users.erase(it);
 			break;
 		}
@@ -46,11 +46,11 @@ void Channel::removeUser(std::string user_name){
 	}
 }
 
-void Channel::removeOper(std::string oper){
+void Channel::remove_oper(std::string oper){
 	std::map<int, Client *>::iterator it = operators.begin();
 	while (it != operators.end()){
-		if (it->second->getNick() == oper){
-			it->second->setIsOperator(false);
+		if (it->second->get_nick() == oper){
+			it->second->set_is_operator(false);
 			operators.erase(it);
 			break;
 		}
@@ -58,71 +58,71 @@ void Channel::removeOper(std::string oper){
 	}
 }
 
-std::string const &Channel::getName(void) const { return _name; }
+std::string const &Channel::get_name(void) const { return _name; }
 
-std::string const &Channel::getTopic() const{ return _topic; }
+std::string const &Channel::get_topic() const{ return _topic; }
 
-std::string const &Channel::getKey() const {return _key;}
+std::string const &Channel::get_key() const {return _key;}
 
-long unsigned int const &Channel::getLimit() const {return _limit;}
+long unsigned int const &Channel::get_limit() const {return _limit;}
 
-std::map<int, Client*>& Channel::getUsers() {return users;}
+std::map<int, Client*>& Channel::get_users() {return users;}
 
-std::map<int, Client*> const & Channel::getOperators() const {return operators;}
+std::map<int, Client*> const & Channel::get_operators() const {return operators;}
 
-std::map<int, Client*> const & Channel::getInviteList() const {return inviteList;}
+std::map<int, Client*> const & Channel::get_invite_list() const {return inviteList;}
 
-bool const &Channel::getInviteChannel() const {return _inviteChannel;}
+bool const &Channel::get_invite_channel() const {return _inviteChannel;}
 
-int Channel::getByName(std::string const &name) const {
+int Channel::get_by_name(std::string const &name) const {
 	std::map<int, Client *>::const_iterator it = users.begin();
 	while (it != users.end()){
-		if (it->second->getNick() == name)
+		if (it->second->get_nick() == name)
 			return it->first;
 		it++;
 	}
 	return 0;
 }
 
-void Channel::setName(std::string const &name) {this->_name = name;}
+void Channel::set_name(std::string const &name) {this->_name = name;}
 
-void Channel::setUser(int const &id, Client *client) {
+void Channel::set_user(int const &id, Client *client) {
 	std::map<int, Client *>::const_iterator it = users.find(id);
 	if (it == users.end()) {
 		users.insert(std::make_pair(id, client));
 	}
 }
 
-void Channel::setTopic(std::string const &topic) {this->_topic = topic;}
+void Channel::set_topic(std::string const &topic) {this->_topic = topic;}
 
-void Channel::setInviteChannel(bool const &invitechannel) {this->_inviteChannel = invitechannel;}
+void Channel::set_invite_channel(bool const &invitechannel) {this->_inviteChannel = invitechannel;}
 
-void Channel::setKey(std::string const &key) {this->_key = key;}
+void Channel::set_key(std::string const &key) {this->_key = key;}
 
-void Channel::setLimit(int const &limit) {this->_limit = limit;}
+void Channel::set_limit(int const &limit) {this->_limit = limit;}
 
-std::string		Channel::listAllUsers() const {
+std::string		Channel::list_all_users() const {
 	std::string		AllUsers(":");
 	std::map<int, Client *>::const_iterator it = this->operators.begin();
 	while (it != this->operators.end()){
-		AllUsers.append("@" + it->second->getNick() + " ");
+		AllUsers.append("@" + it->second->get_nick() + " ");
 		it++;
 	}
 	it = this->users.begin();
 	while (it != this->users.end())
 	{
-		AllUsers.append(it->second->getNick() + " ");
+		AllUsers.append(it->second->get_nick() + " ");
 		it++;
 	}
 	return (AllUsers);
 }
 
-void Channel::addInvite(int fd, Client *client) {
+void Channel::add_invite(int fd, Client *client) {
 	if (this->inviteList.find(fd) == this->inviteList.end())
 		this->inviteList.insert(std::pair<int, Client *>(fd, &client[fd]));
 }
 
-std::string Channel::getModes(){
+std::string Channel::get_modes(){
 	std::string modes = "+";
 	std::stringstream str;
 	char elem[6] = { 'i', 'k', 'l', 'o', 't', 'n'};
@@ -149,7 +149,7 @@ std::string Channel::getModes(){
 	return modes;
 }
 
-bool Channel::addModes(char mode){
+bool Channel::add_modes(char mode){
 	for(std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
 		if (*it == mode)
 			return false;
@@ -158,7 +158,7 @@ bool Channel::addModes(char mode){
 	return true;
 }
 
-bool Channel::removeModes(char mode){
+bool Channel::remove_modes(char mode){
 	std::vector<char>::iterator it = std::find(_modes.begin(), _modes.end(), mode);
 	if (it != _modes.end()){
 		_modes.erase(it);
@@ -167,6 +167,6 @@ bool Channel::removeModes(char mode){
 	return false;
 }
 
-int Channel::getCreatorFD() const {
+int Channel::get_creator_fd() const {
 	return _creator->get_client_fd();
 }

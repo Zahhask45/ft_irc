@@ -37,17 +37,17 @@ public:
 //* Execution functions
 	void binding();
 	void loop();
-	void handleCommands(int fd, const std::string &command);
-	void createChannel(const std::string &channelName, int fd);
+	void handle_commands(int fd, const std::string &command);
+	void create_channel(const std::string &channelName, int fd);
 	
-	std::string const &getUser()const;
+	std::string const &get_user()const;
 	int const &get_socket() const;
-	Channel *getChannel(const std::string name);
-	Client &getClient(int fd);
+	Channel *get_channel(const std::string name);
+	Client &get_client(int fd);
 
-	void setPass(std::string pass);
-	void funct_NewClient(int i);
-	void funct_NotNewClient(int i);
+	void set_pass(std::string pass);
+	void funct_new_client(int i);
+	void funct_not_new_client(int i);
 
 
 //* Auxiliar functions
@@ -106,7 +106,6 @@ public: // Handdle Commands
 	void handleIson(int fd, std::istringstream &command);
 	void handleCap(int fd, std::istringstream &command);
 	void handleSasl(int fd, std::istringstream &command);
-
 
 	//checkMode
 	int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
