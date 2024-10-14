@@ -112,8 +112,7 @@ void Server::funct_NewClient(int i){
 	if (newsocket == -1) {
 		std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
 	}
-	select(_events->data.fd,)
-	//fcntl(newsocket, F_SETFL, O_NONBLOCK);
+	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
 	_events[i].data.fd = newsocket;
 	_events[i].events = EPOLLIN | EPOLLET;
@@ -140,6 +139,15 @@ void Server::funct_NotNewClient(int i)
 	std::cout << _END << std::endl;
 	if (extra_bytes == -1)
 	{
+		int err_code;
+        socklen_t len = sizeof(err_code);
+
+		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1)
+            std::cout << _RED << "Error on getsocket()" << _END << std::endl;
+		else if(err_code == EAGAIN || err_code == EWOULDBLOCK)
+				std::cout << _YELLOW << "Temporary recv() error" << _END << std::endl;
+        else
+                errno = err_code;
 			// Real error, remove the client
 			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
 			{
