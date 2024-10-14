@@ -23,6 +23,9 @@ private:
 	socklen_t _client_len;
 	std::map<std::string, Channel *> channels;
 
+	char _buffer[1024];
+	int bytes_received;
+
 	Client(Client &cp);
 	Client &operator=(Client &cp);
 public:
@@ -32,9 +35,6 @@ public:
 
 
 	//! CHANGE THIS TO PRIVATE, REMAKE THE FUCNTIONS WHERE THIS IS USED ON
-	char _buffer[1024];
-	unsigned long bytes_received;
-
 
 public: //GETTERS
 	int const &get_client_fd() const;
@@ -47,6 +47,8 @@ public: //GETTERS
 	std::string const &get_host() const;
 	std::string const &get_mask() const;
 	std::string const &get_realname() const;
+	const char* get_buffer() const;
+	int const &get_bytes_received() const;
 
 public: //SETTERS
 	void set_addr(struct sockaddr_storage value);
@@ -58,6 +60,8 @@ public: //SETTERS
 	void set_nick(const std::string &nick);
 	void set_mask(const std::string &mask);
 	void set_realname(const std::string &realname);
+	void set_buffer(const char* buffer, int size);
+	void set_bytes_received(const int value);
 	// void set_flagNick(bool value);
 
 	void addChannel(const std::string &channelName, Channel &channel);

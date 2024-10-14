@@ -8,7 +8,7 @@ Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _n
 	//this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
 	//this->_creator->set_isOperator(true);
 	this->addOperator(*Creator);
-	this->_topic = ":Welcome to " + _name;
+	this->_topic = "Welcome to " + _name;
 	this->_inviteChannel = false;
 	this->_limit = 10;//alterar isto
 	this->_creationTime = time(NULL);
