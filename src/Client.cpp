@@ -34,6 +34,10 @@ std::string const &Client::get_mask() const{ return _mask; }
 
 std::string const &Client::get_realname() const{ return _realname; }
 
+const char* Client::get_buffer() const{ return _buffer; }
+
+int const &Client::get_bytes_received() const{ return bytes_received; }
+
 void Client::set_addr(struct sockaddr_storage value){
 	_client_addr = value;
 }
@@ -68,6 +72,14 @@ void Client::set_mask(const std::string &mask){
 
 void Client::set_realname(std::string const &realname){
 	this->_realname = realname;
+}
+
+void Client::set_buffer(const char* buffer, int size){
+	memcpy(_buffer, buffer, size);
+}
+
+void Client::set_bytes_received(int value){
+	this->bytes_received = value;
 }
 
 // void Client::set_flagNick(bool value){
