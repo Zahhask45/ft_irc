@@ -124,75 +124,66 @@ void Server::funct_NewClient(int i){
 	this->_cur_online++;
 }
 
-void Server::funct_NotNewClient(int i)
-{
-	int extra_bytes = 0;
-	char *buffer_ptr =  (char *)this->clients[_events[i].data.fd]->get_buffer();
-	extra_bytes = recv(_events[i].data.fd,  buffer_ptr + this->clients[_events[i].data.fd]->get_bytes_received(), sizeof(buffer_ptr) - this->clients[_events[i].data.fd]->get_bytes_received(), 0);
-	/* std::cout << _PURPLE << "INFO RECEIVED: ";
-	for (int ii = this->clients[_events[i].data.fd]->get_bytes_received() ; ii < this->clients[_events[i].data.fd]->get_bytes_received() + extra_bytes; ii++)
-	{
-		std::cout << this->clients[_events[i].data.fd]->_buffer[ii];
-	} */
-	std::cout << _END << std::endl;
-	if (extra_bytes == -1)
-	{
-		int err_code;
-        socklen_t len = sizeof(err_code);
-
-		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1)
-            std::cout << _RED << "Error on getsocket()" << _END << std::endl;
-		else if(err_code == EAGAIN || err_code == EWOULDBLOCK)
-				std::cout << _YELLOW << "Temporary recv() error" << _END << std::endl;
-        else
-                errno = err_code;
-			// Real error, remove the client
-			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
-			{
-				std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
-			}
-			else
-			{
-				close(_events[i].data.fd);
-				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online << _END << std::endl;
-				this->clients.erase(_events[i].data.fd);
-				this->_cur_online--;
-			}
-			return;
-	}
-	if (extra_bytes > 0)
-		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
-	else if (extra_bytes == 0)
-	{
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
-		{
+void Server::funct_NotNewClient(int i){
+	int bytes_received = recv(_events[i].data.fd, _buffer, sizeof(_buffer), 0);
+	std::string message(_buffer);
+	if (bytes_received == 0) {
+    // Client disconnected
+		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
-		}
-		else
-		{
+		} else {
 			close(_events[i].data.fd);
 			std::cerr << _RED << "Client disconnected. Current onlines: " << _cur_online << _END << std::endl;
 			this->clients.erase(_events[i].data.fd);
 			this->_cur_online--;
 		}
-		return;
-	}
-	//}
-	if (this->clients[_events[i].data.fd]->get_buffer()[this->clients[_events[i].data.fd]->get_bytes_received() - 1] != '\n')
-		return;
-	// Successfully received data
-	buffer_ptr[this->clients[_events[i].data.fd]->get_bytes_received()] = '\0';
-	this->clients[_events[i].data.fd]->set_buffer(buffer_ptr, this->clients[_events[i].data.fd]->get_bytes_received());
-	std::string command(this->clients[_events[i].data.fd]->get_buffer());
-	if (!command.empty() && command[command.size() - 1] == '\r')
-	{
-		command.erase(command.end() - 1);
-	}
-	handleCommands(_events[i].data.fd, command);
-	std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
-	this->clients[_events[i].data.fd]->set_bytes_received(0);
-	memset(buffer_ptr, 0, 1024);
-	this->clients[_events[i].data.fd]->set_buffer(buffer_ptr, sizeof(buffer_ptr));
+	} 
+	else if (bytes_received == -1) {
+		if (errno != EAGAIN && errno != EWOULDBLOCK) {
+			// Real error, remove the client
+			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
+				std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
+			} else {
+				close(_events[i].data.fd);
+				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online << _END << std::endl;
+				this->clients.erase(_events[i].data.fd);
+				this->_cur_online--;
+			}
+		} 
+		else {
+			// EAGAIN/EWOULDBLOCK: temporary non-fatal error, do nothing
+			std::cerr << _YELLOW << "Temporary recv() error: " << strerror(errno) << _END << std::endl;
+		}
+	} 
+	else {
+		int extra_bytes = 0;
+		while (_buffer[bytes_received - 1] != '\n'){
+			extra_bytes = recv(_events[i].data.fd, _buffer + bytes_received, sizeof(_buffer) - bytes_received, 0);
+			if (extra_bytes == -1){
+				if (errno == EAGAIN && errno == EWOULDBLOCK) {
+					//! some debug message
+					continue;
+				}
+				else{
+					//! actual error message
+				}
+			}
+			if (extra_bytes > 0)
+				bytes_received += extra_bytes;
+			else if(extra_bytes == 0){
+				//! error message
+			}
+		}
+		// Successfully received data
+		_buffer[bytes_received] = '\0';
+			std::string command(_buffer);
+			if (!command.empty() && command[command.size() - 1] == '\r') {
+				command.erase(command.end() - 1);
+			}
+			handleCommands(_events[i].data.fd, command);
+			std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
+		}
+	memset(_buffer, 0, 1024);
 }
 
 // std::vector<std::string> Server::parser(const std::string &command){
