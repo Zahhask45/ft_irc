@@ -186,18 +186,6 @@ void Server::funct_NotNewClient(int i){
 	memset(_buffer, 0, 1024);
 }
 
-// std::vector<std::string> Server::parser(const std::string &command){
-// 	 std::vector<std::string> result;
-//     std::stringstream ss(command);
-//     std::string item;
-    
-//     while (std::getline(ss, item, ' ')) {
-//         result.push_back(item);
-//     }
-// 	return result;
-// }
-
-
 
 
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
@@ -248,6 +236,10 @@ void Server::handleCommands(int fd, const std::string &command){
 			handleWhois(fd, iss);
 		else if (cmd == "LIST")
 			handleList(fd);
+		else if (cmd == "SENDFILE")
+			handleSendFile(fd, iss);
+		else if (cmd == "ACCEPTFILE")
+			handleAcceptFile(fd, iss);
 	}
 }
 

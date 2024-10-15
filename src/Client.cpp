@@ -83,10 +83,6 @@ void Client::set_bytes_received(int value){
 	this->bytes_received = value;
 }
 
-// void Client::set_flagNick(bool value){
-// 	this->_flagNick = value;
-// }
-
 void Client::addChannel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){
 		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
