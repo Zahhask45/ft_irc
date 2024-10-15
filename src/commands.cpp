@@ -42,7 +42,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "376", clients[fd]->get_nick(), ":End of message of the day.");
 		sendCode(fd, "374", clients[fd]->get_nick(), ":Now you can join channels and chat with other users");
 		sendCode(fd, "396", clients[fd]->get_nick(), clients[fd]->get_host() + " :is now your displayed host");
-		clients[fd]->setAuth(true);
+		clients[fd]->set_auth(true);
 		return ;
 	}
 	else
