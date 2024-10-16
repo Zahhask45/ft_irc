@@ -28,6 +28,13 @@ void Server::handleSendFile(int fd, std::istringstream &command)
 		sendCode(fd, "401", receiver, "No such nick/channel"); // ERR_NOSUCHNICK
 		return;
 	}
+	//verificar se o path é um arquivo
+	struct stat path_stat;
+    if (stat(path.c_str(), &path_stat) == 0 && S_ISDIR(path_stat.st_mode)) {
+        sendCode(fd, "999", clients[fd]->get_nick(), ":Path is a directory, not a file");
+        return;
+    }
+
 	std::fstream ifs(path.c_str(), std::fstream::in);
 	if (!ifs.is_open()){
 		sendCode(fd, "999", clients[fd]->get_nick(), ":Invalid file path");
@@ -40,6 +47,7 @@ void Server::handleSendFile(int fd, std::istringstream &command)
 		return;
 	}
 	_file.insert(std::pair<std::string, File>(filename, file));
+	print_client(fd, "File " + filename + " sent successfully.\n");
 	print_client(receiver_fd, clients[fd]->get_mask() + " wants to send you a file called " + filename + ".\n");
 }
 
@@ -74,4 +82,5 @@ void Server::handleAcceptFile(int fd, std::istringstream &command)
 	}
 	ofs << ifs.rdbuf();
 	_file.erase(filename);
+	print_client(fd, "File " + filename + " received successfully.\n");
 }

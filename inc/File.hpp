@@ -2,6 +2,7 @@
 #define FILE_HPP
 
 #include "Server.hpp"
+#include <sys/stat.h>
 
 class File
 {

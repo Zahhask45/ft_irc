@@ -132,7 +132,7 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	}
 
 	while (std::getline(ss, channelName, ',')){
-		if (channelName[0] != '#'){
+		if (channelName[0] != '#' || channelName == "#"){
 			sendCode(fd, "476", clients[fd]->get_nick(), channelName + " :Invalid channel name"); // ERR_BADCHANMASK
 			return ;
 		}
