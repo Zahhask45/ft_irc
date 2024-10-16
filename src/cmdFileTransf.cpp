@@ -1,4 +1,7 @@
 #include "Server.hpp"
+#include <arpa/inet.h>
+
+
 
 int Server::getClientByNick(std::string nick)
 {
@@ -10,7 +13,72 @@ int Server::getClientByNick(std::string nick)
 	return -1;
 }
 
-void Server::handleSendFile(int fd, std::istringstream &command)
+void Server::handleSendFile(int fd, std::string &cmd)
+{
+	std::string receiver, path;
+	std::istringstream command(cmd);
+	command >> receiver >> path;
+
+	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_socket < 0)
+	{
+		std::cerr << "Erro ao criar o socket!" << std::endl;
+		return;
+	}
+
+	struct sockaddr_in server_addr;
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(this->_port);
+	server_addr.sin_addr.s_addr = INADDR_ANY;
+
+	if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
+	{
+		std::cerr << "Erro ao fazer bind!" << std::endl;
+		close(server_socket);
+		return;
+	}
+
+	if (listen(server_socket, 1) < 0)
+	{
+		std::cerr << "Erro ao ouvir a porta!" << std::endl;
+		close(server_socket);
+		return;
+	}
+
+	std::cout << "Aguardando conexão DDC..." << std::endl;
+	int client_socket = accept(server_socket, NULL, NULL);
+	if (client_socket < 0)
+	{
+		std::cerr << "Erro ao aceitar conexão!" << std::endl;
+		close(server_socket);
+		return;
+	}
+
+	std::cout << "Conexão estabelecida!" << std::endl;
+
+	std::ifstream ifs(path.c_str(), std::ios::binary);
+	if (!ifs.is_open()){
+		sendCode(fd, "999", clients[fd]->get_nick(), ":Invalid file path");
+		return;
+	}
+
+	char buffer[1024];
+	while (!ifs.eof())
+	{
+		ifs.read(buffer, 1024);
+		int bytes_read = ifs.gcount();
+		if (bytes_read > 0)
+			send(client_socket, buffer, bytes_read, 0);
+	}
+
+    std::cout << "Arquivo enviado com sucesso!" << std::endl;
+    ifs.close();
+
+	close(client_socket);
+	close(server_socket);
+}
+
+/* void Server::handleSendFile(int fd, std::istringstream &command)
 {
 	std::string receiver, path;
 	command >> receiver >> path;
@@ -49,9 +117,32 @@ void Server::handleSendFile(int fd, std::istringstream &command)
 	_file.insert(std::pair<std::string, File>(filename, file));
 	print_client(fd, "File " + filename + " sent successfully.\n");
 	print_client(receiver_fd, clients[fd]->get_mask() + " wants to send you a file called " + filename + ".\n");
-}
+} */
 
-void Server::handleAcceptFile(int fd, std::istringstream &command)
+
+/* void server::handleAcceptFile(int fd, std::string &cmd)
+{
+	std::string filename, server_ip;
+	std::istringstream command(cmd);
+	command >> filename >> server_ip;
+
+	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
+	if (server_socket < 0)
+	{
+		std::cerr << "Erro ao criar o socket!" << std::endl;
+		return;
+	}
+	struct sockaddr_in server_addr;
+	server_addr.sin_family = AF_INET;
+	server_addr.sin_port = htons(this->_port);
+	server_addr.sin_addr.s_addr = inet_addr(server_ip.c_str());
+
+
+	
+} */
+	
+
+/* void Server::handleAcceptFile(int fd, std::istringstream &command)
 {
 	std::string filename, path;
 	command >> filename >> path;
@@ -84,3 +175,4 @@ void Server::handleAcceptFile(int fd, std::istringstream &command)
 	_file.erase(filename);
 	print_client(fd, "File " + filename + " received successfully.\n");
 }
+ */

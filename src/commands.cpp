@@ -197,6 +197,9 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			}
 			it++;
 		}
+		if (message.find("SEND") != std::string::npos){
+			handleSendFile(fd, message);
+		}
 		// _sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 		if(receiver_fd)
 			print_client(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");

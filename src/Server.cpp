@@ -86,6 +86,7 @@ void Server::binding(){
 
 void Server::loop(){
 	while(true){
+
 		std::cout << "Waiting for connections..." << std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
 
@@ -236,10 +237,10 @@ void Server::handleCommands(int fd, const std::string &command){
 			handleWhois(fd, iss);
 		else if (cmd == "LIST")
 			handleList(fd);
-		else if (cmd == "SENDFILE")
+/* 		else if (cmd == "SENDFILE")
 			handleSendFile(fd, iss);
 		else if (cmd == "ACCEPTFILE")
-			handleAcceptFile(fd, iss);
+			handleAcceptFile(fd, iss); */
 	}
 }
 
