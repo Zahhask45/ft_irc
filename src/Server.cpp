@@ -130,12 +130,7 @@ void Server::funct_NotNewClient(int i)
 {
 	int extra_bytes = 0;
 	char buffer_ptr[1024];
-	/* if (this->clients[_events[i].data.fd]->get_buffer() != NULL){
-		buffer_ptr =  (char*)this->clients[_events[i].data.fd]->get_buffer();
-		std::cout << _CYAN << buffer_ptr << _END << std::endl;
-		std::cout << _CYAN << this->clients[_events[i].data.fd]->get_bytes_received() << _END << std::endl;
-	} */
-	extra_bytes = recv(_events[i].data.fd,  buffer_ptr /* + this->clients[_events[i].data.fd]->get_bytes_received() */, sizeof(buffer_ptr) /* - this->clients[_events[i].data.fd]->get_bytes_received() */, 0);
+	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
 	std::cout << _PURPLE << "INFO RECEIVED: ";
 	for (int ii = 0 ; ii < extra_bytes; ii++)
 	{
@@ -144,28 +139,30 @@ void Server::funct_NotNewClient(int i)
 	std::cout << std::endl << "AND EXTRA_BYTES: " << extra_bytes << _END << std::endl;
 	if (extra_bytes == -1)
 	{
-		int err_code;
-        socklen_t len = sizeof(err_code);
-
+		int err_code = 0;
+    	socklen_t len = sizeof(err_code);
 		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1)
             std::cout << _RED << "Error on getsocket()" << _END << std::endl;
 		else if(err_code == EAGAIN || err_code == EWOULDBLOCK)
 				std::cout << _YELLOW << "Temporary recv() error" << _END << std::endl;
-        else
-                errno = err_code;
+        else if(err_code != 0){
+
+            errno = err_code;
 			// Real error, remove the client
 			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
 			{
 				std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
+				return;
 			}
 			else
 			{
 				close(_events[i].data.fd);
-				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online << _END << std::endl;
+				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online  << " WITH ERROR NO: " << err_code << _END << std::endl;
 				this->clients.erase(_events[i].data.fd);
 				this->_cur_online--;
 			}
-			return;
+		}
+			//return; 
 	}
 	if (extra_bytes > 0){
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
