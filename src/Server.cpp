@@ -129,14 +129,19 @@ void Server::funct_NewClient(int i){
 void Server::funct_NotNewClient(int i)
 {
 	int extra_bytes = 0;
-	char *buffer_ptr =  (char *)this->clients[_events[i].data.fd]->get_buffer();
-	extra_bytes = recv(_events[i].data.fd,  buffer_ptr + this->clients[_events[i].data.fd]->get_bytes_received(), sizeof(buffer_ptr) - this->clients[_events[i].data.fd]->get_bytes_received(), 0);
-	/* std::cout << _PURPLE << "INFO RECEIVED: ";
-	for (int ii = this->clients[_events[i].data.fd]->get_bytes_received() ; ii < this->clients[_events[i].data.fd]->get_bytes_received() + extra_bytes; ii++)
-	{
-		std::cout << this->clients[_events[i].data.fd]->_buffer[ii];
+	char buffer_ptr[1024];
+	/* if (this->clients[_events[i].data.fd]->get_buffer() != NULL){
+		buffer_ptr =  (char*)this->clients[_events[i].data.fd]->get_buffer();
+		std::cout << _CYAN << buffer_ptr << _END << std::endl;
+		std::cout << _CYAN << this->clients[_events[i].data.fd]->get_bytes_received() << _END << std::endl;
 	} */
-	std::cout << _END << std::endl;
+	extra_bytes = recv(_events[i].data.fd,  buffer_ptr /* + this->clients[_events[i].data.fd]->get_bytes_received() */, sizeof(buffer_ptr) /* - this->clients[_events[i].data.fd]->get_bytes_received() */, 0);
+	std::cout << _PURPLE << "INFO RECEIVED: ";
+	for (int ii = 0 ; ii < extra_bytes; ii++)
+	{
+		std::cout << buffer_ptr[ii];
+	}
+	std::cout << std::endl << "AND EXTRA_BYTES: " << extra_bytes << _END << std::endl;
 	if (extra_bytes == -1)
 	{
 		int err_code;
@@ -162,8 +167,12 @@ void Server::funct_NotNewClient(int i)
 			}
 			return;
 	}
-	if (extra_bytes > 0)
+	if (extra_bytes > 0){
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
+		buffer_ptr[extra_bytes] = '\0';
+		std::cout << buffer_ptr << std::endl;
+		this->clients[_events[i].data.fd]->add_to_buffer(buffer_ptr);
+	}
 	else if (extra_bytes == 0)
 	{
 		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
@@ -173,19 +182,19 @@ void Server::funct_NotNewClient(int i)
 		else
 		{
 			close(_events[i].data.fd);
-			std::cerr << _RED << "Client disconnected. Current onlines: " << _cur_online << _END << std::endl;
+			std::cerr << _RED << "Client disconnected (FROM THE NEW STUFF). Current onlines: " << _cur_online << _END << std::endl;
 			this->clients.erase(_events[i].data.fd);
 			this->_cur_online--;
 		}
 		return;
 	}
-	//}
-	if (this->clients[_events[i].data.fd]->get_buffer()[this->clients[_events[i].data.fd]->get_bytes_received() - 1] != '\n')
-		return;
 	// Successfully received data
-	buffer_ptr[this->clients[_events[i].data.fd]->get_bytes_received()] = '\0';
-	this->clients[_events[i].data.fd]->set_buffer(buffer_ptr, this->clients[_events[i].data.fd]->get_bytes_received());
+	//this->clients[_events[i].data.fd]->add_to_buffer("\0");
 	std::string command(this->clients[_events[i].data.fd]->get_buffer());
+	if (this->clients[_events[i].data.fd]->get_buffer().find("\n") == std::string::npos){
+		std::cout << ">>" << this->clients[_events[i].data.fd]->get_buffer() << "<<" << std::endl;	
+		return;
+	}
 	if (!command.empty() && command[command.size() - 1] == '\r')
 	{
 		command.erase(command.end() - 1);
@@ -194,7 +203,7 @@ void Server::funct_NotNewClient(int i)
 	std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 	this->clients[_events[i].data.fd]->set_bytes_received(0);
 	memset(buffer_ptr, 0, 1024);
-	this->clients[_events[i].data.fd]->set_buffer(buffer_ptr, sizeof(buffer_ptr));
+	this->clients[_events[i].data.fd]->clean_buffer();
 }
 
 // std::vector<std::string> Server::parser(const std::string &command){
