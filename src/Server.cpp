@@ -153,42 +153,49 @@ void Server::funct_not_new_client(int i){
 	} 
 	else { */
 	int extra_bytes = 0;
-	char *buffer_ptr =  (char *)this->clients[_events[i].data.fd]->get_buffer();
-	extra_bytes = recv(_events[i].data.fd,  buffer_ptr + this->clients[_events[i].data.fd]->get_bytes_received(), sizeof(buffer_ptr) - this->clients[_events[i].data.fd]->get_bytes_received(), 0);
-	/* std::cout << _PURPLE << "INFO RECEIVED: ";
-	for (int ii = this->clients[_events[i].data.fd]->get_bytes_received() ; ii < this->clients[_events[i].data.fd]->get_bytes_received() + extra_bytes; ii++)
+	char buffer_ptr[1024];
+	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
+	std::cout << _PURPLE << "INFO RECEIVED: ";
+	for (int ii = 0 ; ii < extra_bytes; ii++)
 	{
-		std::cout << this->clients[_events[i].data.fd]->_buffer[ii];
-	} */
-	std::cout << _END << std::endl;
+		std::cout << buffer_ptr[ii];
+	}
+	std::cout << std::endl << "AND EXTRA_BYTES: " << extra_bytes << _END << std::endl;
 	if (extra_bytes == -1)
 	{
-		int err_code;
-        socklen_t len = sizeof(err_code);
-
+		int err_code = 0;
+    	socklen_t len = sizeof(err_code);
 		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1)
             std::cout << _RED << "Error on getsocket()" << _END << std::endl;
 		else if(err_code == EAGAIN || err_code == EWOULDBLOCK)
 				std::cout << _YELLOW << "Temporary recv() error" << _END << std::endl;
-        else
-                errno = err_code;
+        else if(err_code != 0){
+
+            errno = err_code;
 			// Real error, remove the client
 			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
 			{
 				std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
+				return;
 			}
 			else
 			{
 				close(_events[i].data.fd);
-				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online << _END << std::endl;
+				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online  << " WITH ERROR NO: " << err_code << _END << std::endl;
 				this->clients.erase(_events[i].data.fd);
 				this->_cur_online--;
 			}
-			return;
+		}
+			//return; 
 	}
-	if (extra_bytes > 0)
-		clients[_events[i].data.fd]->bytes_received += extra_bytes;
-	else if(extra_bytes == 0){
+	if (extra_bytes > 0){
+		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
+		buffer_ptr[extra_bytes] = '\0';
+		std::cout << buffer_ptr << std::endl;
+		this->clients[_events[i].data.fd]->add_to_buffer(buffer_ptr);
+	}
+	else if (extra_bytes == 0)
+	{
 		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
 		{
 			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
@@ -196,28 +203,30 @@ void Server::funct_not_new_client(int i){
 		else
 		{
 			close(_events[i].data.fd);
-			std::cerr << _RED << "Client disconnected. Current onlines: " << _cur_online << _END << std::endl;
+			std::cerr << _RED << "Client disconnected (FROM THE NEW STUFF). Current onlines: " << _cur_online << _END << std::endl;
 			this->clients.erase(_events[i].data.fd);
 			this->_cur_online--;
 		}
 		return;
 	}
-	//}
-	if (this->clients[_events[i].data.fd]->get_buffer()[this->clients[_events[i].data.fd]->get_bytes_received() - 1] != '\n')
-		return;
 	// Successfully received data
-	buffer_ptr[this->clients[_events[i].data.fd]->get_bytes_received()] = '\0';
-	this->clients[_events[i].data.fd]->set_buffer(buffer_ptr, this->clients[_events[i].data.fd]->get_bytes_received());
+	//this->clients[_events[i].data.fd]->add_to_buffer("\0");
 	std::string command(this->clients[_events[i].data.fd]->get_buffer());
+	if (this->clients[_events[i].data.fd]->get_buffer().find("\n") == std::string::npos){
+		std::cout << ">>" << this->clients[_events[i].data.fd]->get_buffer() << "<<" << std::endl;	
+		return;
+	}
 	if (!command.empty() && command[command.size() - 1] == '\r')
 	{
 		command.erase(command.end() - 1);
 	}
 	handle_commands(_events[i].data.fd, command);
 	std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
-	this->clients[_events[i].data.fd]->set_bytes_received(0);
-	memset(buffer_ptr, 0, 1024);
-	this->clients[_events[i].data.fd]->set_buffer(buffer_ptr, sizeof(buffer_ptr));
+	if (this->clients.find(_events[i].data.fd) != this->clients.end() && this->clients[_events[i].data.fd] != 0) { // The solution i found.
+		this->clients[_events[i].data.fd]->set_bytes_received(0); //! this is making the server SEGFAULT when the client disconnects.
+		memset(buffer_ptr, 0, 1024);
+		this->clients[_events[i].data.fd]->clean_buffer();
+	}
 }
 
 // std::vector<std::string> Server::parser(const std::string &command){

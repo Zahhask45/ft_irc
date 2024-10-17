@@ -50,7 +50,7 @@ void Channel::remove_oper(std::string oper){
 	std::map<int, Client *>::iterator it = operators.begin();
 	while (it != operators.end()){
 		if (it->second->get_nick() == oper){
-			it->second->set_is_operator(false);
+			it->second->set_isOperator(false);
 			operators.erase(it);
 			break;
 		}

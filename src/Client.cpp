@@ -17,7 +17,7 @@ Client::~Client(){}
 
 bool const &Client::get_auth() const{ return _auth; }
 
-bool const &Client::get_is_operator() const{ return _isOperator; }
+bool const &Client::get_isOperator() const{ return _isOperator; }
 
 int const &Client::get_client_fd() const{ return _client_fd; }
 
@@ -33,7 +33,7 @@ std::string const &Client::get_mask() const{ return _mask; }
 
 std::string const &Client::get_realname() const{ return _realname; }
 
-const char* Client::get_buffer() const{ return _buffer; }
+const std::string Client::get_buffer() const{ return _buffer; }
 
 int const &Client::get_bytes_received() const{ return bytes_received; }
 
@@ -45,7 +45,7 @@ void Client::set_auth(bool value){
 	this->_auth = value;
 }
 
-void Client::set_is_operator(bool value){
+void Client::set_isOperator(bool value){
 	this->_isOperator = value;
 }
 
@@ -74,7 +74,8 @@ void Client::set_realname(std::string const &realname){
 }
 
 void Client::set_buffer(const char* buffer, int size){
-	memcpy(_buffer, buffer, size);
+	(void)size;
+	_buffer = buffer;
 }
 
 void Client::set_bytes_received(int value){
@@ -96,3 +97,14 @@ void Client::remove_channel(const std::string &channelName){
 		channels.erase(channelName);
 	}
 }
+
+void Client::clean_buffer(){
+	_buffer = "\0";
+
+}
+
+void Client::add_to_buffer(const char* append){
+	_buffer += append;
+}
+
+
