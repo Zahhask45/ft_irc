@@ -20,7 +20,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reauth"); // ERR_ALREADYREGISTRED
 		return;
 	}
-	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
+	if (clients[fd]->get_pass().compare(_pass) == 0){
 		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
 		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + serverTimestamp());
@@ -174,6 +174,9 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 		sendCode(fd, "411", clients[fd]->get_nick(), ": No recipient given (PRIVMSG)");
 		return ;
 	}
+	if (message.find(toString("\x01") + "DCC SEND") != std::string::npos) {
+		handleDCC(fd, message);
+	}
 	if (target[0] == '#'){
 		if (channels.find(target) == channels.end()){
 			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
@@ -302,9 +305,7 @@ void Server::handleWhois(int fd, std::istringstream &command){
 
 void Server::handleList(int fd){
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
-		std::stringstream ss;
-		ss << it->second->get_users().size();
-		sendCode(fd, "322", clients[fd]->get_nick(), it->first + " " + ss.str() + " :" + it->second->get_topic());
+		sendCode(fd, "322", clients[fd]->get_nick(), it->first + " " + toString(it->second->get_users().size()) + " :" + it->second->get_topic());
 	}
 	sendCode(fd, "323", clients[fd]->get_nick(), ":End of /LIST");
 }

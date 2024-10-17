@@ -124,7 +124,6 @@ void Channel::add_invite(int fd, Client *client) {
 
 std::string Channel::get_modes(){
 	std::string modes = "+";
-	std::stringstream str;
 	char elem[6] = { 'i', 'k', 'l', 'o', 't', 'n'};
 
 	for (int i = 0; i < 6; i++){
@@ -136,15 +135,14 @@ std::string Channel::get_modes(){
 	if (_key != "")
 	{
 		if (modes.find('l') != std::string::npos){
-			str << _limit;
-			modes += " " + _key + " :" + str.str();
+			
+			modes += " " + _key + " :" + toString(_limit);
 		}
 		else
 			modes += " :" + _key;
 	}
 	else if (modes.find('l') != std::string::npos){
-		str << _limit;
-		modes += " :" + str.str();
+		modes += " :" + toString(_limit);
 	}
 	return modes;
 }

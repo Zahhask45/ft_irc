@@ -39,11 +39,8 @@ void Server::binding(){
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_protocol = getprotobyname("TCP")->p_proto;
 
-	std::stringstream ss;
 	int opt = 1;
-	ss << _port;
-	std::string Port = ss.str();
-	status = getaddrinfo("0.0.0.0", Port.c_str(), &hints, &serverinfo);
+	status = getaddrinfo("0.0.0.0", toString(_port).c_str(), &hints, &serverinfo);
 	if (status != 0){
 		std::cout << "ERROR ON GETTING ADDRESS INFO" << std::endl;
 		exit (-1);
@@ -233,8 +230,6 @@ void Server::funct_not_new_client(int i){
 //     }
 // 	return result;
 // }
-
-
 
 
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS

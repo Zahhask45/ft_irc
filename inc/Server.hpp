@@ -78,7 +78,9 @@ public: // Handdle Commands
 	void handleList(int fd);
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
-	
+	void handleDCC(int fd, std::string message);
+
+
 	void handleNames(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
 	void handleAway(int fd, std::istringstream &command);
@@ -111,8 +113,11 @@ public: // Handdle Commands
 	int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
 	void genericSendMode(int fd, std::string target, char mode, std::string arg, char sign);
 	bool findNick(std::string nick);
+	void setupFileTransfer(const std::string &filename, unsigned long ip, unsigned short port, unsigned long filesize, int fd);
+
 };
 
 #include "Client.hpp"
+#include "Utils.tpp"
 
 #endif

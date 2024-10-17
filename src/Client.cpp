@@ -19,8 +19,6 @@ bool const &Client::get_auth() const{ return _auth; }
 
 bool const &Client::get_is_operator() const{ return _isOperator; }
 
-// bool const &Client::get_flagNick() const{ return _flagNick; }
-
 int const &Client::get_client_fd() const{ return _client_fd; }
 
 std::string const &Client::get_user() const{ return _user; }
