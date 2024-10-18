@@ -48,7 +48,8 @@ void Server::setupFileTransfer(const std::string &filename, unsigned long ip, un
     serv_addr.sin_addr.s_addr = htonl(ip);
 
     // Bind the socket to the port and IP
-    if (bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) {
+	int verify = bind(sockfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0;
+    if (verify < 0) {
         sendCode(fd, "400", clients[fd]->get_nick(), ":Error binding socket for file transfer");
         close(sockfd);
         return;

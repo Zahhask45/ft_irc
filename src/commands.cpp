@@ -25,11 +25,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
 		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + serverTimestamp());
 		sendCode(fd, "004", clients[fd]->get_nick(), clients[fd]->get_host() + " InspIRCd-3 BDHIORSTWcdghikorswxz ACIJKMNOPQRSTYabceghiklmnopqrstvz :IJYabeghkloqv"); //! Explicacao no arquivo explain.txt
-		
 		sendCode(fd, "005", clients[fd]->get_nick(), "CHANMODES=Ibeg,k,Jl,ACKMNOPQRSTiprstz :are supported by this server");
-
-
-		//sendCode(fd, "005", clients[fd]->get_nick(), ":This server was created " + clients[fd]->get_host());
 		sendCode(fd, "371", clients[fd]->get_nick(), ":User is Authenticated");
 		sendCode(fd, "375", clients[fd]->get_nick(), ":" + clients[fd]->get_host() + " Message of the day");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":    ▟██▛╗██▛███   ");
@@ -80,7 +76,6 @@ void Server::handleNick(int fd, std::istringstream &command){
 		if (it->second->get_nick() == nick){
 			sendCode(fd, "433", nick, ":Nickname is already in use");
 			this->clients[fd]->set_nick(nick);
-			// clients[fd]->set_flagNick(true);
 			return;
 		}
 	}
@@ -158,7 +153,6 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		
 		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
-		// if (!this->channels[channelName]->get_topic().empty())
 		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->get_topic());
 		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->list_all_users());
 		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
@@ -199,7 +193,6 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			}
 			it++;
 		}
-		// _sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 		if(receiver_fd)
 			print_client(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 	}
@@ -241,8 +234,6 @@ void Server::handleQuit(int fd, std::istringstream &command){
 		if (it->second->get_users().find(fd) != it->second->get_users().end()){
 			it->second->remove_user(clients[fd]->get_nick());
 			it->second->remove_oper(clients[fd]->get_nick());
-			// if (it->second->list_all_users() == ":"){
-			// 	delete it->second;
 			clients[fd]->remove_channel(it->first);
 		}
 	}

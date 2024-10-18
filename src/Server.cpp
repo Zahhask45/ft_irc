@@ -122,36 +122,6 @@ void Server::funct_new_client(int i){
 }
 
 void Server::funct_not_new_client(int i){
-	/* this->clients[_events[i].data.fd]->bytes += recv(_events[i].data.fd, this->clients[_events[i].data.fd]->_buffer + clients[_events[i].data.fd]->bytes, sizeof(this->clients[_events[i].data.fd]->_buffer) - clients[_events[i].data.fd]->bytes, 0);
-	if (this->clients[_events[i].data.fd]->bytes == 0) {
-    // Client disconnected
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
-		} else {
-			close(_events[i].data.fd);
-			std::cerr << _RED << "Client disconnected. Current onlines: " << _cur_online << _END << std::endl;
-			this->clients.erase(_events[i].data.fd);
-			this->_cur_online--;
-		}
-	} 
-	else if (this->clients[_events[i].data.fd]->bytes == -1) {
-		if (errno != EAGAIN && errno != EWOULDBLOCK) {
-			// Real error, remove the client
-			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-				std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
-			} else {
-				close(_events[i].data.fd);
-				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online << _END << std::endl;
-				this->clients.erase(_events[i].data.fd);
-				this->_cur_online--;
-			}
-		} 
-		else {
-			// EAGAIN/EWOULDBLOCK: temporary non-fatal error, do nothing
-			std::cerr << _YELLOW << "Temporary recv() error: " << strerror(errno) << _END << std::endl;
-		}
-	} 
-	else { */
 	int extra_bytes = 0;
 	char buffer_ptr[1024];
 	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
@@ -297,7 +267,6 @@ void Server::create_channel(const std::string &channelName, int fd){
 	if (it == channels.end()){
 		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
-		channels[channelName]->add_modes('n');
 		channels[channelName]->add_modes('t');
 	}
 }

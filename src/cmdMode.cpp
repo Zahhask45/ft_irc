@@ -97,9 +97,6 @@ void Server::handleMode(int fd, std::istringstream &command){
 			else if (mode[i] == 't'){ // Set topic
 				genericSendMode(fd, target, mode[i], arg, '+');
 			}
-			else if (mode[i] == 'n'){ // Set no external messages
-				genericSendMode(fd, target, mode[i], arg, '+');
-			}
 		}
 	}
 	else if (mode[0] == '-'){
@@ -129,9 +126,6 @@ void Server::handleMode(int fd, std::istringstream &command){
 				genericSendMode(fd, target, mode[i], arg, '-');
 			}
 			else if (mode[i] == 't' ){ // Remove topic
-				genericSendMode(fd, target, mode[i], arg, '-');
-			}
-			else if (mode[i] == 'n'){ // Remove no external messages
 				genericSendMode(fd, target, mode[i], arg, '-');
 			}
 		}

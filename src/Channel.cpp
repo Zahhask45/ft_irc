@@ -124,7 +124,7 @@ void Channel::add_invite(int fd, Client *client) {
 
 std::string Channel::get_modes(){
 	std::string modes = "+";
-	char elem[6] = { 'i', 'k', 'l', 'o', 't', 'n'};
+	char elem[6] = { 'i', 'k', 'l', 'o', 't'};
 
 	for (int i = 0; i < 6; i++){
 		for (std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
