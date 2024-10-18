@@ -189,6 +189,7 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 	else{
 		int receiver_fd = 0;
 		std::map<int, Client *>::iterator it = this->clients.begin();
+		
 		while(it != this->clients.end())
 		{
 			if (it->second->get_nick() == target){
@@ -197,8 +198,13 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			}
 			it++;
 		}
-		if (message.find("SEND") != std::string::npos){
-			handleSendFile(fd, message);
+		if (receiver_fd == 0) {
+			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel"); // ERR_NOSUCHNICK
+			return;
+        }
+		if (message.find("DCC GET") != std::string::npos){
+			//handleSendFile(fd, message, "a3");
+			handleAcceptFile(fd, message, target);
 		}
 		// _sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 		if(receiver_fd)

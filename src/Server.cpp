@@ -237,10 +237,6 @@ void Server::handleCommands(int fd, const std::string &command){
 			handleWhois(fd, iss);
 		else if (cmd == "LIST")
 			handleList(fd);
-/* 		else if (cmd == "SENDFILE")
-			handleSendFile(fd, iss);
-		else if (cmd == "ACCEPTFILE")
-			handleAcceptFile(fd, iss); */
 	}
 }
 

@@ -2,7 +2,6 @@
 #include <arpa/inet.h>
 
 
-
 int Server::getClientByNick(std::string nick)
 {
 	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
@@ -13,50 +12,19 @@ int Server::getClientByNick(std::string nick)
 	return -1;
 }
 
-void Server::handleSendFile(int fd, std::string &cmd)
+void Server::handleSendFile(int fd, const std::string &cmd, const std::string &target)
 {
-	std::string receiver, path;
+	std::string sha, check, lixo3, filename;
 	std::istringstream command(cmd);
-	command >> receiver >> path;
+	command >> sha >> sha >> lixo3 >> filename ;
 
-	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_socket < 0)
-	{
-		std::cerr << "Erro ao criar o socket!" << std::endl;
+	int receiver_fd = getClientByNick(target);
+	if (receiver_fd < 0){
+		sendCode(fd, "401", target, "No such nick/channel"); // ERR_NOSUCHNICK
 		return;
 	}
 
-	struct sockaddr_in server_addr;
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(this->_port);
-	server_addr.sin_addr.s_addr = INADDR_ANY;
-
-	if (bind(server_socket, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0)
-	{
-		std::cerr << "Erro ao fazer bind!" << std::endl;
-		close(server_socket);
-		return;
-	}
-
-	if (listen(server_socket, 1) < 0)
-	{
-		std::cerr << "Erro ao ouvir a porta!" << std::endl;
-		close(server_socket);
-		return;
-	}
-
-	std::cout << "Aguardando conexão DDC..." << std::endl;
-	int client_socket = accept(server_socket, NULL, NULL);
-	if (client_socket < 0)
-	{
-		std::cerr << "Erro ao aceitar conexão!" << std::endl;
-		close(server_socket);
-		return;
-	}
-
-	std::cout << "Conexão estabelecida!" << std::endl;
-
-	std::ifstream ifs(path.c_str(), std::ios::binary);
+	std::ifstream ifs(filename.c_str(), std::ios::binary);
 	if (!ifs.is_open()){
 		sendCode(fd, "999", clients[fd]->get_nick(), ":Invalid file path");
 		return;
@@ -68,14 +36,13 @@ void Server::handleSendFile(int fd, std::string &cmd)
 		ifs.read(buffer, 1024);
 		int bytes_read = ifs.gcount();
 		if (bytes_read > 0)
-			send(client_socket, buffer, bytes_read, 0);
+		{
+			::send(receiver_fd, buffer, bytes_read, 0);
+		}
 	}
 
     std::cout << "Arquivo enviado com sucesso!" << std::endl;
     ifs.close();
-
-	close(client_socket);
-	close(server_socket);
 }
 
 /* void Server::handleSendFile(int fd, std::istringstream &command)
@@ -120,26 +87,32 @@ void Server::handleSendFile(int fd, std::string &cmd)
 } */
 
 
-/* void server::handleAcceptFile(int fd, std::string &cmd)
+void Server::handleAcceptFile(int fd, std::string &cmd, const std::string &target)
 {
-	std::string filename, server_ip;
+	std::string dcc, send, filename;
+	//int ip, port, size;
 	std::istringstream command(cmd);
-	command >> filename >> server_ip;
+	command >> dcc >> dcc >> filename;
 
-	int server_socket = socket(AF_INET, SOCK_STREAM, 0);
-	if (server_socket < 0)
-	{
-		std::cerr << "Erro ao criar o socket!" << std::endl;
-		return;
-	}
-	struct sockaddr_in server_addr;
-	server_addr.sin_family = AF_INET;
-	server_addr.sin_port = htons(this->_port);
-	server_addr.sin_addr.s_addr = inet_addr(server_ip.c_str());
+	//"NOTICE nick(target) :0x01DCC GET sender->nick filename0x01"
 
+	std::string reply;
+	reply = "NOTICE " + target + " :";
+	reply += 0x01;
+	reply += "DCC GET " + clients[fd]->get_nick() + " " + filename;
+	reply += 0x01;
+
+	/* size_t total = 0;
+	while (total != reply.length()){
+		ssize_t nb = ::send(fd, reply.c_str() + total, reply.length() - total, 0);
+		if (nb == -1)
+			std::cout << "send error" << std::endl;
+		total += nb;
+	} */
+	sendCode(getClientByNick(target),"", "", reply);
 
 	
-} */
+}
 	
 
 /* void Server::handleAcceptFile(int fd, std::istringstream &command)

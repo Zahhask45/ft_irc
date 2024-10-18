@@ -83,8 +83,9 @@ public: // Handdle Commands
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
 
-	void handleSendFile(int fd, std::string &command);
-	void handleAcceptFile(int fd, std::istringstream &command);
+	void handleSendFile(int fd, const std::string &command, const std::string &target);
+	void handleAcceptFile(int fd, std::string &command, const std::string &target);
+	void handleDccSend(int fd, const std::string &target, const std::string &msg);
 	
 	void handleNames(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
