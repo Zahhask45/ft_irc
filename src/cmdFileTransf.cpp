@@ -90,11 +90,10 @@ void Server::handleSendFile(int fd, const std::string &cmd, const std::string &t
 void Server::handleAcceptFile(int fd, std::string &cmd, const std::string &target)
 {
 	std::string dcc, send, filename;
-	//int ip, port, size;
 	std::istringstream command(cmd);
-	command >> dcc >> dcc >> filename;
+	command >> dcc >> send >> filename;
 
-	//"NOTICE nick(target) :0x01DCC GET sender->nick filename0x01"
+	//" :\001DCC SEND \"ex00  em.cpp\" 168558851 40015 1019\001\r"
 
 	std::string reply;
 	reply = "NOTICE " + target + " :";
@@ -102,16 +101,13 @@ void Server::handleAcceptFile(int fd, std::string &cmd, const std::string &targe
 	reply += "DCC GET " + clients[fd]->get_nick() + " " + filename;
 	reply += 0x01;
 
-	/* size_t total = 0;
+	size_t total = 0;
 	while (total != reply.length()){
 		ssize_t nb = ::send(fd, reply.c_str() + total, reply.length() - total, 0);
 		if (nb == -1)
 			std::cout << "send error" << std::endl;
 		total += nb;
-	} */
-	sendCode(getClientByNick(target),"", "", reply);
-
-	
+	}	
 }
 	
 

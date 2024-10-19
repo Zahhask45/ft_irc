@@ -1,0 +1,19 @@
+no nosso:
+d quem manda:
+* Offering 'ex00.cpp' to mont
+* DCC GET a ex00.cpp:server 401 a IRC2 :No such nick/channel
+
+quem recebe:
+nada
+abre uma conversa e adiciona: 	:a>  :DCC SEND ex00.cpp 168558851 54235 1019
+(devia nao abrir uma conversa e enviar a has offered 'ex00.cpp' (1019 bytes))
+
+
+no exemplo:
+
+quem manda:
+* Offering 'ex00.cpp' to mont
+* DCC GET a ex00.cpp:IRC-1337 401 a IRC2 :No such nick/channel
+
+quem recebe:
+a has offered 'ex00.cpp' (1019 bytes)
