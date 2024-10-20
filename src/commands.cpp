@@ -126,7 +126,7 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	}
 
 	while (std::getline(ss, channelName, ',')){
-		if (channelName[0] != '#'){
+		if (channelName[0] != '#' || channelName == "#"){
 			sendCode(fd, "476", clients[fd]->get_nick(), channelName + " :Invalid channel name"); // ERR_BADCHANMASK
 			return ;
 		}
@@ -160,6 +160,17 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	}
 }
 
+void sendReply(int fd, const std::string &reply){
+	size_t total = 0;
+	while (total != reply.length()){
+		ssize_t nb = ::send(fd, reply.c_str() + total, reply.length() - total, 0);
+		if (nb == -1)
+			std::cout << "send error" << std::endl;
+		total += nb;
+	}
+}
+
+
 void Server::handlePrivmsg(int fd, std::istringstream &command){
 	std::string target, message;
 	command >> target;
@@ -167,9 +178,6 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 	if (target.empty() || message.empty()){
 		sendCode(fd, "411", clients[fd]->get_nick(), ": No recipient given (PRIVMSG)");
 		return ;
-	}
-	if (message.find(toString("\x01") + "DCC SEND") != std::string::npos) {
-		handleDCC(fd, message);
 	}
 	if (target[0] == '#'){
 		if (channels.find(target) == channels.end()){
@@ -185,6 +193,7 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 	else{
 		int receiver_fd = 0;
 		std::map<int, Client *>::iterator it = this->clients.begin();
+		
 		while(it != this->clients.end())
 		{
 			if (it->second->get_nick() == target){
@@ -193,7 +202,16 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			}
 			it++;
 		}
-		if(receiver_fd)
+		if (receiver_fd == 0) {
+			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel"); // ERR_NOSUCHNICK
+			return;
+        }
+			if (message.find(toString("\x01") + "DCC SEND") != std::string::npos) {
+			handleAcceptFile(fd, message, target);
+			sendReply(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target +  message + "\n");
+		}
+		// _sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
+		else if(receiver_fd)
 			print_client(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 	}
 }

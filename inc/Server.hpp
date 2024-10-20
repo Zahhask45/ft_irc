@@ -3,11 +3,14 @@
 
 #include "colors.hpp"
 #include "Channel.hpp"
+#include "File.hpp"
+#include <fstream>
 
 #define MAX_CLIENTS 100
 
 class Client;
 class Channel;
+class File;
 
 class Server
 {
@@ -18,6 +21,7 @@ private:
 	// struct sockaddr_storage _addr;
 	std::map<std::string, Channel *> channels;
 	std::map<int, Client *> clients;
+	std::map<std::string, File> _file;
 
 	// std::vector<std::string> user;
 
@@ -78,9 +82,11 @@ public: // Handdle Commands
 	void handleList(int fd);
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
-	void handleDCC(int fd, std::string message);
 
-
+	void handleSendFile(int fd, const std::string &command, const std::string &target);
+	void handleAcceptFile(int fd, std::string &command, const std::string &target);
+	void handleDccSend(int fd, const std::string &target, const std::string &msg);
+	
 	void handleNames(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
 	void handleAway(int fd, std::istringstream &command);
@@ -109,12 +115,13 @@ public: // Handdle Commands
 	void handleCap(int fd, std::istringstream &command);
 	void handleSasl(int fd, std::istringstream &command);
 
+
+
 	//checkMode
 	int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
 	void genericSendMode(int fd, std::string target, char mode, std::string arg, char sign);
 	bool findNick(std::string nick);
-	void setupFileTransfer(const std::string &filename, unsigned long ip, unsigned short port, unsigned long filesize, int fd);
-
+	int getClientByNick(std::string nick);
 };
 
 #include "Client.hpp"

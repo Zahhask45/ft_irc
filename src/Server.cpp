@@ -83,6 +83,7 @@ void Server::binding(){
 
 void Server::loop(){
 	while(true){
+
 		std::cout << "Waiting for connections..." << std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
 
@@ -143,8 +144,7 @@ void Server::funct_not_new_client(int i){
 
             errno = err_code;
 			// Real error, remove the client
-			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
-			{
+			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 				std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
 				return;
 			}
