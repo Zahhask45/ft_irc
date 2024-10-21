@@ -139,7 +139,7 @@ void Server::funct_not_new_client(int i){
     	socklen_t len = sizeof(err_code);
 		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1){
         	std::cout << _RED << "Error on getsocket()" << _END << std::endl;
-			if (this->clients.find(_events[i].data.fd) == this->clients.end() && this->clients[_events[i].data.fd] != 0) {
+			if (this->clients.find(_events[i].data.fd) == this->clients.end()) {
 				return ;
 			}
 			throw std::invalid_argument("SOME ERROR");
