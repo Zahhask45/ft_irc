@@ -18,6 +18,7 @@ private:
 	std::string _realname;
 	bool _auth;
 	bool _isOperator;
+	bool _flagNick;
 
 	struct sockaddr_storage _client_addr;
 	socklen_t _client_len;
@@ -33,7 +34,6 @@ public:
 	Client(int fd);
 	~Client();
 
-
 	//! CHANGE THIS TO PRIVATE, REMAKE THE FUCNTIONS WHERE THIS IS USED ON
 
 public: //GETTERS
@@ -43,7 +43,7 @@ public: //GETTERS
 	std::string const &get_nick() const;
 	bool const &get_auth() const;
 	bool const &get_isOperator() const;
-	// bool const &get_flagNick() const;
+	bool const &get_flagNick() const;
 	std::string const &get_host() const;
 	std::string const &get_mask() const;
 	std::string const &get_realname() const;
@@ -62,7 +62,7 @@ public: //SETTERS
 	void set_realname(const std::string &realname);
 	void set_buffer(const char* buffer, int size);
 	void set_bytes_received(const int value);
-	// void set_flagNick(bool value);
+	void set_flagNick(bool value);
 
 	void addChannel(const std::string &channelName, Channel &channel);
 	void removeChannel(const std::string &channelName);

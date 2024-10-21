@@ -5,14 +5,15 @@ Client::Client(): _client_fd(), _user(), _nick(), bytes_received(0) {
 	_isOperator = false;
 	_host = "Terracota";
 	bytes_received = 0;
+	_flagNick = false;
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick(), bytes_received(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracota";
-
 	bytes_received = 0;
+	_flagNick = false;
 }
 
 Client::~Client(){}
@@ -38,6 +39,8 @@ std::string const &Client::get_realname() const{ return _realname; }
 const char* Client::get_buffer() const{ return _buffer; }
 
 int const &Client::get_bytes_received() const{ return bytes_received; }
+
+bool const &Client::get_flagNick() const{ return _flagNick; }
 
 void Client::set_addr(struct sockaddr_storage value){
 	_client_addr = value;
@@ -81,6 +84,10 @@ void Client::set_buffer(const char* buffer, int size){
 
 void Client::set_bytes_received(int value){
 	this->bytes_received = value;
+}
+
+void Client::set_flagNick(bool value){
+	this->_flagNick = value;
 }
 
 void Client::addChannel(const std::string &channelName, Channel &channel){

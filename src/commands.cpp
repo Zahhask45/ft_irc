@@ -13,7 +13,14 @@ void Server::handleAuth(int fd){
 	if (clients[fd] && (clients[fd]->get_user().empty() 
 		|| clients[fd]->get_pass().empty() 
 		|| clients[fd]->get_nick().empty())){
-		sendCode(fd, "461", "", "Not enough parameters"); //ERR_NEEDMOREPARAMS
+		if (clients[fd]->get_user().empty())
+			sendCode(fd, "461", "", "USER: Not enough parameters"); //ERR_NEEDMOREPARAMS
+		if (clients[fd]->get_pass().empty())
+			sendCode(fd, "461", "", "PASS: Not enough parameters"); //ERR_NEEDMOREPARAMS
+		if (clients[fd]->get_nick().empty())
+			sendCode(fd, "461", "", "NICK: Not enough parameters"); //ERR_NEEDMOREPARAMS
+		else
+			sendCode(fd, "461", "", "Not enough parameters"); //ERR_NEEDMOREPARAMS
 		return;
 	}
 	if (clients[fd]->get_auth() == true){
@@ -79,12 +86,12 @@ void Server::handleNick(int fd, std::istringstream &command){
 	for(it = clients.begin(); it != clients.end(); it++){
 		if (it->second->get_nick() == nick){
 			sendCode(fd, "433", nick, ":Nickname is already in use"); // ERR_NICKNAMEINUSE
-			this->clients[fd]->set_nick(nick);
-			// clients[fd]->set_flagNick(true);
+			//this->clients[fd]->set_nick(nick);
+			clients[fd]->set_flagNick(true);
 			return;
 		}
 	}
-	if (this->clients[fd]->get_nick().empty())
+	if (this->clients[fd]->get_nick().empty() && this->clients[fd]->get_auth() == false)
 		this->clients[fd]->set_nick(nick);
 	else{
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
