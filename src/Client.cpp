@@ -92,7 +92,7 @@ void Client::set_flagNick(bool value){
 	this->_flagNick = value;
 }
 
-void Client::addChannel(const std::string &channelName, Channel &channel){
+void Client::add_channel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){
 		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
 	}
