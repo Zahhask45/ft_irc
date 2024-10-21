@@ -71,7 +71,7 @@ void Server::binding(){
 	}
 
 	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN | EPOLLET;
+	_events[0].events = EPOLLIN;
 	
 	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
@@ -111,7 +111,7 @@ void Server::funct_new_client(int i){
 	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
 	_events[i].data.fd = newsocket;
-	_events[i].events = EPOLLIN | EPOLLET;
+	_events[i].events = EPOLLIN;
 	this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
 
@@ -159,6 +159,7 @@ void Server::funct_not_new_client(int i){
 			//return; 
 	}
 	if (extra_bytes > 0){
+		_events[i].events = EPOLLOUT;
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
 		buffer_ptr[extra_bytes] = '\0';
 		std::cout << buffer_ptr << std::endl;
@@ -197,18 +198,8 @@ void Server::funct_not_new_client(int i){
 		memset(buffer_ptr, 0, 1024);
 		this->clients[_events[i].data.fd]->clean_buffer();
 	}
+	_events[i].events = EPOLLIN;
 }
-
-// std::vector<std::string> Server::parser(const std::string &command){
-// 	 std::vector<std::string> result;
-//     std::stringstream ss(command);
-//     std::string item;
-    
-//     while (std::getline(ss, item, ' ')) {
-//         result.push_back(item);
-//     }
-// 	return result;
-// }
 
 
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
@@ -385,7 +376,3 @@ bool Server::findNick(std::string nick){
 	return false;
 }
 
-// void server::set_buffer(std::string buffer)
-// {
-// 	this->_buffer.append(buffer);
-// }

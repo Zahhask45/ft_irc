@@ -112,5 +112,3 @@ void Client::clean_buffer(){
 void Client::add_to_buffer(const char* append){
 	_buffer += append;
 }
-
-

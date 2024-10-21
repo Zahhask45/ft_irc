@@ -82,7 +82,6 @@ void Server::handleNick(int fd, std::istringstream &command){
 	for(it = clients.begin(); it != clients.end(); it++){
 		if (it->second->get_nick() == nick){
 			sendCode(fd, "433", nick, ":Nickname is already in use"); // ERR_NICKNAMEINUSE
-			//this->clients[fd]->set_nick(nick);
 			clients[fd]->set_flagNick(true);
 			return;
 		}
