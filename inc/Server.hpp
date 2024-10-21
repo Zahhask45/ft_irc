@@ -30,7 +30,7 @@ private:
 	int _epoll_fd;
 	int _nfds;
 	int _cur_online;
-	char _buffer[1024];
+	// char _buffer[1024];
 
 	Server(Server &cp);
 	Server &operator=(Server &cp);
@@ -41,17 +41,17 @@ public:
 //* Execution functions
 	void binding();
 	void loop();
-	void handleCommands(int fd, const std::string &command);
-	void createChannel(const std::string &channelName, int fd);
+	void handle_commands(int fd, const std::string &command);
+	void create_channel(const std::string &channelName, int fd);
 	
-	std::string const &getUser()const;
+	std::string const &get_user()const;
 	int const &get_socket() const;
-	Channel *getChannel(const std::string name);
-	Client &getClient(int fd);
+	Channel *get_channel(const std::string name);
+	Client &get_client(int fd);
 
-	void setPass(std::string pass);
-	void funct_NewClient(int i);
-	void funct_NotNewClient(int i);
+	void set_pass(std::string pass);
+	void funct_new_client(int i);
+	void funct_not_new_client(int i);
 
 
 //* Auxiliar functions
@@ -125,5 +125,6 @@ public: // Handdle Commands
 };
 
 #include "Client.hpp"
+#include "Utils.tpp"
 
 #endif

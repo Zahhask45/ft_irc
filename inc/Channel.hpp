@@ -32,40 +32,40 @@ public:
     Channel(const std::string name, Client *Creator);
     ~Channel();
 
-    std::string const &getName(void) const;
-    std::string const &getTopic(void) const;
-    std::string const &getKey(void) const;
-    long unsigned int const &getLimit(void) const;
-    bool const &getInviteChannel(void) const;
-	std::string getModes();
-    int const &getCreationTime() const;
+    std::string const &get_name(void) const;
+    std::string const &get_topic(void) const;
+    std::string const &get_key(void) const;
+    long unsigned int const &get_limit(void) const;
+    bool const &get_invite_channel(void) const;
+	std::string get_modes();
+    int const &get_creation_time() const;
 
-    std::map<int, Client*> &getUsers();
-    std::map<int, Client *>	const &getOperators() const;
-    std::map<int, Client *>	const &getInviteList() const;
+    std::map<int, Client*> &get_users();
+    std::map<int, Client *>	const &get_operators() const;
+    std::map<int, Client *>	const &get_invite_list() const;
 
-    void addUser(Client &client);
-	void addOperator( Client &op );
+    void add_user(Client &client);
+	void add_operator( Client &op );
     
-	bool addModes(char mode);
-	bool removeModes(char mode);
+	bool add_modes(char mode);
+	bool remove_modes(char mode);
 
-    void removeUser(std::string user);
-    void removeOper(std::string oper);
+    void remove_user(std::string user);
+    void remove_oper(std::string oper);
     
-    void setName(std::string const &name);
-    void setUser(int const &id, Client *client);
-    void setTopic(std::string const &topic);
-    void setInviteChannel(bool const &invite);
-    void setKey(std::string const &key);
-    void setLimit(int const &limit);
+    void set_name(std::string const &name);
+    void set_user(int const &id, Client *client);
+    void set_topic(std::string const &topic);
+    void set_invite_channel(bool const &invite);
+    void set_key(std::string const &key);
+    void set_limit(int const &limit);
     
-    std::string	listAllUsers() const;
+    std::string	list_all_users() const;
     
-    int getByName(std::string const &name) const;
+    int get_by_name(std::string const &name) const;
 
-    void addInvite(int fd, Client *client);
-    int getCreatorFD() const;
+    void add_invite(int fd, Client *client);
+    int get_creator_fd() const;
 };
 
 #include "Client.hpp"

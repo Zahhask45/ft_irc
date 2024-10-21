@@ -36,7 +36,7 @@ std::string const &Client::get_mask() const{ return _mask; }
 
 std::string const &Client::get_realname() const{ return _realname; }
 
-const char* Client::get_buffer() const{ return _buffer; }
+const std::string Client::get_buffer() const{ return _buffer; }
 
 int const &Client::get_bytes_received() const{ return bytes_received; }
 
@@ -78,8 +78,10 @@ void Client::set_realname(std::string const &realname){
 	this->_realname = realname;
 }
 
+//? Not sure why the size is called if is not being used.
 void Client::set_buffer(const char* buffer, int size){
-	memcpy(_buffer, buffer, size);
+	(void)size;
+	_buffer = buffer;
 }
 
 void Client::set_bytes_received(int value){
@@ -96,8 +98,19 @@ void Client::addChannel(const std::string &channelName, Channel &channel){
 	}
 }
 
-void Client::removeChannel(const std::string &channelName){
+void Client::remove_channel(const std::string &channelName){
 	if (channels.find(channelName) != channels.end()){
 		channels.erase(channelName);
 	}
 }
+
+void Client::clean_buffer(){
+	_buffer = "\0";
+
+}
+
+void Client::add_to_buffer(const char* append){
+	_buffer += append;
+}
+
+

@@ -27,16 +27,12 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reauth"); // ERR_ALREADYREGISTRED
 		return;
 	}
-	if (strcmp(clients[fd]->get_pass().c_str(), _pass.c_str()) == 0){
+	if (clients[fd]->get_pass().compare(_pass) == 0){
 		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
 		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + serverTimestamp());
 		sendCode(fd, "004", clients[fd]->get_nick(), clients[fd]->get_host() + " InspIRCd-3 BDHIORSTWcdghikorswxz ACIJKMNOPQRSTYabceghiklmnopqrstvz :IJYabeghkloqv"); //! Explicacao no arquivo explain.txt
-		
 		sendCode(fd, "005", clients[fd]->get_nick(), "CHANMODES=Ibeg,k,Jl,ACKMNOPQRSTiprstz :are supported by this server");
-
-
-		//sendCode(fd, "005", clients[fd]->get_nick(), ":This server was created " + clients[fd]->get_host());
 		sendCode(fd, "371", clients[fd]->get_nick(), ":User is Authenticated");
 		sendCode(fd, "375", clients[fd]->get_nick(), ":" + clients[fd]->get_host() + " Message of the day");
 		sendCode(fd, "372", clients[fd]->get_nick(), ":    ▟██▛╗██▛███   ");
@@ -69,7 +65,7 @@ void Server::handlePass(int fd, std::istringstream &command){
 		sendCode(fd, "464", clients[fd]->get_nick(), ": Password incorrect");
 	else {
 		clients[fd]->set_pass(pass);
-		sendCode(fd, "338", clients[fd]->get_nick(), ": Password accepted"); // RPL_USERREGISTRATION
+		sendCode(fd, "338", clients[fd]->get_nick(), ": Password accepted");
 	}
 }
 
@@ -116,7 +112,6 @@ void Server::handleUser(int fd, std::istringstream &command){
 		this->clients[fd]->set_realname(realname.substr(2, realname.size() - 3));
 		if (clients[fd]->get_nick() != "\0")
 			clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
-		sendCode(fd, "338", clients[fd]->get_nick(), ": User registered"); // RPL_USERREGISTRATION
 	}
 	else{
 		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reregister"); // ERR_ALREADYREGISTRED
@@ -143,34 +138,33 @@ void Server::handleJoin(int fd, std::istringstream &command){
 			sendCode(fd, "476", clients[fd]->get_nick(), channelName + " :Invalid channel name"); // ERR_BADCHANMASK
 			return ;
 		}
-		if (getChannel(channelName) == NULL)
-			createChannel(channelName, fd);
-		if ((this->channels[channelName]->getInviteChannel() == true 
-		&& this->channels[channelName]->getInviteList().find(fd) == this->channels[channelName]->getInviteList().end())
-		&& this->channels[channelName]->getOperators().find(fd) == this->channels[channelName]->getOperators().end()){
+		if (get_channel(channelName) == NULL)
+			create_channel(channelName, fd);
+		if ((this->channels[channelName]->get_invite_channel() == true 
+		&& this->channels[channelName]->get_invite_list().find(fd) == this->channels[channelName]->get_invite_list().end())
+		&& this->channels[channelName]->get_operators().find(fd) == this->channels[channelName]->get_operators().end()){
 			sendCode(fd, "473", clients[fd]->get_nick(), channelName + " :Cannot join channel (+i) invite only"); // ERR_INVITEONLYCHAN
 			return ;
 		}
-		if (!this->channels[channelName]->getKey().empty() && this->channels[channelName]->getKey() != key){
+		if (!this->channels[channelName]->get_key().empty() && this->channels[channelName]->get_key() != key){
 			sendCode(fd, "475", clients[fd]->get_nick(), channelName + " :Cannot join channel (+k) bad key"); // ERR_BADCHANNELKEY
 			return ;
 		}
-		if (this->channels[channelName]->getUsers().size() >= this->channels[channelName]->getLimit() ){
+		if (this->channels[channelName]->get_users().size() >= this->channels[channelName]->get_limit() ){
 			sendCode(fd, "471", clients[fd]->get_nick(), channelName + " :Cannot join channel (+l) limit reached"); // ERR_CHANNELISFULL
 			return ;
 		}
 
-		this->clients[fd]->addChannel(channelName, *this->channels[channelName]);
+		this->clients[fd]->add_channel(channelName, *this->channels[channelName]);
 		
-		this->channels[channelName]->addUser(getClient(fd));
+		this->channels[channelName]->add_user(get_client(fd));
 		
 		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
-		// if (!this->channels[channelName]->getTopic().empty())
-		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->getTopic()); // RPL_TOPIC
-		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->listAllUsers()); // RPL_NAMREPLY
-		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list"); // RPL_ENDOFNAMES
-		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n"); 
+		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->get_topic());
+		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->list_all_users());
+		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
+		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
 	}
 }
 
@@ -190,16 +184,16 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 	command >> target;
 	std::getline(command, message);
 	if (target.empty() || message.empty()){
-		sendCode(fd, "411", clients[fd]->get_nick(), ": No recipient given (PRIVMSG)"); // ERR_NORECIPIENT
+		sendCode(fd, "411", clients[fd]->get_nick(), ": No recipient given (PRIVMSG)");
 		return ;
 	}
 	if (target[0] == '#'){
 		if (channels.find(target) == channels.end()){
-			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel"); // ERR_NOSUCHNICK
+			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel");
 			return ;
 		}
-		if (channels[target]->getUsers().find(fd) == channels[target]->getUsers().end()){
-			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel"); // ERR_CANNOTSENDTOCHAN
+		if (channels[target]->get_users().find(fd) == channels[target]->get_users().end()){
+			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
 			return ;
 		}
 		_ToAll(channels[target], fd, "PRIVMSG " + target + " " + message + "\n");
@@ -220,7 +214,7 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel"); // ERR_NOSUCHNICK
 			return;
         }
-		if (message.find("DCC SEND") != std::string::npos){
+			if (message.find(toString("\x01") + "DCC SEND") != std::string::npos) {
 			handleAcceptFile(fd, message, target);
 			sendReply(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target +  message + "\n");
 		}
@@ -242,19 +236,19 @@ void Server::handlePart(int fd, std::istringstream &command){
 		return ;
 	}
 	Channel *channel = channels[channelName];
-	if (channel->getUsers().find(fd) == channel->getUsers().end()){
+	if (channel->get_users().find(fd) == channel->get_users().end()){
 		print_client(fd, "You are not in this channel\n");
 		return ;
 	}
 	print_client(fd, clients[fd]->get_mask() + "PART " + channelName + "\r\n");
 	_ToAll(channel, fd, "PART " + channelName + "\r\n");
-	channel->removeUser(clients[fd]->get_nick());
-	channel->removeOper(clients[fd]->get_nick());
-	if (this->channels[channelName]->listAllUsers() == ":"){
+	channel->remove_user(clients[fd]->get_nick());
+	channel->remove_oper(clients[fd]->get_nick());
+	if (this->channels[channelName]->list_all_users() == ":"){
 		delete this->channels[channelName];
 		this->channels.erase(channelName);
 	}
-	clients[fd]->removeChannel(channelName);
+	clients[fd]->remove_channel(channelName);
 }
 
 void Server::handleQuit(int fd, std::istringstream &command){
@@ -263,11 +257,10 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	std::string response = clients[fd]->get_mask() + "QUIT :" + message + "\r\n";
 	_ToAll(fd, response);
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
-		if (it->second->getUsers().find(fd) != it->second->getUsers().end()){
-			it->second->removeUser(clients[fd]->get_nick());
-			it->second->removeOper(clients[fd]->get_nick());
-
-			clients[fd]->removeChannel(it->first);
+		if (it->second->get_users().find(fd) != it->second->get_users().end()){
+			it->second->remove_user(clients[fd]->get_nick());
+			it->second->remove_oper(clients[fd]->get_nick());
+			clients[fd]->remove_channel(it->first);
 		}
 	}
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {
@@ -329,9 +322,7 @@ void Server::handleWhois(int fd, std::istringstream &command){
 
 void Server::handleList(int fd){
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
-		std::stringstream ss;
-		ss << it->second->getUsers().size();
-		sendCode(fd, "322", clients[fd]->get_nick(), it->first + " " + ss.str() + " :" + it->second->getTopic());
+		sendCode(fd, "322", clients[fd]->get_nick(), it->first + " " + toString(it->second->get_users().size()) + " :" + it->second->get_topic());
 	}
 	sendCode(fd, "323", clients[fd]->get_nick(), ":End of /LIST");
 }

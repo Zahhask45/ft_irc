@@ -20,21 +20,19 @@ private:
 	bool _isOperator;
 	bool _flagNick;
 
-	struct sockaddr_storage _client_addr;
-	socklen_t _client_len;
-	std::map<std::string, Channel *> channels;
+		struct sockaddr_storage _client_addr;
+		socklen_t _client_len;
+		std::map<std::string, Channel *> channels;
 
-	char _buffer[1024];
+	std::string _buffer;
 	int bytes_received;
 
-	Client(Client &cp);
-	Client &operator=(Client &cp);
-public:
-	Client();
-	Client(int fd);
-	~Client();
-
-	//! CHANGE THIS TO PRIVATE, REMAKE THE FUCNTIONS WHERE THIS IS USED ON
+		Client(Client &cp);
+		Client &operator=(Client &cp);
+	public:
+		Client();
+		Client(int fd);
+		~Client();
 
 public: //GETTERS
 	int const &get_client_fd() const;
@@ -47,7 +45,7 @@ public: //GETTERS
 	std::string const &get_host() const;
 	std::string const &get_mask() const;
 	std::string const &get_realname() const;
-	const char* get_buffer() const;
+	const std::string get_buffer() const;
 	int const &get_bytes_received() const;
 
 public: //SETTERS
@@ -64,8 +62,13 @@ public: //SETTERS
 	void set_bytes_received(const int value);
 	void set_flagNick(bool value);
 
-	void addChannel(const std::string &channelName, Channel &channel);
-	void removeChannel(const std::string &channelName);
+	void clean_buffer();
+	void add_to_buffer(const char* buffer);
+
+		void add_channel(const std::string &channelName, Channel &channel);
+		void remove_channel(const std::string &channelName);
+		void reset_bytes();
+		void reset_buffer();
 };
 
 #endif

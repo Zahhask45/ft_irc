@@ -12,11 +12,11 @@ void Server::handleTopic(int fd, std::istringstream &command){
 		sendCode(fd, "401", clients[fd]->get_nick(), channelName + " :No such nick/channel");
 		return ;
 	}
-	if (channels[channelName]->getOperators().find(fd) == channels[channelName]->getOperators().end() && channels[channelName]->getModes().find('t') != std::string::npos){
+	if (channels[channelName]->get_operators().find(fd) == channels[channelName]->get_operators().end() && channels[channelName]->get_modes().find('t') != std::string::npos){
 		sendCode(fd, "482", clients[fd]->get_nick(), channelName + " :You're not channel operator");
 		return ;
 	}
-	if (channels[channelName]->getUsers().find(fd) == channels[channelName]->getUsers().end()){
+	if (channels[channelName]->get_users().find(fd) == channels[channelName]->get_users().end()){
 		sendCode(fd, "442", clients[fd]->get_nick(), channelName + " :You're not on that channel");
 		return ;
 	}
@@ -24,7 +24,7 @@ void Server::handleTopic(int fd, std::istringstream &command){
 		sendCode(fd, "331", clients[fd]->get_nick(), channelName + " :No topic is set");
 		return ;
 	}
-	channels[channelName]->setTopic(topic);
+	channels[channelName]->set_topic(topic);
 	sendCode(fd, "332", clients[fd]->get_nick(), channelName + topic);
 	_ToAll(channels[channelName], fd, "TOPIC " + channelName + topic + "\r\n");
 }
