@@ -10,12 +10,13 @@ File::File(std::string filename, std::string sender, std::string receiver, std::
 
 File::~File(){}
 
-File &File::operator=(const File &src)
-{
-	_filename = src._filename;
-	_sender = src._sender;
-	_receiver = src._receiver;
-	_path = src._path;
+File &File::operator=(const File &src){
+	if(this == &src){
+		_filename = src._filename;
+		_sender = src._sender;
+		_receiver = src._receiver;
+		_path = src._path;
+	}
 	return *this;
 }
 

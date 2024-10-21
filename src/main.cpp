@@ -25,7 +25,7 @@ int main(){
 	
 	close(serv.get_socket());
 	}
-	catch (std::runtime_error &e) {
+	catch (std::exception &e) {
 		std::cerr << e.what() << std::endl;
 		return 0;
 	}

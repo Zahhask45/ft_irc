@@ -71,7 +71,7 @@ void Server::binding(){
 	}
 
 	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN | EPOLLET;
+	_events[0].events = EPOLLIN;
 	
 	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
@@ -85,7 +85,7 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
+		_nfds = epoll_wait(_epoll_fd, _events, 100, -1);
 
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
@@ -111,7 +111,7 @@ void Server::funct_new_client(int i){
 	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
 	_events[i].data.fd = newsocket;
-	_events[i].events = EPOLLIN | EPOLLET;
+	_events[i].events = EPOLLIN;
 	this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
 
@@ -131,13 +131,19 @@ void Server::funct_not_new_client(int i){
 	{
 		std::cout << buffer_ptr[ii];
 	}
-	std::cout << std::endl << "AND EXTRA_BYTES: " << extra_bytes << _END << std::endl;
+	std::cout << std::endl << "AND EXTRA_BYTES: " << extra_bytes << std::endl;
+	std::cout << std::endl << "RECEIVED BY CLIENT: " << _events[i].data.fd << _END << std::endl;
 	if (extra_bytes == -1)
 	{
 		int err_code = 0;
     	socklen_t len = sizeof(err_code);
-		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1)
-            std::cout << _RED << "Error on getsocket()" << _END << std::endl;
+		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1){
+        	std::cout << _RED << "Error on getsocket()" << _END << std::endl;
+			if (this->clients.find(_events[i].data.fd) == this->clients.end() && this->clients[_events[i].data.fd] != 0) {
+				return ;
+			}
+			throw std::invalid_argument("SOME ERROR");
+		}
 		else if(err_code == EAGAIN || err_code == EWOULDBLOCK)
 				std::cout << _YELLOW << "Temporary recv() error" << _END << std::endl;
         else if(err_code != 0){
@@ -159,6 +165,7 @@ void Server::funct_not_new_client(int i){
 			//return; 
 	}
 	if (extra_bytes > 0){
+		_events[i].events = EPOLLOUT;
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
 		buffer_ptr[extra_bytes] = '\0';
 		std::cout << buffer_ptr << std::endl;
@@ -191,11 +198,13 @@ void Server::funct_not_new_client(int i){
 		command.erase(command.end() - 1);
 	}
 	handle_commands(_events[i].data.fd, command);
+	memset(buffer_ptr, 0, 1024);
 	std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 	if (this->clients.find(_events[i].data.fd) != this->clients.end() && this->clients[_events[i].data.fd] != 0) { // The solution i found.
 		this->clients[_events[i].data.fd]->set_bytes_received(0); //! this is making the server SEGFAULT when the client disconnects.
-		memset(buffer_ptr, 0, 1024);
 		this->clients[_events[i].data.fd]->clean_buffer();
+		_events[i].events = EPOLLIN;
+
 	}
 }
 
