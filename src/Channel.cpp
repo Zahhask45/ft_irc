@@ -5,7 +5,7 @@ Channel::Channel(): _name(), users(){}
 Channel::Channel(const std::string name): _name(name), users(){}
 
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
-	//this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
+	//this->operators.insert(std::make_pair(Creator->get_client_fd(), Creator));
 	//this->_creator->set_is_operator(true);
 	this->add_operator(*Creator);
 	this->_topic = ":Welcome to " + _name;
@@ -27,12 +27,12 @@ Channel &Channel::operator=(const Channel &origin) {
 
 void Channel::add_user(Client &client){
 	if (this->users.find(client.get_client_fd()) == this->users.end())
-			this->users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
+			this->users.insert(std::make_pair(client.get_client_fd(), &client));
 }
 
 void Channel::add_operator( Client &op ){
 	if (this->operators.find(op.get_client_fd()) == this->operators.end())
-		this->operators.insert(std::pair<int, Client *>(op.get_client_fd(), &op));
+		this->operators.insert(std::make_pair(op.get_client_fd(), &op));
 }
 
 void Channel::remove_user(std::string user_name){
@@ -119,7 +119,7 @@ std::string		Channel::list_all_users() const {
 
 void Channel::add_invite(int fd, Client *client) {
 	if (this->inviteList.find(fd) == this->inviteList.end())
-		this->inviteList.insert(std::pair<int, Client *>(fd, &client[fd]));
+		this->inviteList.insert(std::make_pair(fd, &client[fd]));
 }
 
 std::string Channel::get_modes(){

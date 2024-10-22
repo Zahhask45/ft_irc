@@ -71,7 +71,7 @@ void Server::binding(){
 	}
 
 	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN | EPOLLET;
+	_events[0].events = EPOLLIN;
 	
 	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
@@ -85,7 +85,7 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, 10, -1);
+		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, -1);
 
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
@@ -111,8 +111,8 @@ void Server::funct_new_client(int i){
 	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
 	_events[i].data.fd = newsocket;
-	_events[i].events = EPOLLIN | EPOLLET;
-	this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
+	_events[i].events = EPOLLIN;
+	this->clients.insert(std::make_pair(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
 
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[i]) == -1) {
@@ -143,7 +143,6 @@ void Server::funct_not_new_client(int i){
         else if(err_code != 0){
 
             errno = err_code;
-			// Real error, remove the client
 			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 				std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
 				return;
@@ -156,7 +155,6 @@ void Server::funct_not_new_client(int i){
 				this->_cur_online--;
 			}
 		}
-			//return; 
 	}
 	if (extra_bytes > 0){
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
@@ -179,8 +177,8 @@ void Server::funct_not_new_client(int i){
 		}
 		return;
 	}
-	// Successfully received data
-	//this->clients[_events[i].data.fd]->add_to_buffer("\0");
+	if (this->clients.find(_events[i].data.fd) == this->clients.end() && this->clients[_events[i].data.fd] != 0)
+		return;
 	std::string command(this->clients[_events[i].data.fd]->get_buffer());
 	if (this->clients[_events[i].data.fd]->get_buffer().find("\n") == std::string::npos){
 		std::cout << ">>" << this->clients[_events[i].data.fd]->get_buffer() << "<<" << std::endl;	
@@ -192,32 +190,15 @@ void Server::funct_not_new_client(int i){
 	}
 	handle_commands(_events[i].data.fd, command);
 	std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
-	if (this->clients.find(_events[i].data.fd) != this->clients.end() && this->clients[_events[i].data.fd] != 0) { // The solution i found.
-		this->clients[_events[i].data.fd]->set_bytes_received(0); //! this is making the server SEGFAULT when the client disconnects.
-		memset(buffer_ptr, 0, 1024);
+	memset(buffer_ptr, 0, 1024);
+	if (this->clients.find(_events[i].data.fd) != this->clients.end() && this->clients[_events[i].data.fd] != 0) {
 		this->clients[_events[i].data.fd]->clean_buffer();
+		this->clients[_events[i].data.fd]->set_bytes_received(0); 
 	}
 }
 
-// std::vector<std::string> Server::parser(const std::string &command){
-// 	 std::vector<std::string> result;
-//     std::stringstream ss(command);
-//     std::string item;
-    
-//     while (std::getline(ss, item, ' ')) {
-//         result.push_back(item);
-//     }
-// 	return result;
-// }
-
-
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void Server::handle_commands(int fd, const std::string &command){
-	// //TODO: CHANGE WAY TO RECEIVE COMMANDS
-	// std::vector<std::string> args = parser(command);
-	// for (std::size_t i = 0; i < args.size(); ++i) {
-    //     std::cout << "VECTOR ARGS: " << args[i] << std::endl;
-    // }
 
 	std::istringstream commandStream(command);
     std::string line;
@@ -266,7 +247,7 @@ void Server::create_channel(const std::string &channelName, int fd){
 	std::map<std::string, Channel *>::iterator it = channels.find(channelName);
 	if (it == channels.end()){
 		Channel *channel = new Channel(channelName, this->clients[fd]);
-		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
+		channels.insert(std::make_pair(channelName, channel));
 		channels[channelName]->add_modes('t');
 	}
 }
@@ -277,34 +258,9 @@ Channel *Server::get_channel(const std::string name)  {
 	return NULL;
 }
 
-
 Client &Server::get_client(int fd){
 	std::map<int, Client *>::iterator it = clients.find(fd);
 	return *it->second;
-}
-
-std::string Server::extract_value(const std::string& line) {
-	size_t start = 0;  // Find end of key
-	if (start == std::string::npos) {
-		return "";  // Key not found
-	}
-	// Skip any spaces or colons that follow the key
-	while (start < line.length() && (line[start] == ' ' || line[start] == ':')) {
-		start++;
-	}
-	// Find the end of the first word (next space or newline)
-	size_t end = line.find_first_of(" \r\n", start);
-	if (end == std::string::npos) {
-		end = line.length();  // If no space or newline, take until the end of the line
-	}
-	std::string value = line.substr(start, end - start);
-
-	// Remove any trailing newline character
-	if (!value.empty() && value[value.length() - 1] == '\n') {
-		value = value.substr(0, value.length() - 1);
-	}
-
-	return value;
 }
 
 void Server::_ToAll(int ori_fd, std::string message){

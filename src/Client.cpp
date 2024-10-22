@@ -85,7 +85,7 @@ void Client::set_bytes_received(int value){
 
 void Client::add_channel(const std::string &channelName, Channel &channel){
 	if (channels.find(channelName) == channels.end()){
-		channels.insert(std::pair<std::string, Channel *>(channelName, &channel));
+		channels.insert(std::make_pair(channelName, &channel));
 	}
 }
 

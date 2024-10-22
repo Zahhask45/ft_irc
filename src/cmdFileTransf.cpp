@@ -1,6 +1,5 @@
 #include "Server.hpp"
-#include <arpa/inet.h>
-
+// #include <arpa/inet.h>
 
 int Server::getClientByNick(std::string nick)
 {
@@ -14,9 +13,9 @@ int Server::getClientByNick(std::string nick)
 
 void Server::handleSendFile(int fd, const std::string &cmd, const std::string &target)
 {
-	std::string sha, check, lixo3, filename;
+	std::string sha, check, junk3, filename;
 	std::istringstream command(cmd);
-	command >> sha >> sha >> lixo3 >> filename ;
+	command >> sha >> sha >> junk3 >> filename ;
 
 	int receiver_fd = getClientByNick(target);
 	if (receiver_fd < 0){
@@ -81,11 +80,10 @@ void Server::handleSendFile(int fd, const std::string &cmd, const std::string &t
 		sendCode(fd, "999", clients[fd]->get_nick(), ":File already exists");
 		return;
 	}
-	_file.insert(std::pair<std::string, File>(filename, file));
+	_file.insert(std::make_pair(filename, file));
 	print_client(fd, "File " + filename + " sent successfully.\n");
 	print_client(receiver_fd, clients[fd]->get_mask() + " wants to send you a file called " + filename + ".\n");
 } */
-
 
 void Server::handleAcceptFile(int fd, std::string &cmd, const std::string &target)
 {
@@ -96,10 +94,8 @@ void Server::handleAcceptFile(int fd, std::string &cmd, const std::string &targe
 	//" :\001DCC SEND \"ex00  em.cpp\" 168558851 40015 1019\001\r"
 
 	std::string reply;
-	reply = "NOTICE " + target + " :";
-	reply += 0x01;
-	reply += "DCC GET " + clients[fd]->get_nick() + " " + filename;
-	reply += 0x01;
+	reply = "NOTICE " + target + " :" + toString("\x01") + \
+		"DCC GET " + clients[fd]->get_nick() + " " + filename + toString("\x01");
 
 	size_t total = 0;
 	while (total != reply.length()){
@@ -109,7 +105,7 @@ void Server::handleAcceptFile(int fd, std::string &cmd, const std::string &targe
 		total += nb;
 	}	
 }
-	
+
 
 /* void Server::handleAcceptFile(int fd, std::istringstream &command)
 {

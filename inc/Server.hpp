@@ -3,14 +3,12 @@
 
 #include "colors.hpp"
 #include "Channel.hpp"
-#include "File.hpp"
 #include <fstream>
 
 #define MAX_CLIENTS 100
 
 class Client;
 class Channel;
-class File;
 
 class Server
 {
@@ -21,12 +19,11 @@ private:
 	// struct sockaddr_storage _addr;
 	std::map<std::string, Channel *> channels;
 	std::map<int, Client *> clients;
-	std::map<std::string, File> _file;
 
 	// std::vector<std::string> user;
 
 	//! DONT KNOW WHERE TO PUT THIS YET
-	struct epoll_event _eve, _events[10];
+	struct epoll_event _eve, _events[MAX_CLIENTS];
 	int _epoll_fd;
 	int _nfds;
 	int _cur_online;
@@ -58,16 +55,12 @@ public:
 	void _ToAll(int ori_fd, std::string message);
 	void _ToAll(Channel *channel, int ori_fd, std::string message);
 	int _sendall(int destfd, std::string message);
-	// void broadcast_to_channel(const std::string &channelName, int sender_fd) ;
 	void sendCode(int fd, std::string num, std::string nickname, std::string message);
 	std::set<std::string> findInChannel(int fd);
-	std::string extract_value(const std::string& line);
 	void print_client(int client_fd, std::string str);
-	// std::vector<std::string> parser(const std::string &commands);
 
 public: // Handdle Commands
 	void handleAuth(int fd);
-	void handleOper(int fd);
 	void handlePass(int fd, std::istringstream &command);
 	void handleNick(int fd, std::istringstream &command);
 	void handleUser(int fd, std::istringstream &command);
@@ -82,6 +75,7 @@ public: // Handdle Commands
 	void handleList(int fd);
 	void handleWho(int fd, std::istringstream &command);
 	void handleWhois(int fd, std::istringstream &command);
+	void handlePing(int fd, std::istringstream &command);
 
 	void handleSendFile(int fd, const std::string &command, const std::string &target);
 	void handleAcceptFile(int fd, std::string &command, const std::string &target);
@@ -90,7 +84,6 @@ public: // Handdle Commands
 	void handleNames(int fd, std::istringstream &command);
 	void handleMotd(int fd, std::istringstream &command);
 	void handleAway(int fd, std::istringstream &command);
-	void handlePing(int fd, std::istringstream &command);
 	void handlePong(int fd, std::istringstream &command);
 	void handleNotice(int fd, std::istringstream &command);
 	void handleTime(int fd, std::istringstream &command);
