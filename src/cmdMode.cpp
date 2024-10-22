@@ -54,7 +54,9 @@ void Server::handleMode(int fd, std::istringstream &command){
 	command >> target >> mode >> arg;
 	if (checkMode(fd, target, mode, arg) == -1)
 		return ;
-	int user_fd = channels[target]->get_by_name(arg);
+	if (target[0] != '#')
+		target.insert(0, "#");
+	int user_fd = channels[target]->get_by_name(arg); //!segfault here, channel without '#'
 
 	if (mode[0] == '+'){
 		for (size_t i = mode.size() - 1; i > 0; i--){

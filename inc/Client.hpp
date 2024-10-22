@@ -24,8 +24,8 @@ private:
 		socklen_t _client_len;
 		std::map<std::string, Channel *> channels;
 
-	std::string _buffer;
-	int bytes_received;
+		std::string _buffer;
+		int bytes_received;
 
 		Client(Client &cp);
 		Client &operator=(Client &cp);
@@ -62,8 +62,8 @@ public: //SETTERS
 	void set_bytes_received(const int value);
 	void set_flagNick(bool value);
 
-	void clean_buffer();
-	void add_to_buffer(const char* buffer);
+		void clean_buffer();
+		void add_to_buffer(const char* buffer);
 
 		void add_channel(const std::string &channelName, Channel &channel);
 		void remove_channel(const std::string &channelName);

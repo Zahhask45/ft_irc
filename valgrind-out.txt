@@ -1,15 +1,19 @@
-==32521== Memcheck, a memory error detector
-==32521== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
-==32521== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
-==32521== Command: ./ircserv_M
-==32521== Parent PID: 32492
-==32521== 
-==32521== 
-==32521== HEAP SUMMARY:
-==32521==     in use at exit: 0 bytes in 0 blocks
-==32521==   total heap usage: 46 allocs, 46 frees, 91,507 bytes allocated
-==32521== 
-==32521== All heap blocks were freed -- no leaks are possible
-==32521== 
-==32521== For lists of detected and suppressed errors, rerun with: -s
-==32521== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)
+RECEIVED By COMMAND /DCC SEND
+
+>> @time=2024-10-22T17:18:56.514Z :a!~monteiro@269F9C81.63B8E521.3DF847E.IP PRIVMSG L :DCC SEND ex00.cpp 168559110 36403 1019
+>> @time=2024-10-22T17:18:56.681Z :a!~monteiro@269F9C81.63B8E521.3DF847E.IP PRIVMSG #42 :SHA-256 checksum for /home/bmonteir/Downloads/ex00.cpp (remote): 1f68b4ea6c6374719644b517fdfa1d152a9139db2c937030d3376e34fb525919
+
+SEND By COMMAND
+<< PRIVMSG L :DCC SEND ex00.cpp 168559110 36403 1019
+<< PRIVMSG #42 :SHA-256 checksum for /home/bmonteir/Downloads/ex00.cpp (remote): 1f68b4ea6c6374719644b517fdfa1d152a9139db2c937030d3376e34fb525919
+
+RECEIVED By Send FILE
+
+>> @time=2024-10-22T17:20:14.461Z :a!~monteiro@269F9C81.63B8E521.3DF847E.IP PRIVMSG L :DCC SEND Makefile 199 0 1935 195
+>> @time=2024-10-22T17:20:14.629Z :a!~monteiro@269F9C81.63B8E521.3DF847E.IP PRIVMSG #42 :SHA-256 checksum for /home/bmonteir/Downloads/ft_irc-main/Makefile (remote): ba8520dd626d94a1cfe09b67656036c20658347feba83600c0e28cc9e23a2a9b
+<< PRIVMSG a :DCC SEND Makefile 168559109 42103 1935 195
+
+SEND
+<< PRIVMSG L :DCC SEND Makefile 199 0 1935 195
+<< PRIVMSG #42 :SHA-256 checksum for /home/bmonteir/Downloads/ft_irc-main/Makefile (remote): ba8520dd626d94a1cfe09b67656036c20658347feba83600c0e28cc9e23a2a9b
+>> @time=2024-10-22T17:20:18.395Z :L!~LAST-Mara@269F9C81.63B8E521.3DF847E.IP PRIVMSG a :DCC SEND Makefile 168559109 42103 1935 195
