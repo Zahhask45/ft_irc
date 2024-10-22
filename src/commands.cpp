@@ -259,9 +259,10 @@ void Server::handleQuit(int fd, std::istringstream &command){
 		std::cerr << "Error removing socket from epoll(quit): " << strerror(errno) << std::endl;
 	}
 	close(clients[fd]->get_client_fd());
-	delete clients[fd];
-	this->clients.erase(fd);
-	this->_cur_online--;
+	end_connection(fd);
+	// delete clients[fd];
+	// this->clients.erase(fd);
+	// this->_cur_online--;
 	this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
 	print_client(fd, response);
 }

@@ -58,9 +58,9 @@ class Server
 		// void broadcast_to_channel(const std::string &channelName, int sender_fd) ;
 		void sendCode(int fd, std::string num, std::string nickname, std::string message);
 		std::set<std::string> findInChannel(int fd);
-		std::string extract_value(const std::string& line);
 		void print_client(int client_fd, std::string str);
 		// std::vector<std::string> parser(const std::string &commands);
+		void end_connection(int fd);
 
 	public: // Handdle Commands
 		void handleAuth(int fd);

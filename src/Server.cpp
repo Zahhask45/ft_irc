@@ -157,8 +157,10 @@ void Server::funct_not_new_client(int i){
 			{
 				close(_events[i].data.fd);
 				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online  << " WITH ERROR NO: " << err_code << _END << std::endl;
-				this->clients.erase(_events[i].data.fd);
-				this->_cur_online--;
+				end_connection(_events[i].data.fd);
+				// delete this->clients[_events[i].data.fd];
+				// this->clients.erase(_events[i].data.fd);
+				// this->_cur_online--;
 			}
 		}
 	}
@@ -179,8 +181,10 @@ void Server::funct_not_new_client(int i){
 		{
 			close(_events[i].data.fd);
 			std::cerr << _RED << "Client disconnected (FROM THE NEW STUFF). Current onlines: " << _cur_online << _END << std::endl;
-			this->clients.erase(_events[i].data.fd);
-			this->_cur_online--;
+			end_connection(_events[i].data.fd);
+			// delete this->clients[_events[i].data.fd];
+			// this->clients.erase(_events[i].data.fd);
+			// this->_cur_online--;
 		}
 		return;
 	}
@@ -362,7 +366,8 @@ bool Server::findNick(std::string nick){
 	return false;
 }
 
-// void server::set_buffer(std::string buffer)
-// {
-// 	this->_buffer.append(buffer);
-// }
+void Server::end_connection(int fd){
+	delete clients[fd];
+	this->clients.erase(fd);
+	this->_cur_online--;
+}
