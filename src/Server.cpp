@@ -65,7 +65,7 @@ void Server::binding(){
 	}
 	
 
-	if (listen(_socket_Server, 10) == -1) {
+	if (listen(_socket_Server, 100) == -1) {
     	std::cerr << "Error in listen()" << std::endl;
     	exit(EXIT_FAILURE);
 	}
@@ -79,7 +79,7 @@ void Server::binding(){
 		exit(EXIT_FAILURE);
 	}
 	_cur_online++;
-	//funct_bot();
+	this->bot = new Bot();
 }
 
 /* void Server::funct_bot(){
@@ -92,8 +92,8 @@ void Server::binding(){
 
 	_events[1].data.fd = newsocket;
 	_events[1].events = EPOLLIN;
-	this->bot.insert(std::pair<int, Bot *>(newsocket, new Bot(newsocket)));
-	bot[newsocket]->set_addr(bot_addr);
+	this->bot = new Bot();
+	bot->set_addr(bot_addr);
 
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[1]) == -1) {
 		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
