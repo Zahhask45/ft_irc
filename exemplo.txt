@@ -9,8 +9,8 @@ SEND By COMMAND
 
 RECEIVED By Send FILE
 
->> @time=2024-10-22T17:20:14.461Z :a!~monteiro@269F9C81.63B8E521.3DF847E.IP PRIVMSG L :DCC SEND Makefile 199 0 1935 195
->> @time=2024-10-22T17:20:14.629Z :a!~monteiro@269F9C81.63B8E521.3DF847E.IP PRIVMSG #42 :SHA-256 checksum for /home/bmonteir/Downloads/ft_irc-main/Makefile (remote): ba8520dd626d94a1cfe09b67656036c20658347feba83600c0e28cc9e23a2a9b
+:a!~monteiro@269F9C81.63B8E521.3DF847E.IP PRIVMSG L :DCC SEND Makefile 199 0 1935 195
+:a!~monteiro@269F9C81.63B8E521.3DF847E.IP PRIVMSG #42 :SHA-256 checksum for /home/bmonteir/Downloads/ft_irc-main/Makefile (remote): ba8520dd626d94a1cfe09b67656036c20658347feba83600c0e28cc9e23a2a9b
 << PRIVMSG a :DCC SEND Makefile 168559109 42103 1935 195
 
 SEND

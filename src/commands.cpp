@@ -50,16 +50,6 @@ void Server::handleJoin(int fd, std::istringstream &command){
 	}
 }
 
-void sendReply(int fd, const std::string &reply){
-	size_t total = 0;
-	while (total != reply.length()){
-		ssize_t nb = ::send(fd, reply.c_str() + total, reply.length() - total, 0);
-		if (nb == -1)
-			std::cout << "send error" << std::endl;
-		total += nb;
-	}
-}
-
 void Server::handlePrivmsg(int fd, std::istringstream &command){
 	std::string target, message;
 	command >> target;
@@ -95,12 +85,10 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			sendCode(fd, "401", clients[fd]->get_nick(), target + " :No such nick/channel"); // ERR_NOSUCHNICK
 			return;
         }
-			if (message.find(toString("\x01") + "DCC SEND") != std::string::npos) {
-			// handleAcceptFile(fd, message, target);
-			_sendall(receiver_fd, clients[receiver_fd]->get_mask() + "PRIVMSG " + target + message + "\n");
-			//sendReply(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target +  message + "\n");
+		if (message.find(toString("\x01") + "DCC SEND") != std::string::npos || message.find("SHA") != std::string::npos){
+			// aqui o sendall tinha um " " entre target e message isso dava erro
+			_sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + message + "\n"); 
 		}
-		// _sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 		else if(receiver_fd)
 			print_client(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 	}
