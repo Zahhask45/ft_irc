@@ -35,11 +35,12 @@ SRCS		=	main.cpp \
 				Client.cpp \
 				Channel.cpp \
 				commands.cpp \
+				cmdAuth.cpp \
+				cmdFileTransf.cpp \
 				cmdInvite.cpp \
 				cmdKick.cpp \
 				cmdMode.cpp \
-				cmdTopic.cpp \
-				cmdFileTransf.cpp \
+				cmdTopic.cpp
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRCS))
 OBJS		=	$(SRCS:.cpp=.o)
