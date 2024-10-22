@@ -34,7 +34,6 @@ SRCS		=	main.cpp \
 				Server.cpp \
 				Client.cpp \
 				Channel.cpp \
-				File.cpp \
 				commands.cpp \
 				cmdInvite.cpp \
 				cmdKick.cpp \

@@ -9,7 +9,6 @@
 
 class Client;
 class Channel;
-class File;
 
 class Server
 {
@@ -20,7 +19,6 @@ private:
 	// struct sockaddr_storage _addr;
 	std::map<std::string, Channel *> channels;
 	std::map<int, Client *> clients;
-	std::map<std::string, File> _file;
 
 	// std::vector<std::string> user;
 
