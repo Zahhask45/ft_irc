@@ -147,6 +147,13 @@ void Server::handleJoin(int fd, std::istringstream &command){
 			return ;
 		}
 
+		std::cout << _RED <<"BEFORE"  << _END << std::endl;
+		this->bot->add_channel(channelName, *this->channels[channelName]);
+		std::cout << _RED <<"MIDDLE" << _END << std::endl;
+		this->channels[channelName]->add_bot(get_bot());
+		std::cout << _RED <<"AFTER" << _END << std::endl;
+
+
 		this->clients[fd]->add_channel(channelName, *this->channels[channelName]);
 		
 		this->channels[channelName]->add_user(get_client(fd));

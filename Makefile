@@ -41,6 +41,7 @@ SRCS		=	main.cpp \
 				cmdMode.cpp \
 				cmdTopic.cpp \
 				cmdFileTransf.cpp \
+				Bot.cpp \
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRCS))
 OBJS		=	$(SRCS:.cpp=.o)

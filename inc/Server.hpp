@@ -4,6 +4,7 @@
 #include "colors.hpp"
 #include "Channel.hpp"
 #include "File.hpp"
+#include "Bot.hpp"
 #include <fstream>
 
 #define MAX_CLIENTS 100
@@ -11,6 +12,7 @@
 class Client;
 class Channel;
 class File;
+class Bot;
 
 class Server
 {
@@ -22,7 +24,7 @@ class Server
 		std::map<std::string, Channel *> channels;
 		std::map<int, Client *> clients;
 		std::map<std::string, File> _file;
-
+		Bot* bot;
 		// std::vector<std::string> user;
 
 		//! DONT KNOW WHERE TO PUT THIS YET
@@ -48,8 +50,10 @@ class Server
 		int const &get_socket() const;
 		Channel *get_channel(const std::string name);
 		Client &get_client(int fd);
+		Bot &get_bot();
 
 		void set_pass(std::string pass);
+		void funct_bot();
 		void funct_new_client(int i);
 		void funct_not_new_client(int i);
 

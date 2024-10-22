@@ -30,6 +30,11 @@ void Channel::add_user(Client &client){
 			this->users.insert(std::pair<int, Client *>(client.get_client_fd(), &client));
 }
 
+void Channel::add_bot(Bot &bot){
+	if (this->bots.find(bot.get_bot_fd()) == this->bots.end())
+			this->bots.insert(std::pair<int, Bot *>(bot.get_bot_fd(), &bot));
+}
+
 void Channel::add_operator( Client &op ){
 	if (this->operators.find(op.get_client_fd()) == this->operators.end())
 		this->operators.insert(std::pair<int, Client *>(op.get_client_fd(), &op));

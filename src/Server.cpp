@@ -79,7 +79,28 @@ void Server::binding(){
 		exit(EXIT_FAILURE);
 	}
 	_cur_online++;
+	//funct_bot();
 }
+
+/* void Server::funct_bot(){
+	struct sockaddr_storage bot_addr;
+	socklen_t bot_len = sizeof(bot_addr);
+	int newsocket = accept(_socket_Server, (struct sockaddr*)&bot_addr, &bot_len);
+	if (newsocket == -1)
+		std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
+	fcntl(newsocket, F_SETFL, O_NONBLOCK);
+
+	_events[1].data.fd = newsocket;
+	_events[1].events = EPOLLIN;
+	this->bot.insert(std::pair<int, Bot *>(newsocket, new Bot(newsocket)));
+	bot[newsocket]->set_addr(bot_addr);
+
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[1]) == -1) {
+		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
+		close(newsocket);
+	}
+	this->_cur_online++;
+} */
 
 void Server::loop(){
 	while(true){
@@ -208,18 +229,6 @@ void Server::funct_not_new_client(int i){
 	}
 }
 
-// std::vector<std::string> Server::parser(const std::string &command){
-// 	 std::vector<std::string> result;
-//     std::stringstream ss(command);
-//     std::string item;
-    
-//     while (std::getline(ss, item, ' ')) {
-//         result.push_back(item);
-//     }
-// 	return result;
-// }
-
-
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void Server::handle_commands(int fd, const std::string &command){
 	// //TODO: CHANGE WAY TO RECEIVE COMMANDS
@@ -290,6 +299,10 @@ Channel *Server::get_channel(const std::string name)  {
 Client &Server::get_client(int fd){
 	std::map<int, Client *>::iterator it = clients.find(fd);
 	return *it->second;
+}
+
+Bot &Server::get_bot(){
+	return *bot;
 }
 
 std::string Server::extract_value(const std::string& line) {
