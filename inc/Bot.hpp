@@ -12,7 +12,4 @@ public:
 	~Bot();
 };
 
-
-
-
 #endif

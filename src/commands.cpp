@@ -245,7 +245,7 @@ void Server::handlePart(int fd, std::istringstream &command){
 
 void Server::handleQuit(int fd, std::istringstream &command){
 	std::string message;
-	command >> message;
+	getline(command, message);
 	std::string response = clients[fd]->get_mask() + "QUIT :" + message + "\r\n";
 	_ToAll(fd, response);
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
@@ -260,8 +260,7 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	}
 	close(clients[fd]->get_client_fd());
 	end_connection(fd);
-	// delete clients[fd];
-	// this->clients.erase(fd);
+	// this->clients.erase(fd); //! Sempre que um cliente sai, tem que fazer o delete dele
 	// this->_cur_online--;
 	this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
 	print_client(fd, response);

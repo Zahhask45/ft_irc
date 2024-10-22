@@ -140,6 +140,7 @@ void Server::funct_not_new_client(int i){
 		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1){
         	std::cout << _RED << "Error on getsocket()" << _END << std::endl;
 			if (this->clients.find(_events[i].data.fd) == this->clients.end()) {
+				//! Cleaning the users.
 				return ;
 			}
 			throw std::invalid_argument("SOME ERROR");
@@ -158,7 +159,6 @@ void Server::funct_not_new_client(int i){
 				close(_events[i].data.fd);
 				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online  << " WITH ERROR NO: " << err_code << _END << std::endl;
 				end_connection(_events[i].data.fd);
-				// delete this->clients[_events[i].data.fd];
 				// this->clients.erase(_events[i].data.fd);
 				// this->_cur_online--;
 			}
@@ -179,10 +179,11 @@ void Server::funct_not_new_client(int i){
 		}
 		else
 		{
-			close(_events[i].data.fd);
+			//close(_events[i].data.fd);
 			std::cerr << _RED << "Client disconnected (FROM THE NEW STUFF). Current onlines: " << _cur_online << _END << std::endl;
-			end_connection(_events[i].data.fd);
-			// delete this->clients[_events[i].data.fd];
+			std::istringstream iss("Unexpected disconnection by client");
+			handleQuit(_events[i].data.fd, iss);
+			// end_connection(_events[i].data.fd);
 			// this->clients.erase(_events[i].data.fd);
 			// this->_cur_online--;
 		}
@@ -332,10 +333,10 @@ std::set<std::string> Server::findInChannel(int fd){
 }
 
 void Server::print_client(int client_fd, std::string str){
-	send(client_fd, str.c_str(), str.size(), 0);
+	send(client_fd, str.c_str(), str.size(), MSG_NOSIGNAL);
 	// std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
 }
-
+ 
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
 	if (nickname.empty())
 		nickname = "*";
