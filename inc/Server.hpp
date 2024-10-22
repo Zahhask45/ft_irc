@@ -3,7 +3,6 @@
 
 #include "colors.hpp"
 #include "Channel.hpp"
-#include "File.hpp"
 #include <fstream>
 
 #define MAX_CLIENTS 100

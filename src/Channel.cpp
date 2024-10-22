@@ -5,12 +5,10 @@ Channel::Channel(): _name(), users(){}
 Channel::Channel(const std::string name): _name(name), users(){}
 
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
-	//this->operators.insert(std::pair<int, Client *>(Creator->get_client_fd(), Creator));
-	//this->_creator->set_is_operator(true);
 	this->add_operator(*Creator);
 	this->_topic = ":Welcome to " + _name;
 	this->_inviteChannel = false;
-	this->_limit = 10;//alterar isto
+	this->_limit = 9999;//alterar isto
 	this->_creationTime = time(NULL);
 }
 
