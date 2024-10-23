@@ -79,7 +79,10 @@ void Server::binding(){
 		exit(EXIT_FAILURE);
 	}
 	_cur_online++;
-	this->bot = new Bot();
+	//funct_bot();
+	bot = new Bot(1);
+	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
+	//sendCode(bot->get_bot_fd(), "338", bot->get_name(), ": Password accepted");
 }
 
 /* void Server::funct_bot(){
@@ -90,19 +93,26 @@ void Server::binding(){
 		std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
 	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
-	_events[1].data.fd = newsocket;
-	_events[1].events = EPOLLIN;
-	this->bot = new Bot();
+	_eve.data.fd = newsocket;
+	_eve.events = EPOLLIN;
+	this->bot = new Bot(newsocket);
+	bot->set_addr(bot_addr);
+
 
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[1]) == -1) {
 		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
 		close(newsocket);
 	}
-	this->_cur_online++;
-	this->bot = new Bot();
+	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
+	std::string command;
+	command = "PASS bananan123\r\nNICK TEST\r\nUSER BOT 0 * :BOT\r\n";
+	handle_commands(bot->get_bot_fd(), command);
+	
+	//this->_cur_online++;
 } */
 
 void Server::loop(){
+	//int ii = 10;
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
@@ -113,6 +123,12 @@ void Server::loop(){
 			exit(EXIT_FAILURE);
 		}
 		for(int i = 0; i < _cur_online; i++){
+			// if (ii == 10){
+			// 	funct_bot();
+			// 	ii = 1;
+			// 	continue;
+			// }
+			std::cout << _RED << "DAMN FRICK" << _END << std::endl;
 			if (_events[i].events & EPOLLIN) {
 				if(_events[i].data.fd == _socket_Server)
 					funct_new_client(i); 
@@ -236,7 +252,7 @@ void Server::handle_commands(int fd, const std::string &command){
 	// for (std::size_t i = 0; i < args.size(); ++i) {
     //     std::cout << "VECTOR ARGS: " << args[i] << std::endl;
     // }
-
+	std::cout << _RED << command << _END << std::endl;
 	std::istringstream commandStream(command);
     std::string line;
     // TODO: Percorre cada linha do comando
@@ -244,6 +260,7 @@ void Server::handle_commands(int fd, const std::string &command){
         std::istringstream iss(line);
         std::string cmd;
 		iss >> cmd;
+		std::cout << _PURPLE << cmd << _END << std::endl;
 		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 		if (cmd == "AUTH")
 			handleAuth(fd);
@@ -292,7 +309,7 @@ void Server::create_channel(const std::string &channelName, int fd){
 			std::cout << _RED <<"MIDDLE" << _END << std::endl;
 			this->channels[channelName]->add_bot(get_bot());
 			std::cout << _RED <<"AFTER" << _END << std::endl;
-
+			print_client(bot->get_bot_fd(), bot->get_mask() + "JOIN :" + channelName + "\r\n");
 		}
 
 	}
@@ -389,7 +406,7 @@ void Server::print_client(int client_fd, std::string str){
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
 	if (nickname.empty())
 		nickname = "*";
-	print_client(fd, ":server " + num + " " + nickname + " " + message + "\r\n");
+	print_client(fd, ":Terracotta " + num + " " + nickname + " " + message + "\r\n");
 }
 
 int Server::_sendall(int destfd, std::string message)

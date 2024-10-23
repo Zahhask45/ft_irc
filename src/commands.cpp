@@ -156,7 +156,7 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
 		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->get_topic());
-		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->list_all_users());
+		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->list_all_users().append(bot->get_name() + " "));
 		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
 
