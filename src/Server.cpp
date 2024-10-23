@@ -93,13 +93,13 @@ void Server::binding(){
 	_events[1].data.fd = newsocket;
 	_events[1].events = EPOLLIN;
 	this->bot = new Bot();
-	bot->set_addr(bot_addr);
 
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[1]) == -1) {
 		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
 		close(newsocket);
 	}
 	this->_cur_online++;
+	this->bot = new Bot();
 } */
 
 void Server::loop(){
@@ -286,6 +286,15 @@ void Server::create_channel(const std::string &channelName, int fd){
 		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::pair<std::string, Channel *>(channelName, channel));
 		channels[channelName]->add_modes('t');
+		if (bot){
+			std::cout << _RED <<"BEFORE"  << _END << std::endl;
+			this->bot->add_channel(channelName, *this->channels[channelName]);
+			std::cout << _RED <<"MIDDLE" << _END << std::endl;
+			this->channels[channelName]->add_bot(get_bot());
+			std::cout << _RED <<"AFTER" << _END << std::endl;
+
+		}
+
 	}
 }
 

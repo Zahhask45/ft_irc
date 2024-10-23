@@ -11,9 +11,8 @@ private:
 	std::string _name;
 	std::string _mask;
 	int _bot_fd;
-	struct sockaddr_storage _bot_addr;
-	//socklen_t _bot_len;
-	std::map<std::string, Channel *> channels;
+	
+	std::map<std::string, Channel *> bot_channels;
 
 	//* I like your funny words magic man
 	//std::list<std::string> _words;
@@ -26,9 +25,10 @@ public:
 	void remove_channel(const std::string &channelName);
 
 
-	void set_addr(struct sockaddr_storage value);
-
 	int const &get_bot_fd() const;
+	std::string const &get_mask() const;
+	std::string const &get_name() const;
+
 
 
 };
