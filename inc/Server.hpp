@@ -3,7 +3,6 @@
 
 #include "colors.hpp"
 #include "Channel.hpp"
-#include "Bot.hpp"
 #include <fstream>
 
 #define MAX_CLIENTS 100
@@ -18,11 +17,9 @@ class Server
 		int _socket_Server;
 		int _port;
 		std::string _pass;
-		// struct sockaddr_storage _addr;
 		std::map<std::string, Channel *> channels;
 		std::map<int, Client *> clients;
 		Bot* bot;
-		// std::vector<std::string> user;
 
 		//! DONT KNOW WHERE TO PUT THIS YET
 		struct epoll_event _eve, _events[100];
@@ -59,11 +56,9 @@ class Server
 		void _ToAll(int ori_fd, std::string message);
 		void _ToAll(Channel *channel, int ori_fd, std::string message);
 		int _sendall(int destfd, std::string message);
-		// void broadcast_to_channel(const std::string &channelName, int sender_fd) ;
 		void sendCode(int fd, std::string num, std::string nickname, std::string message);
 		std::set<std::string> findInChannel(int fd);
 		void print_client(int client_fd, std::string str);
-		// std::vector<std::string> parser(const std::string &commands);
 		void end_connection(int fd);
 
 	public: // Handdle Commands
@@ -126,6 +121,7 @@ class Server
 };
 
 #include "Client.hpp"
+#include "Bot.hpp"
 #include "Utils.tpp"
 
 #endif

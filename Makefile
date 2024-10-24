@@ -22,7 +22,7 @@ CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
 DEBUG				= -ggdb -fno-limit-debug-info -fsanitize=address
 
-NAME		=	ircserv_M
+NAME		=	ircserv
 
 SRC_DIR		=	./src/
 OBJ_DIR		=	./obj/
@@ -81,7 +81,7 @@ re: fclean all
 
 # run: valgrind
 run: debug
-	./$(NAME)
+	./$(NAME) 6667 unlock123
 
 debug: CXXFLAGS += $(DEBUG)
 debug: re
