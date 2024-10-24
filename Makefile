@@ -14,13 +14,13 @@ _WHITE		=	\e[1;37m
 
 _GONE		=	\e[2K\r
 
-# CXX					= clang++ ## em casa
-CXX					= c++ ## na escola
+CXX					= clang++ ## em casa
+# CXX					= c++ ## na escola
 CXX_WARNINGS 		= -Wall -Wextra -Werror
 CXX_RESTRICTION 	= -std=c++98 -pedantic-errors
 CXX_DEPENDENCIES 	= -MMD -MP -MF $(DEPS_DIR)/$*.d
 CXXFLAGS 			= $(CXX_WARNINGS) $(CXX_RESTRICTION) $(CXX_DEPENDENCIES)
-DEBUG				= -ggdb #-fno-limit-debug-info -fsanitize=address
+DEBUG				= -ggdb -fno-limit-debug-info -fsanitize=address
 
 NAME		=	ircserv_M
 
@@ -39,7 +39,8 @@ SRCS		=	main.cpp \
 				cmdInvite.cpp \
 				cmdKick.cpp \
 				cmdMode.cpp \
-				cmdTopic.cpp
+				cmdTopic.cpp \
+				Bot.cpp \
 
 SRC			=	$(addprefix $(SRC_DIR), $(SRCS))
 OBJS		=	$(SRCS:.cpp=.o)

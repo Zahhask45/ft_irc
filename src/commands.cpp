@@ -37,6 +37,8 @@ void Server::handleJoin(int fd, std::istringstream &command){
 			return ;
 		}
 
+
+
 		this->clients[fd]->add_channel(channelName, *this->channels[channelName]);
 		
 		this->channels[channelName]->add_user(get_client(fd));
@@ -44,9 +46,13 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
 		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->get_topic());
-		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->list_all_users());
+		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->list_all_users().append(bot->get_name() + " "));
 		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
+
+		std::string welcomeMsg = "Hello, I am " + bot->get_name() + "! Welcome to " + channelName;
+		std::string fullMessage = bot->get_mask() + " PRIVMSG " + channels[channelName]->get_name() + " :" + welcomeMsg + "\r\n";
+		print_client(clients[fd]->get_client_fd(), fullMessage);
 	}
 }
 

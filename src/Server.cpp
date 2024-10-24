@@ -23,6 +23,9 @@ Server::~Server() {
 		delete it->second;
 	}
 	channels.clear();
+
+	if (bot)
+		delete bot;
 }
 
 int const &Server::get_socket() const{
@@ -65,13 +68,12 @@ void Server::binding(){
 	}
 	
 
-	if (listen(_socket_Server, 10) == -1) {
+	if (listen(_socket_Server, 100) == -1) {
     	std::cerr << "Error in listen()" << std::endl;
     	exit(EXIT_FAILURE);
 	}
 
 	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN;
 	_events[0].events = EPOLLIN;
 	
 	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
@@ -80,9 +82,40 @@ void Server::binding(){
 		exit(EXIT_FAILURE);
 	}
 	_cur_online++;
+	//funct_bot();
+	bot = new Bot(1);
+	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
+	//sendCode(bot->get_bot_fd(), "338", bot->get_name(), ": Password accepted");
 }
 
+/* void Server::funct_bot(){
+	struct sockaddr_storage bot_addr;
+	socklen_t bot_len = sizeof(bot_addr);
+	int newsocket = accept(_socket_Server, (struct sockaddr*)&bot_addr, &bot_len);
+	if (newsocket == -1)
+		std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
+	fcntl(newsocket, F_SETFL, O_NONBLOCK);
+
+	_eve.data.fd = newsocket;
+	_eve.events = EPOLLIN;
+	this->bot = new Bot(newsocket);
+	bot->set_addr(bot_addr);
+
+
+	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[1]) == -1) {
+		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
+		close(newsocket);
+	}
+	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
+	std::string command;
+	command = "PASS bananan123\r\nNICK TEST\r\nUSER BOT 0 * :BOT\r\n";
+	handle_commands(bot->get_bot_fd(), command);
+	
+	//this->_cur_online++;
+} */
+
 void Server::loop(){
+	//int ii = 10;
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
@@ -93,6 +126,12 @@ void Server::loop(){
 			exit(EXIT_FAILURE);
 		}
 		for(int i = 0; i < _cur_online; i++){
+			// if (ii == 10){
+			// 	funct_bot();
+			// 	ii = 1;
+			// 	continue;
+			// }
+			std::cout << _RED << "DAMN FRICK" << _END << std::endl;
 			if (_events[i].events & EPOLLIN) {
 				if(_events[i].data.fd == _socket_Server)
 					funct_new_client(i); 
@@ -114,8 +153,6 @@ void Server::funct_new_client(int i){
 	_events[i].data.fd = newsocket;
 	_events[i].events = EPOLLIN;
 	this->clients.insert(std::make_pair(newsocket, new Client(newsocket)));
-	_events[i].events = EPOLLIN;
-	this->clients.insert(std::pair<int, Client *>(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
 
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[i]) == -1) {
@@ -169,7 +206,6 @@ void Server::funct_not_new_client(int i){
 	}
 	if (extra_bytes > 0){
 		_events[i].events = EPOLLOUT;
-		_events[i].events = EPOLLOUT;
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
 		buffer_ptr[extra_bytes] = '\0';
 		std::cout << buffer_ptr << std::endl;
@@ -213,21 +249,9 @@ void Server::funct_not_new_client(int i){
 	}
 }
 
-// std::vector<std::string> Server::parser(const std::string &command){
-// 	 std::vector<std::string> result;
-//     std::stringstream ss(command);
-//     std::string item;
-    
-//     while (std::getline(ss, item, ' ')) {
-//         result.push_back(item);
-//     }
-// 	return result;
-// }
-
-
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void Server::handle_commands(int fd, const std::string &command){
-
+	std::cout << _RED << command << _END << std::endl;
 	std::istringstream commandStream(command);
     std::string line;
     // TODO: Percorre cada linha do comando
@@ -235,6 +259,7 @@ void Server::handle_commands(int fd, const std::string &command){
         std::istringstream iss(line);
         std::string cmd;
 		iss >> cmd;
+		std::cout << _PURPLE << cmd << _END << std::endl;
 		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 		if (cmd == "AUTH")
 			handleAuth(fd);
@@ -277,6 +302,15 @@ void Server::create_channel(const std::string &channelName, int fd){
 		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::make_pair(channelName, channel));
 		channels[channelName]->add_modes('t');
+		if (bot){
+			std::cout << _RED <<"BEFORE"  << _END << std::endl;
+			this->bot->add_channel(channelName, *this->channels[channelName]);
+			std::cout << _RED <<"MIDDLE" << _END << std::endl;
+			this->channels[channelName]->add_bot(get_bot());
+			std::cout << _RED <<"AFTER" << _END << std::endl;
+			print_client(bot->get_bot_fd(), bot->get_mask() + "JOIN :" + channelName + "\r\n");
+		}
+
 	}
 }
 
@@ -289,6 +323,10 @@ Channel *Server::get_channel(const std::string name)  {
 Client &Server::get_client(int fd){
 	std::map<int, Client *>::iterator it = clients.find(fd);
 	return *it->second;
+}
+
+Bot &Server::get_bot(){
+	return *bot;
 }
 
 void Server::_ToAll(int ori_fd, std::string message){

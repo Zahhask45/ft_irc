@@ -3,6 +3,7 @@
 
 #include "colors.hpp"
 class Client;
+class Bot;
 
 class Channel
 {
@@ -17,6 +18,7 @@ class Channel
 		bool        _inviteChannel;
 		//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
 		std::map<int, Client *> users;
+		std::map<int, Bot *> bots;
 		std::map<int, Client *>	operators;
 		std::map<int, Client *>	inviteList;
 		std::vector<char> _modes;
@@ -45,12 +47,14 @@ class Channel
 		std::map<int, Client *>	const &get_invite_list() const;
 
 		void add_user(Client &client);
+		void add_bot(Bot &bot);
 		void add_operator( Client &op );
 		
 		bool add_modes(char mode);
 		bool remove_modes(char mode);
 
 		void remove_user(std::string user);
+		//void remove_bot(std::string bot);
 		void remove_oper(std::string oper);
 		
 		void set_name(std::string const &name);
