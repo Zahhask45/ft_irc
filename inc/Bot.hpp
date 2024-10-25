@@ -8,17 +8,11 @@ class Bot
 {
 private:
 	std::string _name;
-	std::string _user;
-	std::string _pass;
 	std::string _mask;
 	int _bot_fd;
 	
 	std::map<std::string, Channel *> bot_channels;
-
-	struct sockaddr_storage _bot_addr;
-
-	//* I like your funny words magic man
-	std::list<std::string> _words;
+	std::list<std::string> _welcome_messages;
 public:
 	Bot();
 	Bot(int fd);
@@ -39,6 +33,7 @@ public:
 	std::string const &get_name() const;
 	std::string const &get_user() const;
 	std::string const &get_pass() const;
+	std::string get_random_message();
 
 
 

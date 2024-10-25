@@ -50,8 +50,7 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
 
-		std::string welcomeMsg = "Hello, I am " + bot->get_name() + "! Welcome to " + channelName;
-		std::string fullMessage = bot->get_mask() + " PRIVMSG " + channels[channelName]->get_name() + " :" + welcomeMsg + "\r\n";
+		std::string fullMessage = bot->get_mask() + " PRIVMSG " + channels[channelName]->get_name() + " :" + bot->get_random_message() + "\r\n";
 		print_client(clients[fd]->get_client_fd(), fullMessage);
 	}
 }
@@ -83,7 +82,7 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 		std::map<int, Client *>::iterator it = this->clients.begin();
 		if (bot->get_name() == target){
 			print_client(bot->get_bot_fd(), clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
-			if (message.find("Terracotta") || message.find("Banana") || message.find("Terracota pie")){
+			if (message.find("Terracotta") != std::string::npos || message.find("Banana") != std::string::npos || message.find("Terracota pie") != std::string::npos){
 				std::cout << _CYAN << "DAMN I WAS HERE FAST" << _END << std::endl;
 				print_client(clients[fd]->get_client_fd(), bot->get_mask() + "PRIVMSG " + clients[fd]->get_nick() + " I like you funny words magic man\r\n");
 			}
