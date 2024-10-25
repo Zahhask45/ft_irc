@@ -50,7 +50,7 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
 
-		std::string fullMessage = bot->get_mask() + " PRIVMSG " + channels[channelName]->get_name() + " :" + bot->get_random_message() + "\r\n";
+		std::string fullMessage = bot->get_mask() + "PRIVMSG " + channels[channelName]->get_name() + " :" + bot->get_random_message() + "\r\n";
 		print_client(clients[fd]->get_client_fd(), fullMessage);
 	}
 }
