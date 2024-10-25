@@ -23,7 +23,7 @@ class Server
 		Bot* bot;
 
 		//! DONT KNOW WHERE TO PUT THIS YET
-		struct epoll_event _eve, _events[100];
+		struct epoll_event _eve, _events[MAX_CLIENTS];
 		int _epoll_fd;
 		int _nfds;
 		int _cur_online;
@@ -51,6 +51,7 @@ class Server
 		void funct_bot();
 		void funct_new_client(int i);
 		void funct_not_new_client(int i);
+		int	checkAuth(int fd);
 
 
 	//* Auxiliar functions

@@ -69,7 +69,7 @@ void Server::binding(){
 	}
 	
 
-	if (listen(_socket_Server, 100) == -1) {
+	if (listen(_socket_Server, MAX_CLIENTS) == -1) {
     	std::cerr << "Error in listen()" << std::endl;
     	exit(EXIT_FAILURE);
 	}
@@ -120,7 +120,7 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, 100, -1);
+		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, -1);
 
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
@@ -380,7 +380,7 @@ void Server::print_client(int client_fd, std::string str){
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
 	if (nickname.empty())
 		nickname = "*";
-	print_client(fd, ":Terracotta " + num + " " + nickname + " " + message + "\r\n");
+	print_client(fd, ":server " + num + " " + nickname + " " + message + "\r\n");
 }
 
 int Server::_sendall(int destfd, std::string message)

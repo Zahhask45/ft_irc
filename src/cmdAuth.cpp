@@ -9,19 +9,29 @@ static std::string serverTimestamp(){
 	return buf;
 }
 
-std::string checkAuth(const std::string arg){
-	if (arg.empty())
-		return "error";
-	return "check";
+int Server::checkAuth(int fd){
+	std::string response = ": ";
+	int i = 0;
+	if (clients[fd]->get_pass().empty()){
+		response += "[ Pass: empty ] ";
+		i = 1;
+	}
+	if ((clients[fd]->get_user().empty())){
+		response += "[ User: empty ] ";
+		i = 1;
+	}
+	if (clients[fd]->get_nick().empty()){
+		response += "[ Nick: empty ] ";
+		i = 1;
+	}
+	if (i == 1) 
+		sendCode(fd, "461", "", response); //ERR_NEEDMOREPARAMS
+	return i;
 }
 
 void Server::handleAuth(int fd){
-	if (clients[fd] && (clients[fd]->get_user().empty() 
-		|| clients[fd]->get_pass().empty() 
-		|| clients[fd]->get_nick().empty())){
-		sendCode(fd, "461", "", "Not enough parameters"); //ERR_NEEDMOREPARAMS
+	if (checkAuth(fd))
 		return;
-	}
 	if (clients[fd]->get_auth() == true){
 		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reauth"); // ERR_ALREADYREGISTRED
 		return;
