@@ -18,7 +18,7 @@ private:
 	struct sockaddr_storage _bot_addr;
 
 	//* I like your funny words magic man
-	//std::list<std::string> _words;
+	std::list<std::string> _words;
 public:
 	Bot();
 	Bot(int fd);

@@ -354,7 +354,7 @@ void Server::print_client(int client_fd, std::string str){
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
 	if (nickname.empty())
 		nickname = "*";
-	print_client(fd, ":Terracotta " + num + " " + nickname + " " + message + "\r\n");
+	print_client(fd, ":server " + num + " " + nickname + " " + message + "\r\n");
 }
 
 int Server::_sendall(int destfd, std::string message)

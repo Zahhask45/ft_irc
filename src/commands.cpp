@@ -82,7 +82,12 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 	else{
 		std::map<int, Client *>::iterator it = this->clients.begin();
 		if (bot->get_name() == target){
-			print_client(bot->get_bot_fd(), bot->get_mask() + "PRIVMSG " + target + " " + message + "\n");
+			print_client(bot->get_bot_fd(), clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
+			if (message.find("Terracotta") || message.find("Banana") || message.find("Terracota pie")){
+				std::cout << _CYAN << "DAMN I WAS HERE FAST" << _END << std::endl;
+				print_client(clients[fd]->get_client_fd(), bot->get_mask() + "PRIVMSG " + clients[fd]->get_nick() + " I like you funny words magic man\r\n");
+			}
+
 			return ;
 		}
 
@@ -104,7 +109,7 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			_sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + message + "\n"); 
 		}
 		else if(receiver_fd)
-			print_client(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
+			print_client(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + message + "\n");
 	}
 }
 

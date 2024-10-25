@@ -80,16 +80,21 @@ void Server::handleNick(int fd, std::istringstream &command){
 	std::map<int, Client *>::iterator it;
 	for(it = clients.begin(); it != clients.end(); it++){
 		if (it->second->get_nick() == nick){
-			sendCode(fd, "433", nick, ":Nickname is already in use");
+			sendCode(fd, "433", nick, ":" + nick + " Nickname is already in use");
 			this->clients[fd]->set_nick(nick);
 			return;
 		}
 	}
+	if(nick == bot->get_name()){
+			sendCode(fd, "433", nick,":" + nick + " is a invalid nickname, it's the bot nickname");
+			clients[fd]->set_nick("\0");
+	}
+	else if(nick == "Terracotta"){
+			sendCode(fd, "433", nick,":" + nick + " is a invalid nickname, it's the server host name");
+			clients[fd]->set_nick("\0");
+	}
 	if (this->clients[fd]->get_nick().empty())
 		this->clients[fd]->set_nick(nick);
-	else if(nick == bot->get_name()){
-			sendCode(fd, "433", nick, ":Cannot use the bot nickname");
-	}
 	else{
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
 		std::string nickChangeMsg = this->clients[fd]->get_mask() + "NICK :" + nick + "\r\n";

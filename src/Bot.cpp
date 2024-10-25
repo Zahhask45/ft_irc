@@ -1,9 +1,10 @@
 #include "Bot.hpp"
 
-Bot::Bot(int fd) : _name("Terracotta"), _mask(":Terracotta!Terracotta@Terracotta "), _bot_fd(fd){}
+Bot::Bot(int fd) : _name("Pie"), _mask(":Pie!Pie@Terracotta "), _bot_fd(fd){
+}
 
 
-Bot::Bot(): _name("Terracotta"), _user("Terracotta 0 * :Terracotta"), _pass("banana123"), _mask(":Terracotta!Terracotta@Terracotta "), _bot_fd(1){
+Bot::Bot(): _name("Pie"), _user("Pie 0 * :Pie"), _pass("banana123"), _mask(":Pie!Pie@Terracotta "), _bot_fd(1){
 
 }
 
