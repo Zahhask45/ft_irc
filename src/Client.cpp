@@ -75,9 +75,7 @@ void Client::set_realname(std::string const &realname){
 	this->_realname = realname;
 }
 
-//? Not sure why the size is called if is not being used.
-void Client::set_buffer(const char* buffer, int size){
-	(void)size;
+void Client::set_buffer(const char* buffer){
 	_buffer = buffer;
 }
 

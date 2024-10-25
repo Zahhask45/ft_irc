@@ -42,7 +42,6 @@ void	Server::genericSendMode(int fd, std::string target, char mode, std::string 
 		flag = this->channels[target]->remove_modes(mode);
 	if (flag == true || mode == 'l' || mode == 'k' || mode == 'o'){
 		print_client(fd, clients[fd]->get_mask() + "MODE " + target + " " + sign + mode + " " + arg + "\r\n");
-		//sendCode(fd, "324", clients[fd]->get_nick(), target + " :" + mode + " " + arg);
 		_ToAll(channels[target], fd, "MODE " + target + " " + sign + mode + " " + arg + "\r\n");
 	}
 }
@@ -54,9 +53,11 @@ void Server::handleMode(int fd, std::istringstream &command){
 	command >> target >> mode >> arg;
 	if (checkMode(fd, target, mode, arg) == -1)
 		return ;
-	if (target[0] != '#')
-		target.insert(0, "#");
-	int user_fd = channels[target]->get_by_name(arg); //!segfault here, channel without '#'
+	if (target[0] != '#'){
+		sendCode(fd, "403", clients[fd]->get_nick(), target + " :MODE command only for Users");
+		return ;
+	}
+	int user_fd = channels[target]->get_by_name(arg);
 
 	if (mode[0] == '+'){
 		for (size_t i = mode.size() - 1; i > 0; i--){

@@ -3,7 +3,6 @@
 Server::Server(){}
 
 Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(0) {
-	//! DONT KNOW WHERE TO PUT THIS
 	_epoll_fd = epoll_create1(0);
 	if (_epoll_fd == -1) {
 		std::cerr << "Error creating epoll file descriptor" << std::endl;
@@ -83,40 +82,12 @@ void Server::binding(){
 		exit(EXIT_FAILURE);
 	}
 	_cur_online++;
-	//funct_bot();
+
 	bot = new Bot(1);
 	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
-	//sendCode(bot->get_bot_fd(), "338", bot->get_name(), ": Password accepted");
 }
 
-/* void Server::funct_bot(){
-	struct sockaddr_storage bot_addr;
-	socklen_t bot_len = sizeof(bot_addr);
-	int newsocket = accept(_socket_Server, (struct sockaddr*)&bot_addr, &bot_len);
-	if (newsocket == -1)
-		std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
-	fcntl(newsocket, F_SETFL, O_NONBLOCK);
-
-	_eve.data.fd = newsocket;
-	_eve.events = EPOLLIN;
-	this->bot = new Bot(newsocket);
-	bot->set_addr(bot_addr);
-
-
-	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[1]) == -1) {
-		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
-		close(newsocket);
-	}
-	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
-	std::string command;
-	command = "PASS bananan123\r\nNICK TEST\r\nUSER BOT 0 * :BOT\r\n";
-	handle_commands(bot->get_bot_fd(), command);
-	
-	//this->_cur_online++;
-} */
-
 void Server::loop(){
-	//int ii = 10;
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
@@ -127,11 +98,6 @@ void Server::loop(){
 			exit(EXIT_FAILURE);
 		}
 		for(int i = 0; i < _cur_online; i++){
-			// if (ii == 10){
-			// 	funct_bot();
-			// 	ii = 1;
-			// 	continue;
-			// }
 			std::cout << _RED << "DAMN FRICK" << _END << std::endl;
 			if (_events[i].events & EPOLLIN) {
 				if(_events[i].data.fd == _socket_Server)
@@ -181,7 +147,6 @@ void Server::funct_not_new_client(int i){
 		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1){
         	std::cout << _RED << "Error on getsocket()" << _END << std::endl;
 			if (this->clients.find(_events[i].data.fd) == this->clients.end()) {
-				//! Cleaning the users.
 				return ;
 			}
 			throw std::invalid_argument("SOME ERROR");
@@ -200,8 +165,6 @@ void Server::funct_not_new_client(int i){
 				close(_events[i].data.fd);
 				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online  << " WITH ERROR NO: " << err_code << _END << std::endl;
 				end_connection(_events[i].data.fd);
-				// this->clients.erase(_events[i].data.fd);
-				// this->_cur_online--;
 			}
 		}
 	}
@@ -220,13 +183,9 @@ void Server::funct_not_new_client(int i){
 		}
 		else
 		{
-			//close(_events[i].data.fd);
 			std::cerr << _RED << "Client disconnected (FROM THE NEW STUFF). Current onlines: " << _cur_online << _END << std::endl;
 			std::istringstream iss("Unexpected disconnection by client");
 			handleQuit(_events[i].data.fd, iss);
-			// end_connection(_events[i].data.fd);
-			// this->clients.erase(_events[i].data.fd);
-			// this->_cur_online--;
 		}
 		return;
 	}
@@ -244,8 +203,8 @@ void Server::funct_not_new_client(int i){
 	handle_commands(_events[i].data.fd, command);
 	memset(buffer_ptr, 0, 1024);
 	std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
-	if (this->clients.find(_events[i].data.fd) != this->clients.end() && this->clients[_events[i].data.fd] != 0) { // The solution i found.
-		this->clients[_events[i].data.fd]->set_bytes_received(0); //! this is making the server SEGFAULT when the client disconnects.
+	if (this->clients.find(_events[i].data.fd) != this->clients.end() && this->clients[_events[i].data.fd] != 0) { 
+		this->clients[_events[i].data.fd]->set_bytes_received(0);
 		this->clients[_events[i].data.fd]->clean_buffer();
 	}
 }
@@ -254,7 +213,6 @@ void Server::funct_not_new_client(int i){
 void Server::handle_commands(int fd, const std::string &command){
 	std::istringstream commandStream(command);
     std::string line;
-    // TODO: Percorre cada linha do comando
     while (std::getline(commandStream, line, '\n')) {
         std::istringstream iss(line);
         std::string cmd;
@@ -357,8 +315,8 @@ void Server::_ToAll(Channel *channel, int ori_fd, std::string message){
 	}
 }
 
-// Essa tem como objetivo localizar o usuário em um canal dentre todos os canais armazendaos no servidor
-// em caso positivo, retorna a lista com o nome dos canais, caso contrário, retorna null.
+// The purpose of this is to locate the user on a channel among all the channels stored on the server.
+// if so, it returns the list with the name of the channels, otherwise it returns null.
 std::set<std::string> Server::findInChannel(int fd){
 	std::set<std::string> channelList;
 	std::map<std::string, Channel *>::iterator it = channels.begin();
@@ -374,7 +332,6 @@ std::set<std::string> Server::findInChannel(int fd){
 
 void Server::print_client(int client_fd, std::string str){
 	send(client_fd, str.c_str(), str.size(), MSG_NOSIGNAL);
-	// std::cout << "[FOR DEBUG PURPOSES] Sent: " << str << "[DEBUG PURPOSES]" << std::endl;
 }
  
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){

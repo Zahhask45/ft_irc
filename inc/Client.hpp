@@ -3,12 +3,10 @@
 
 #include "Server.hpp"
 
-//TODO: ADD STUFF FOR THE CLIENT USER
 
 class Client
 {
 private:
-	//* STUFF ABOUT THE USER
 	int _client_fd;
 	std::string _user;
 	std::string _nick;
@@ -58,7 +56,7 @@ public: //SETTERS
 	void set_nick(const std::string &nick);
 	void set_mask(const std::string &mask);
 	void set_realname(const std::string &realname);
-	void set_buffer(const char* buffer, int size);
+	void set_buffer(const char* buffer);
 	void set_bytes_received(const int value);
 	void set_flagNick(bool value);
 
