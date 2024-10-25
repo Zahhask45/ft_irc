@@ -72,11 +72,11 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			sendCode(fd, "404", clients[fd]->get_nick(), target + " :Cannot send to channel");
 			return ;
 		}
-		if (message.find("SHA-256") != std::string::npos){
+		// if (message.find("SHA-256") != std::string::npos){
+		// 	_ToAll(channels[target], fd, "PRIVMSG " + target + message + "\n");
+		// }
+		//else 
 			_ToAll(channels[target], fd, "PRIVMSG " + target + message + "\n");
-		}
-		else 
-			_ToAll(channels[target], fd, "PRIVMSG " + target + " " + message + "\n");
 	}
 	else{
 		std::map<int, Client *>::iterator it = this->clients.begin();

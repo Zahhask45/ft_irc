@@ -6,7 +6,7 @@
 #include "Bot.hpp"
 #include <fstream>
 
-#define MAX_CLIENTS 100
+#define MAX_CLIENTS 256
 
 class Client;
 class Channel;
@@ -23,7 +23,7 @@ class Server
 		Bot* bot;
 
 		//! DONT KNOW WHERE TO PUT THIS YET
-		struct epoll_event _eve, _events[100];
+		struct epoll_event _eve, _events[MAX_CLIENTS];
 		int _epoll_fd;
 		int _nfds;
 		int _cur_online;

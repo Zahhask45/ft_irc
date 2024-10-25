@@ -69,7 +69,7 @@ void Server::binding(){
 	}
 	
 
-	if (listen(_socket_Server, 100) == -1) {
+	if (listen(_socket_Server, MAX_CLIENTS) == -1) {
     	std::cerr << "Error in listen()" << std::endl;
     	exit(EXIT_FAILURE);
 	}
@@ -94,7 +94,7 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, 100, -1);
+		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, -1);
 
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;

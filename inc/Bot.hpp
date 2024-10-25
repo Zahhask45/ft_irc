@@ -21,18 +21,12 @@ public:
 	void add_channel(const std::string &channelName, Channel &channel);
 	void remove_channel(const std::string &channelName);
 
-	void set_addr(struct sockaddr_storage value);
-	void set_user(const std::string &name);
-	void set_pass(const std::string &pass);
 	void set_name(const std::string &nick);
 	void set_mask(const std::string &nick);
 
-	struct sockaddr_storage const &get_addr() const;
 	int const &get_bot_fd() const;
 	std::string const &get_mask() const;
 	std::string const &get_name() const;
-	std::string const &get_user() const;
-	std::string const &get_pass() const;
 	std::string get_random_message();
 
 
