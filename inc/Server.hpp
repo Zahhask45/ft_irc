@@ -3,6 +3,7 @@
 
 #include "colors.hpp"
 #include "Channel.hpp"
+#include "Bot.hpp"
 #include <fstream>
 
 #define MAX_CLIENTS 100
@@ -121,7 +122,6 @@ class Server
 };
 
 #include "Client.hpp"
-#include "Bot.hpp"
 #include "Utils.tpp"
 
 #endif

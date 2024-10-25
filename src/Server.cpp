@@ -252,7 +252,6 @@ void Server::funct_not_new_client(int i){
 
 //! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void Server::handle_commands(int fd, const std::string &command){
-	std::cout << _RED << command << _END << std::endl;
 	std::istringstream commandStream(command);
     std::string line;
     // TODO: Percorre cada linha do comando
@@ -260,7 +259,7 @@ void Server::handle_commands(int fd, const std::string &command){
         std::istringstream iss(line);
         std::string cmd;
 		iss >> cmd;
-		std::cout << _PURPLE << cmd << _END << std::endl;
+		std::cout << _RED << command << _END << std::endl;
 		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 		if (cmd == "AUTH")
 			handleAuth(fd);
@@ -381,7 +380,7 @@ void Server::print_client(int client_fd, std::string str){
 void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
 	if (nickname.empty())
 		nickname = "*";
-	print_client(fd, ":server " + num + " " + nickname + " " + message + "\r\n");
+	print_client(fd, ":Terracotta " + num + " " + nickname + " " + message + "\r\n");
 }
 
 int Server::_sendall(int destfd, std::string message)
