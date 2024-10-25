@@ -89,32 +89,6 @@ void Server::binding(){
 	//sendCode(bot->get_bot_fd(), "338", bot->get_name(), ": Password accepted");
 }
 
-/* void Server::funct_bot(){
-	struct sockaddr_storage bot_addr;
-	socklen_t bot_len = sizeof(bot_addr);
-	int newsocket = accept(_socket_Server, (struct sockaddr*)&bot_addr, &bot_len);
-	if (newsocket == -1)
-		std::cerr << "Error accepting new connection: " << strerror(errno) << std::endl;
-	fcntl(newsocket, F_SETFL, O_NONBLOCK);
-
-	_eve.data.fd = newsocket;
-	_eve.events = EPOLLIN;
-	this->bot = new Bot(newsocket);
-	bot->set_addr(bot_addr);
-
-
-	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[1]) == -1) {
-		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
-		close(newsocket);
-	}
-	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
-	std::string command;
-	command = "PASS bananan123\r\nNICK TEST\r\nUSER BOT 0 * :BOT\r\n";
-	handle_commands(bot->get_bot_fd(), command);
-	
-	//this->_cur_online++;
-} */
-
 void Server::loop(){
 	//int ii = 10;
 	while(true){

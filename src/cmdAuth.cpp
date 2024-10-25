@@ -87,6 +87,9 @@ void Server::handleNick(int fd, std::istringstream &command){
 	}
 	if (this->clients[fd]->get_nick().empty())
 		this->clients[fd]->set_nick(nick);
+	else if(nick == bot->get_name()){
+			sendCode(fd, "433", nick, ":Cannot use the bot nickname");
+	}
 	else{
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
 		std::string nickChangeMsg = this->clients[fd]->get_mask() + "NICK :" + nick + "\r\n";

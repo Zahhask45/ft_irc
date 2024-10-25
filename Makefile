@@ -88,7 +88,7 @@ debug: re
 
 valgrind: CXXFLAGS += -ggdb
 valgrind: re
-		valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt ./$(NAME)
+		valgrind --leak-check=full --show-leak-kinds=all --track-origins=yes --log-file=valgrind-out.txt ./$(NAME) 6667 banana123
 
 .SILENT:
 

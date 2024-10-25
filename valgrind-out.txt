@@ -1,0 +1,15 @@
+==172663== Memcheck, a memory error detector
+==172663== Copyright (C) 2002-2017, and GNU GPL'd, by Julian Seward et al.
+==172663== Using Valgrind-3.18.1 and LibVEX; rerun with -h for copyright info
+==172663== Command: ./ircserv 6667 banana123
+==172663== Parent PID: 172629
+==172663== 
+==172663== 
+==172663== HEAP SUMMARY:
+==172663==     in use at exit: 0 bytes in 0 blocks
+==172663==   total heap usage: 660 allocs, 660 frees, 129,766 bytes allocated
+==172663== 
+==172663== All heap blocks were freed -- no leaks are possible
+==172663== 
+==172663== For lists of detected and suppressed errors, rerun with: -s
+==172663== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 0 from 0)

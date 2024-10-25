@@ -46,7 +46,7 @@ void Server::handleJoin(int fd, std::istringstream &command){
 		print_client(fd, clients[fd]->get_mask() + "JOIN :" + channelName + "\r\n");
 
 		sendCode(fd, "332", clients[fd]->get_nick(), channelName + " " + this->channels[channelName]->get_topic());
-		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->list_all_users().append(bot->get_name() + " "));
+		sendCode(fd, "353", clients[fd]->get_nick() + " = " + channelName, this->channels[channelName]->list_all_users().append("+" + bot->get_name() + " "));
 		sendCode(fd, "366", clients[fd]->get_nick(), channelName + " :End of /NAMES list");
 		_ToAll(this->channels[channelName], fd, "JOIN :" + channelName + "\r\n");
 
@@ -80,9 +80,13 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			_ToAll(channels[target], fd, "PRIVMSG " + target + " " + message + "\n");
 	}
 	else{
-		int receiver_fd = 0;
 		std::map<int, Client *>::iterator it = this->clients.begin();
-		
+		if (bot->get_name() == target){
+			print_client(bot->get_bot_fd(), bot->get_mask() + "PRIVMSG " + target + " " + message + "\n");
+			return ;
+		}
+
+		int receiver_fd = 0;
 		while(it != this->clients.end())
 		{
 			if (it->second->get_nick() == target){
@@ -125,6 +129,7 @@ void Server::handlePart(int fd, std::istringstream &command){
 	channel->remove_user(clients[fd]->get_nick());
 	channel->remove_oper(clients[fd]->get_nick());
 	if (this->channels[channelName]->list_all_users() == ":"){
+		bot->remove_channel(channelName);
 		delete this->channels[channelName];
 		this->channels.erase(channelName);
 	}
@@ -136,11 +141,22 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	getline(command, message);
 	std::string response = clients[fd]->get_mask() + "QUIT :" + message + "\r\n";
 	_ToAll(fd, response);
+	std::list<std::string> empty_channels;
 	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++){
 		if (it->second->get_users().find(fd) != it->second->get_users().end()){
 			it->second->remove_user(clients[fd]->get_nick());
 			it->second->remove_oper(clients[fd]->get_nick());
 			clients[fd]->remove_channel(it->first);
+			if (this->channels[it->first]->list_all_users() == ":"){
+				empty_channels.push_back(it->first);
+			}
+		}
+	}
+	for (std::list<std::string>::iterator it = empty_channels.begin(); it != empty_channels.end(); it++){
+		if (this->channels[*it]->list_all_users() == ":"){
+			bot->remove_channel(*it);
+			delete this->channels[*it];
+			this->channels.erase(*it);
 		}
 	}
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {
