@@ -104,7 +104,6 @@ void Server::handlePrivmsg(int fd, std::istringstream &command){
 			return;
         }
 		if (message.find(toString("\x01") + "DCC SEND") != std::string::npos || message.find("SHA") != std::string::npos){
-			// aqui o sendall tinha um " " entre target e message isso dava erro
 			_sendall(receiver_fd, clients[fd]->get_mask() + "PRIVMSG " + target + message + "\n"); 
 		}
 		else if(receiver_fd)
@@ -168,8 +167,6 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	}
 	close(clients[fd]->get_client_fd());
 	end_connection(fd);
-	// this->clients.erase(fd); //! Sempre que um cliente sai, tem que fazer o delete dele
-	// this->_cur_online--;
 	this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
 	print_client(fd, response);
 }

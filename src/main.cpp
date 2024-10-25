@@ -16,7 +16,7 @@ int main(int ac, char *av[]){
 		sigemptyset(&sa.sa_mask);
 		sa.sa_handler = handle_signal;
 		sigaction(SIGINT, &sa, NULL);
-		sigaction(SIGQUIT, &sa, NULL); // Ensure SIGQUIT is also handled
+		sigaction(SIGQUIT, &sa, NULL);
 	
 		int port = std::atoi(av[1]);
 		Server serv(port, av[2]);

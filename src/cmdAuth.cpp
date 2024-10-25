@@ -9,19 +9,29 @@ static std::string serverTimestamp(){
 	return buf;
 }
 
-std::string checkAuth(const std::string arg){
-	if (arg.empty())
-		return "error";
-	return "check";
+int Server::checkAuth(int fd){
+	std::string response = ": ";
+	int i = 0;
+	if (clients[fd]->get_pass().empty()){
+		response += "[ Pass: empty ] ";
+		i = 1;
+	}
+	if ((clients[fd]->get_user().empty())){
+		response += "[ User: empty ] ";
+		i = 1;
+	}
+	if (clients[fd]->get_nick().empty()){
+		response += "[ Nick: empty ] ";
+		i = 1;
+	}
+	if (i == 1) 
+		sendCode(fd, "461", "", response); //ERR_NEEDMOREPARAMS
+	return i;
 }
 
 void Server::handleAuth(int fd){
-	if (clients[fd] && (clients[fd]->get_user().empty() 
-		|| clients[fd]->get_pass().empty() 
-		|| clients[fd]->get_nick().empty())){
-		sendCode(fd, "461", "", "Not enough parameters"); //ERR_NEEDMOREPARAMS
+	if (checkAuth(fd))
 		return;
-	}
 	if (clients[fd]->get_auth() == true){
 		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reauth"); // ERR_ALREADYREGISTRED
 		return;
@@ -30,7 +40,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
 		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + serverTimestamp());
-		sendCode(fd, "004", clients[fd]->get_nick(), clients[fd]->get_host() + " InspIRCd-3 BDHIORSTWcdghikorswxz ACIJKMNOPQRSTYabceghiklmnopqrstvz :IJYabeghkloqv"); //! Explicacao no arquivo explain.txt
+		sendCode(fd, "004", clients[fd]->get_nick(), clients[fd]->get_host() + " InspIRCd-3 BDHIORSTWcdghikorswxz ACIJKMNOPQRSTYabceghiklmnopqrstvz :IJYabeghkloqv");
 		sendCode(fd, "005", clients[fd]->get_nick(), "CHANMODES=Ibeg,k,Jl,ACKMNOPQRSTiprstz :are supported by this server");
 		sendCode(fd, "371", clients[fd]->get_nick(), ":User is Authenticated");
 		sendCode(fd, "375", clients[fd]->get_nick(), ":" + clients[fd]->get_host() + " Message of the day");
@@ -51,7 +61,6 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "372", clients[fd]->get_nick(), ": User is not Authenticated");
 }
 
-//! PASS should come before NICK and USER, maybe we should create a function to force the others commands to come only after PASS.
 void Server::handlePass(int fd, std::istringstream &command){
 	std::string pass;
 	command >> pass;
@@ -72,6 +81,11 @@ void Server::handleNick(int fd, std::istringstream &command){
 	std::string nick;
 	command >> nick;
 	
+	if (clients[fd]->get_pass().empty()){
+		sendCode(fd, "431", "", "No Password"); // ERR_NONICKNAMEGIVEN
+		clients[fd]->set_nick("\0");
+		return;
+	}
 	if (nick.empty()){
 		sendCode(fd, "431", "", "No nickname given"); // ERR_NONICKNAMEGIVEN
 		clients[fd]->set_nick("\0");
@@ -109,6 +123,12 @@ void Server::handleUser(int fd, std::istringstream &command){
 	std::string username, hostname, servername, realname;
 	command >> username >> hostname >> servername; 
 	std::getline(command, realname);
+
+	if (clients[fd]->get_pass().empty()){
+		sendCode(fd, "431", "", "No Password"); // ERR_NONICKNAMEGIVEN
+		clients[fd]->set_nick("\0");
+		return;
+	}
 	if (username.empty() || hostname.empty() || servername.empty() || realname.empty()){
 		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return;

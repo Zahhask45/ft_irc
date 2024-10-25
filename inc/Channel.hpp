@@ -16,14 +16,11 @@ class Channel
 		long unsigned int         _limit;
 		int         _creationTime;
 		bool        _inviteChannel;
-		//! CHANGE ALSO THIS FOR STRINGS AND NOT INT
 		std::map<int, Client *> users;
 		std::map<int, Bot *> bots;
 		std::map<int, Client *>	operators;
 		std::map<int, Client *>	inviteList;
 		std::vector<char> _modes;
-
-		//TODO: BANNED USERS
 		
 		Channel(const Channel &cp);
 		
@@ -54,7 +51,6 @@ class Channel
 		bool remove_modes(char mode);
 
 		void remove_user(std::string user);
-		//void remove_bot(std::string bot);
 		void remove_oper(std::string oper);
 		
 		void set_name(std::string const &name);

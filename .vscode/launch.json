@@ -5,11 +5,11 @@
       "name": "C/C++ Runner: Debug Session",
       "type": "cppdbg",
       "request": "launch",
-      "args": ["6667", "unlock123" ],
+      "args": [],
       "stopAtEntry": false,
       "externalConsole": false,
-      "cwd": "${workspaceFolder}/",
-      "program": "${workspaceFolder}/ircserv",
+      "cwd": "/home/mamaral-/Documents/42Cursus/Github/42Porto-lvl_5_ft_irc/src",
+      "program": "/home/mamaral-/Documents/42Cursus/Github/42Porto-lvl_5_ft_irc/src/build/Debug/outDebug",
       "MIMode": "gdb",
       "miDebuggerPath": "gdb",
       "setupCommands": [
@@ -18,8 +18,7 @@
           "text": "-enable-pretty-printing",
           "ignoreFailures": true
         }
-      ],
-        "preLaunchTask": "Makefile: re"
+      ]
     }
   ]
 }

@@ -22,12 +22,10 @@ class Server
 		std::map<int, Client *> clients;
 		Bot* bot;
 
-		//! DONT KNOW WHERE TO PUT THIS YET
 		struct epoll_event _eve, _events[MAX_CLIENTS];
 		int _epoll_fd;
 		int _nfds;
 		int _cur_online;
-		// char _buffer[1024];
 
 		Server(Server &cp);
 		Server &operator=(Server &cp);
@@ -51,6 +49,7 @@ class Server
 		void funct_bot();
 		void funct_new_client(int i);
 		void funct_not_new_client(int i);
+		int	checkAuth(int fd);
 
 
 	//* Auxiliar functions
@@ -79,40 +78,8 @@ class Server
 		void handleList(int fd);
 		void handleWho(int fd, std::istringstream &command);
 		void handleWhois(int fd, std::istringstream &command);
-
-		void handleSendFile(int fd, const std::string &command, const std::string &target);
-		void handleAcceptFile(int fd, std::string &command, const std::string &target);
-		void handleDccSend(int fd, const std::string &target, const std::string &msg);
 		
-		void handleNames(int fd, std::istringstream &command);
-		void handleMotd(int fd, std::istringstream &command);
-		void handleAway(int fd, std::istringstream &command);
 		void handlePing(int fd, std::istringstream &command);
-		void handlePong(int fd, std::istringstream &command);
-		void handleNotice(int fd, std::istringstream &command);
-		void handleTime(int fd, std::istringstream &command);
-		void handleVersion(int fd, std::istringstream &command);
-		void handleStats(int fd, std::istringstream &command);
-		void handleLinks(int fd, std::istringstream &command);
-		void handleConnect(int fd, std::istringstream &command);
-		void handleTrace(int fd, std::istringstream &command);
-		void handleAdmin(int fd, std::istringstream &command);
-		void handleInfo(int fd, std::istringstream &command);
-		void handleServlist(int fd, std::istringstream &command);
-		void handleSquery(int fd, std::istringstream &command);
-		void handleWhoWas(int fd, std::istringstream &command);
-		void handleKill(int fd, std::istringstream &command);
-		void handleError(int fd, std::istringstream &command);
-		void handleRestart(int fd, std::istringstream &command);
-		void handleDie(int fd, std::istringstream &command);
-		void handleLusers(int fd, std::istringstream &command);
-		void handleWallops(int fd, std::istringstream &command);
-		void handleUserhost(int fd, std::istringstream &command);
-		void handleIson(int fd, std::istringstream &command);
-		void handleCap(int fd, std::istringstream &command);
-		void handleSasl(int fd, std::istringstream &command);
-
-
 
 		//checkMode
 		int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
