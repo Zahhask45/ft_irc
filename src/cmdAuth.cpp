@@ -9,6 +9,12 @@ static std::string serverTimestamp(){
 	return buf;
 }
 
+std::string checkAuth(const std::string arg){
+	if (arg.empty())
+		return "error";
+	return "check";
+}
+
 void Server::handleAuth(int fd){
 	if (clients[fd] && (clients[fd]->get_user().empty() 
 		|| clients[fd]->get_pass().empty() 

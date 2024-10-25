@@ -24,8 +24,9 @@ Server::~Server() {
 	}
 	channels.clear();
 
-	if (bot)
+	if (bot){
 		delete bot;
+	}
 }
 
 int const &Server::get_socket() const{
