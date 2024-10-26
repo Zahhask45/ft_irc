@@ -42,8 +42,8 @@ const std::string Client::get_first_buffer(){
     std::string line;
     std::getline(commandStream, line, '\n');
 	size_t pos = line.size();
-	_buffer.erase(0, pos);
-	std::cout << _GREEN << _buffer << _END << std::endl;
+	_buffer.erase(0, pos + 1);
+	std::cout << _YELLOW << _buffer << _END << std::endl;
 	return line;
 }
 

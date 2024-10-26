@@ -95,7 +95,7 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 1500);
+		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 0);
 		
 
 		/* if(_events[i].events & EPOLLIN
@@ -108,19 +108,23 @@ void Server::loop(){
 		}
 		for(int i = 0; i < _cur_online; i++){
 			std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " << _events[i].events << std::endl;
+			if (_events[i].events & EPOLLET)
+				break;
 			if ((_events[i].events & EPOLLIN)) {
 				std::cout << _PURPLE << "EPOLLIN" << _END << std::endl;
 				if(_events[i].data.fd == _socket_Server){
 					std::cout << _RED << "DAMN FRICK(new)" << _END << std::endl;
 					funct_new_client(i);
+					//break;
 				}
 				else if(clients[_events[i].data.fd]->ready_in == 1){
 					std::cout << _RED << "DAMN FRICK(not new)" << _END << std::endl;	
-					funct_not_new_client(i);	
 					clients[_events[i].data.fd]->ready_in = 4;
+					funct_not_new_client(i);	
+					//break;
 				}
 				else if ((_events[i].events & EPOLLOUT) && clients[_events[i].data.fd]->ready_in == 4){
-					std::cout << _PURPLE << "EPOLLOUT" << _END << std::endl;
+					std::cout << _GREEN << "EPOLLOUT" << _END << std::endl;
 					handle_commands(_events[i].data.fd, clients[_events[i].data.fd]->get_buffer());
 				}
 				break;
@@ -249,53 +253,53 @@ void Server::funct_not_new_client(int i){
 
 void Server::handle_commands(int fd, const std::string &command){
 	(void)command;
-	std::istringstream commandStream(clients[fd]->get_buffer());
+	/* std::istringstream commandStream(clients[fd]->get_buffer());
+	clients[fd]->clean_buffer();
     std::string line;
     while (std::getline(commandStream, line, '\n')) {
         std::istringstream iss(line);
         std::string cmd;
-		iss >> cmd;
-	/* std::string line = clients[fd]->get_first_buffer();
+		iss >> cmd; */
+	std::string line = clients[fd]->get_first_buffer();
 	std::istringstream iss(line);
 	std::string cmd;
-	iss >> cmd; */
-		std::cout << _RED << clients[fd]->get_buffer() << _END << std::endl;
-		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
-		if (cmd == "AUTH")
-			handleAuth(fd);
-		else if (cmd == "PASS")
-			handlePass(fd, iss);
-		else if (cmd == "NICK")
-			handleNick(fd, iss);
-		else if (cmd == "USER")
-			handleUser(fd, iss);
-		else if (cmd == "JOIN")
-			handleJoin(fd, iss);
-		else if (cmd == "PRIVMSG")
-			handlePrivmsg(fd, iss);
-		else if (cmd == "PART")
-			handlePart(fd, iss);
-		else if (cmd == "QUIT")
-			handleQuit(fd, iss);
-		else if (cmd == "PING")
-			handlePing(fd, iss);
-		else if (cmd == "MODE")
-			handleMode(fd, iss);
-		else if (cmd == "KICK")
-			handleKick(fd, iss);
-		else if (cmd == "INVITE")
-			handleInvite(fd, iss);
-		else if (cmd == "TOPIC")
-			handleTopic(fd, iss);
-		else if (cmd == "WHO")
-			handleWho(fd, iss);
-		else if (cmd == "WHOIS")
-			handleWhois(fd, iss);
-		else if (cmd == "LIST")
-			handleList(fd);
-	}
+	iss >> cmd;
+	std::cout << _RED << cmd << _END << std::endl;
+	std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 	clients[fd]->ready_in = 1;
-	clients[fd]->clean_buffer();
+	if (cmd == "AUTH")
+		handleAuth(fd);
+	else if (cmd == "PASS")
+		handlePass(fd, iss);
+	else if (cmd == "NICK")
+		handleNick(fd, iss);
+	else if (cmd == "USER")
+		handleUser(fd, iss);
+	else if (cmd == "JOIN")
+		handleJoin(fd, iss);
+	else if (cmd == "PRIVMSG")
+		handlePrivmsg(fd, iss);
+	else if (cmd == "PART")
+		handlePart(fd, iss);
+	else if (cmd == "QUIT")
+		handleQuit(fd, iss);
+	else if (cmd == "PING")
+		handlePing(fd, iss);
+	else if (cmd == "MODE")
+		handleMode(fd, iss);
+	else if (cmd == "KICK")
+		handleKick(fd, iss);
+	else if (cmd == "INVITE")
+		handleInvite(fd, iss);
+	else if (cmd == "TOPIC")
+		handleTopic(fd, iss);
+	else if (cmd == "WHO")
+		handleWho(fd, iss);
+	else if (cmd == "WHOIS")
+		handleWhois(fd, iss);
+	else if (cmd == "LIST")
+		handleList(fd);
+	//}
 }
 
 void Server::create_channel(const std::string &channelName, int fd){
