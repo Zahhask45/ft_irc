@@ -4,12 +4,14 @@ Client::Client(): _client_fd(), _user(), _nick(), bytes_received(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracotta";
+	ready_in = 1;
 }
 
 Client::Client(int fd): _client_fd(fd), _user(), _nick(), bytes_received(0) {
 	_auth = false;
 	_isOperator = false;
 	_host = "Terracotta";
+	ready_in = 1;
 
 }
 
@@ -34,6 +36,16 @@ std::string const &Client::get_mask() const{ return _mask; }
 std::string const &Client::get_realname() const{ return _realname; }
 
 const std::string Client::get_buffer() const{ return _buffer; }
+
+const std::string Client::get_first_buffer(){
+	std::istringstream commandStream(_buffer);
+    std::string line;
+    std::getline(commandStream, line, '\n');
+	size_t pos = line.size();
+	_buffer.erase(0, pos);
+	std::cout << _GREEN << _buffer << _END << std::endl;
+	return line;
+}
 
 int const &Client::get_bytes_received() const{ return bytes_received; }
 
@@ -106,4 +118,21 @@ void Client::clean_buffer(){
 
 void Client::add_to_buffer(const char* append){
 	_buffer += append;
+}
+
+void Client::add_to_buffer(const std::string append){
+	std::istringstream appendStream(append);
+    std::string line;
+	while (std::getline(appendStream, line, '\n')){
+		std::istringstream iss(line);
+		std::string cmd;
+		iss >> cmd;
+		_buffer += cmd;
+	}
+}
+
+bool Client::empty_buffer(){
+	if (_buffer.empty())
+		return 1;
+	return 0;
 }

@@ -32,6 +32,8 @@ private:
 		Client(int fd);
 		~Client();
 
+		int ready_in;
+
 public: //GETTERS
 	int const &get_client_fd() const;
 	std::string const &get_user() const;
@@ -44,6 +46,7 @@ public: //GETTERS
 	std::string const &get_mask() const;
 	std::string const &get_realname() const;
 	const std::string get_buffer() const;
+	const std::string get_first_buffer();
 	int const &get_bytes_received() const;
 
 public: //SETTERS
@@ -62,11 +65,15 @@ public: //SETTERS
 
 		void clean_buffer();
 		void add_to_buffer(const char* buffer);
+		void add_to_buffer(const std::string buffer);
 
 		void add_channel(const std::string &channelName, Channel &channel);
 		void remove_channel(const std::string &channelName);
 		void reset_bytes();
 		void reset_buffer();
+
+		bool empty_buffer();
+
 };
 
 #endif

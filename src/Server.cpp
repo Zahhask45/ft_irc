@@ -78,7 +78,7 @@ void Server::binding(){
 	}
 
 	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN;
+	_events[0].events = EPOLLIN | EPOLLET | EPOLLOUT;
 	
 	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
@@ -95,19 +95,46 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, -1);
+		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 1500);
+		
+
+		/* if(_events[i].events & EPOLLIN
+
+		) */
 
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
 		for(int i = 0; i < _cur_online; i++){
-			std::cout << _RED << "DAMN FRICK" << _END << std::endl;
-			if (_events[i].events & EPOLLIN) {
-				if(_events[i].data.fd == _socket_Server)
-					funct_new_client(i); 
+			std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " << _events[i].events << std::endl;
+			if ((_events[i].events & EPOLLIN)) {
+				std::cout << _PURPLE << "EPOLLIN" << _END << std::endl;
+				if(_events[i].data.fd == _socket_Server){
+					std::cout << _RED << "DAMN FRICK(new)" << _END << std::endl;
+					funct_new_client(i);
+				}
+				else if(clients[_events[i].data.fd]->ready_in == 1){
+					std::cout << _RED << "DAMN FRICK(not new)" << _END << std::endl;	
+					funct_not_new_client(i);	
+					clients[_events[i].data.fd]->ready_in = 4;
+				}
+				else if ((_events[i].events & EPOLLOUT) && clients[_events[i].data.fd]->ready_in == 4){
+					std::cout << _PURPLE << "EPOLLOUT" << _END << std::endl;
+					handle_commands(_events[i].data.fd, clients[_events[i].data.fd]->get_buffer());
+				}
+				break;
+				
+			}
+			else if((_events[i].events & EPOLLOUT && clients[_events[i].data.fd]->ready_in == 4)){
+				std::cout << _PURPLE << "EPOLLOUT" << _END << std::endl;
+				handle_commands(_events[i].data.fd, clients[_events[i].data.fd]->get_buffer());
+				break;
+				/* if (clients[_events[i].data.fd]->empty_buffer() == 1)
+					_events[i].events = EPOLLIN;
 				else
-					funct_not_new_client(i);
+					_events[i].events = EPOLLOUT; */
+				
 			}
 		}
 	}
@@ -122,7 +149,7 @@ void Server::funct_new_client(int i){
 	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
 	_events[i].data.fd = newsocket;
-	_events[i].events = EPOLLIN;
+	_events[i].events = EPOLLIN | EPOLLET | EPOLLOUT;
 	this->clients.insert(std::make_pair(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
 
@@ -137,13 +164,18 @@ void Server::funct_not_new_client(int i){
 	int extra_bytes = 0;
 	char buffer_ptr[1024];
 	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
-	std::cout << _PURPLE << "INFO RECEIVED: ";
+	std::cout << _CYAN << "EPOLLIN VALUE: " << EPOLLIN << _END << std::endl;
+	std::cout << _CYAN << "EPOLLOUT VALUE: " << EPOLLOUT << _END << std::endl;
+	std::cout << _CYAN << "EPOLLET VALUE: " << EPOLLET << _END << std::endl;
+	std::cout << _PURPLE << _events[i].events << _END << std::endl;
+
+	/* std::cout << _PURPLE << "INFO RECEIVED: ";
 	for (int ii = 0 ; ii < extra_bytes; ii++)
 	{
 		std::cout << buffer_ptr[ii];
 	}
 	std::cout << std::endl << "AND EXTRA_BYTES: " << extra_bytes << std::endl;
-	std::cout << std::endl << "RECEIVED BY CLIENT: " << _events[i].data.fd << _END << std::endl;
+	std::cout << std::endl << "RECEIVED BY CLIENT: " << _events[i].data.fd << _END << std::endl; */
 	if (extra_bytes == -1)
 	{
 		int err_code = 0;
@@ -173,11 +205,12 @@ void Server::funct_not_new_client(int i){
 		}
 	}
 	if (extra_bytes > 0){
-		_events[i].events = EPOLLOUT;
+		//_events[i].events = EPOLLOUT;
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
 		buffer_ptr[extra_bytes] = '\0';
 		std::cout << buffer_ptr << std::endl;
 		this->clients[_events[i].data.fd]->add_to_buffer(buffer_ptr);
+		std::cout << _CYAN << "here" << _END << std::endl;
 	}
 	else if (extra_bytes == 0)
 	{
@@ -204,23 +237,29 @@ void Server::funct_not_new_client(int i){
 	{
 		command.erase(command.end() - 1);
 	}
-	handle_commands(_events[i].data.fd, command);
+	//handle_commands(_events[i].data.fd, command);
+	//clients[_events[i].data.fd]->add_to_buffer(command);
 	memset(buffer_ptr, 0, 1024);
-	std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
+	/* std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
 	if (this->clients.find(_events[i].data.fd) != this->clients.end() && this->clients[_events[i].data.fd] != 0) { 
 		this->clients[_events[i].data.fd]->set_bytes_received(0);
 		this->clients[_events[i].data.fd]->clean_buffer();
-	}
+	} */
 }
 
 void Server::handle_commands(int fd, const std::string &command){
-	std::istringstream commandStream(command);
+	(void)command;
+	std::istringstream commandStream(clients[fd]->get_buffer());
     std::string line;
     while (std::getline(commandStream, line, '\n')) {
         std::istringstream iss(line);
         std::string cmd;
 		iss >> cmd;
-		std::cout << _RED << command << _END << std::endl;
+	/* std::string line = clients[fd]->get_first_buffer();
+	std::istringstream iss(line);
+	std::string cmd;
+	iss >> cmd; */
+		std::cout << _RED << clients[fd]->get_buffer() << _END << std::endl;
 		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 		if (cmd == "AUTH")
 			handleAuth(fd);
@@ -255,6 +294,8 @@ void Server::handle_commands(int fd, const std::string &command){
 		else if (cmd == "LIST")
 			handleList(fd);
 	}
+	clients[fd]->ready_in = 1;
+	clients[fd]->clean_buffer();
 }
 
 void Server::create_channel(const std::string &channelName, int fd){
