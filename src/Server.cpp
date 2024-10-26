@@ -5,7 +5,11 @@ Server::Server(){}
 Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(0) {
 	_epoll_fd = epoll_create1(0);
 	if (_epoll_fd == -1) {
-		std::cerr << "Error creating epoll file descriptor" << std::endl;
+		std::cerr << _RED << "Error creating epoll file descriptor" << _END << std::endl;
+		exit(EXIT_FAILURE);
+	}
+	if (port < 1 || port > 65535){
+		std::cerr << _RED << "Invalid port: port needs to be between 1 and 65535" << _END << std::endl;
 		exit(EXIT_FAILURE);
 	}
 }
@@ -209,7 +213,6 @@ void Server::funct_not_new_client(int i){
 	}
 }
 
-//! VERIFY AMOUNT OF ARGUMENTS PASS TO THE COMMANDS
 void Server::handle_commands(int fd, const std::string &command){
 	std::istringstream commandStream(command);
     std::string line;

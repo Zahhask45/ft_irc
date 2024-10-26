@@ -163,7 +163,7 @@ void Server::handleQuit(int fd, std::istringstream &command){
 		}
 	}
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, clients[fd]->get_client_fd(), NULL) == -1) {
-		std::cerr << "Error removing socket from epoll(quit): " << strerror(errno) << std::endl;
+		std::cerr << _RED << "Error removing socket from epoll(quit): " << strerror(errno) << _END << std::endl;
 	}
 	close(clients[fd]->get_client_fd());
 	end_connection(fd);

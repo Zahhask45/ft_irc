@@ -8,8 +8,8 @@ void handle_signal(int signal) {
 		throw std::runtime_error("Signal ^C received. Closing server.");
 }
 
-int main(int ac, char *av[]){
-	if(ac == 3){	
+int main(int argc, char **argv){
+	if(argc == 3){	
 		try{
 		struct sigaction sa;
 		sa.sa_flags = SA_RESTART;
@@ -18,8 +18,8 @@ int main(int ac, char *av[]){
 		sigaction(SIGINT, &sa, NULL);
 		sigaction(SIGQUIT, &sa, NULL);
 	
-		int port = std::atoi(av[1]);
-		Server serv(port, av[2]);
+		int port = std::atoi(argv[1]);
+		Server serv(port, argv[2]);
 	
 		serv.binding();
 		serv.loop();
