@@ -95,7 +95,7 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 50);
+		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 1000);
 		//usleep(5000);
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
@@ -113,14 +113,14 @@ void Server::loop(){
 					std::cerr << _RED << "Client disconnected (FROM THE EPOLLHUP WITH CLIENT NO: " << _events[i].data.fd << "). Current onlines: " << _cur_online << _END << std::endl;
 					std::istringstream iss("Unexpected disconnection by client");
 					handleQuit(_events[i].data.fd, iss);
-					break;
+					continue;
 				}
 			}
 			if ((_events[i].events & EPOLLIN)) {
 				if(_events[i].data.fd == _socket_Server){
 					//std::cout << _RED << "DAMN FRICK(new)" << _END << std::endl;
 					funct_new_client(i);
-					break;
+					continue;
 				}
 				else if(clients.find(_events[i].data.fd) != clients.end() && clients[_events[i].data.fd]->empty_buffer()){
 					std::cout << _PURPLE << "EPOLLIN (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
@@ -128,7 +128,7 @@ void Server::loop(){
 					//clients[_events[i].data.fd]->ready_in = 4;
 					funct_not_new_client(i);
 					if (!clients[_events[i].data.fd]->empty_buffer())
-						break;
+						continue;
 					continue;
 				}
 			}
@@ -136,7 +136,7 @@ void Server::loop(){
 				if((clients.find(_events[i].data.fd) != clients.end() && !clients[_events[i].data.fd]->empty_buffer())){
 					std::cout << _PURPLE << "EPOLLOUT (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
 					handle_commands(_events[i].data.fd);
-					break;
+					continue;
 				}
 			}
 		}
@@ -204,7 +204,7 @@ void Server::funct_not_new_client(int i){
 		//_events[i].events = EPOLLOUT;
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
 		buffer_ptr[extra_bytes] = '\0';
-		std::cout << _PURPLE << buffer_ptr << std::endl;
+		std::cout << _PURPLE << buffer_ptr << _END << std::endl;
 		this->clients[_events[i].data.fd]->add_to_buffer(buffer_ptr);
 		//std::cout << _CYAN << "here" << _END << std::endl;
 	}
@@ -251,46 +251,48 @@ void Server::handle_commands(int fd){
         std::istringstream iss(line);
         std::string cmd;
 		iss >> cmd; */
-	std::string line = clients[fd]->get_first_buffer();
-	std::istringstream iss(line);
-	std::string cmd;
-	iss >> cmd;
-	std::cout << _RED << cmd << _END << std::endl << std::endl;
-	std::cout << _CYAN << clients[fd]->get_buffer() << _END << std::endl;
-	std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
-	clients[fd]->ready_in = 1;
-	if (cmd == "AUTH")
-		handleAuth(fd);
-	else if (cmd == "PASS")
-		handlePass(fd, iss);
-	else if (cmd == "NICK")
-		handleNick(fd, iss);
-	else if (cmd == "USER")
-		handleUser(fd, iss);
-	else if (cmd == "JOIN")
-		handleJoin(fd, iss);
-	else if (cmd == "PRIVMSG")
-		handlePrivmsg(fd, iss);
-	else if (cmd == "PART")
-		handlePart(fd, iss);
-	else if (cmd == "QUIT")
-		handleQuit(fd, iss);
-	else if (cmd == "PING")
-		handlePing(fd, iss);
-	else if (cmd == "MODE")
-		handleMode(fd, iss);
-	else if (cmd == "KICK")
-		handleKick(fd, iss);
-	else if (cmd == "INVITE")
-		handleInvite(fd, iss);
-	else if (cmd == "TOPIC")
-		handleTopic(fd, iss);
-	else if (cmd == "WHO")
-		handleWho(fd, iss);
-	else if (cmd == "WHOIS")
-		handleWhois(fd, iss);
-	else if (cmd == "LIST")
-		handleList(fd);
+	while (!clients[fd]->empty_buffer()){
+		std::string line = clients[fd]->get_first_buffer();
+		std::istringstream iss(line);
+		std::string cmd;
+		iss >> cmd;
+		std::cout << _RED << cmd << _END << std::endl << std::endl;
+		std::cout << _CYAN << clients[fd]->get_buffer() << _END << std::endl;
+		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
+		clients[fd]->ready_in = 1;
+		if (cmd == "AUTH")
+			handleAuth(fd);
+		else if (cmd == "PASS")
+			handlePass(fd, iss);
+		else if (cmd == "NICK")
+			handleNick(fd, iss);
+		else if (cmd == "USER")
+			handleUser(fd, iss);
+		else if (cmd == "JOIN")
+			handleJoin(fd, iss);
+		else if (cmd == "PRIVMSG")
+			handlePrivmsg(fd, iss);
+		else if (cmd == "PART")
+			handlePart(fd, iss);
+		else if (cmd == "QUIT")
+			handleQuit(fd, iss);
+		else if (cmd == "PING")
+			handlePing(fd, iss);
+		else if (cmd == "MODE")
+			handleMode(fd, iss);
+		else if (cmd == "KICK")
+			handleKick(fd, iss);
+		else if (cmd == "INVITE")
+			handleInvite(fd, iss);
+		else if (cmd == "TOPIC")
+			handleTopic(fd, iss);
+		else if (cmd == "WHO")
+			handleWho(fd, iss);
+		else if (cmd == "WHOIS")
+			handleWhois(fd, iss);
+		else if (cmd == "LIST")
+			handleList(fd);
+	}
 	//}
 }
 
