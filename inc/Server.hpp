@@ -36,7 +36,7 @@ class Server
 	//* Execution functions
 		void binding();
 		void loop();
-		void handle_commands(int fd, const std::string &command);
+		void handle_commands(int fd);
 		void create_channel(const std::string &channelName, int fd);
 		
 		std::string const &get_user()const;

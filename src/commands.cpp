@@ -167,7 +167,9 @@ void Server::handleQuit(int fd, std::istringstream &command){
 	}
 	close(clients[fd]->get_client_fd());
 	end_connection(fd);
-	this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;
+	//this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;	
+	//close(_events[_cur_online].data.fd);
+	//this->_events[_cur_online].data.fd = this->_socket_Server;
 	print_client(fd, response);
 }
 

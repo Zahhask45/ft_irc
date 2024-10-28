@@ -95,50 +95,49 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 0);
-		
-
-		/* if(_events[i].events & EPOLLIN
-
-		) */
-
+		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 50);
+		//usleep(5000);
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
+		std::cout << _BOLD << _YELLOW << "AFTER THE EPOLL_CTL" << _END << std::endl;
+		
+
 		for(int i = 0; i < _cur_online; i++){
-			std::cout << "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA: " << _events[i].events << std::endl;
+			std::cout << "AAAAAAAAAAAAAAAAA: " << _events[i].events << " FROM FD: " << _events[i].data.fd << " AND IN THE FOR IS THE: " << i << " FROM A TOTAL OF: " << _cur_online << std::endl;
 			if (_events[i].events & EPOLLET)
-				break;
-			if ((_events[i].events & EPOLLIN)) {
-				std::cout << _PURPLE << "EPOLLIN" << _END << std::endl;
-				if(_events[i].data.fd == _socket_Server){
-					std::cout << _RED << "DAMN FRICK(new)" << _END << std::endl;
-					funct_new_client(i);
-					//break;
+				continue;
+			if (_events[i].events & EPOLLHUP){
+				if (clients.find(_events[i].data.fd) != clients.end()){
+					std::cerr << _RED << "Client disconnected (FROM THE EPOLLHUP WITH CLIENT NO: " << _events[i].data.fd << "). Current onlines: " << _cur_online << _END << std::endl;
+					std::istringstream iss("Unexpected disconnection by client");
+					handleQuit(_events[i].data.fd, iss);
+					break;
 				}
-				else if(clients[_events[i].data.fd]->ready_in == 1){
-					std::cout << _RED << "DAMN FRICK(not new)" << _END << std::endl;	
-					clients[_events[i].data.fd]->ready_in = 4;
-					funct_not_new_client(i);	
-					//break;
-				}
-				else if ((_events[i].events & EPOLLOUT) && clients[_events[i].data.fd]->ready_in == 4){
-					std::cout << _GREEN << "EPOLLOUT" << _END << std::endl;
-					handle_commands(_events[i].data.fd, clients[_events[i].data.fd]->get_buffer());
-				}
-				break;
-				
 			}
-			else if((_events[i].events & EPOLLOUT && clients[_events[i].data.fd]->ready_in == 4)){
-				std::cout << _PURPLE << "EPOLLOUT" << _END << std::endl;
-				handle_commands(_events[i].data.fd, clients[_events[i].data.fd]->get_buffer());
-				break;
-				/* if (clients[_events[i].data.fd]->empty_buffer() == 1)
-					_events[i].events = EPOLLIN;
-				else
-					_events[i].events = EPOLLOUT; */
-				
+			if ((_events[i].events & EPOLLIN)) {
+				if(_events[i].data.fd == _socket_Server){
+					//std::cout << _RED << "DAMN FRICK(new)" << _END << std::endl;
+					funct_new_client(i);
+					break;
+				}
+				else if(clients.find(_events[i].data.fd) != clients.end() && clients[_events[i].data.fd]->empty_buffer()){
+					std::cout << _PURPLE << "EPOLLIN (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
+					//std::cout << _RED << "DAMN FRICK(not new)" << _END << std::endl;	
+					//clients[_events[i].data.fd]->ready_in = 4;
+					funct_not_new_client(i);
+					if (!clients[_events[i].data.fd]->empty_buffer())
+						break;
+					continue;
+				}
+			}
+			if ((_events[i].events & EPOLLOUT)) {
+				if((clients.find(_events[i].data.fd) != clients.end() && !clients[_events[i].data.fd]->empty_buffer())){
+					std::cout << _PURPLE << "EPOLLOUT (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
+					handle_commands(_events[i].data.fd);
+					break;
+				}
 			}
 		}
 	}
@@ -168,18 +167,11 @@ void Server::funct_not_new_client(int i){
 	int extra_bytes = 0;
 	char buffer_ptr[1024];
 	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
-	std::cout << _CYAN << "EPOLLIN VALUE: " << EPOLLIN << _END << std::endl;
+	/* std::cout << _CYAN << "EPOLLIN VALUE: " << EPOLLIN << _END << std::endl;
 	std::cout << _CYAN << "EPOLLOUT VALUE: " << EPOLLOUT << _END << std::endl;
 	std::cout << _CYAN << "EPOLLET VALUE: " << EPOLLET << _END << std::endl;
-	std::cout << _PURPLE << _events[i].events << _END << std::endl;
+	std::cout << _PURPLE << _events[i].events << _END << std::endl; */
 
-	/* std::cout << _PURPLE << "INFO RECEIVED: ";
-	for (int ii = 0 ; ii < extra_bytes; ii++)
-	{
-		std::cout << buffer_ptr[ii];
-	}
-	std::cout << std::endl << "AND EXTRA_BYTES: " << extra_bytes << std::endl;
-	std::cout << std::endl << "RECEIVED BY CLIENT: " << _events[i].data.fd << _END << std::endl; */
 	if (extra_bytes == -1)
 	{
 		int err_code = 0;
@@ -212,13 +204,13 @@ void Server::funct_not_new_client(int i){
 		//_events[i].events = EPOLLOUT;
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
 		buffer_ptr[extra_bytes] = '\0';
-		std::cout << buffer_ptr << std::endl;
+		std::cout << _PURPLE << buffer_ptr << std::endl;
 		this->clients[_events[i].data.fd]->add_to_buffer(buffer_ptr);
-		std::cout << _CYAN << "here" << _END << std::endl;
+		//std::cout << _CYAN << "here" << _END << std::endl;
 	}
 	else if (extra_bytes == 0)
 	{
-		if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
+		/* if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
 		{
 			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
 		}
@@ -227,7 +219,7 @@ void Server::funct_not_new_client(int i){
 			std::cerr << _RED << "Client disconnected (FROM THE NEW STUFF). Current onlines: " << _cur_online << _END << std::endl;
 			std::istringstream iss("Unexpected disconnection by client");
 			handleQuit(_events[i].data.fd, iss);
-		}
+		} */
 		return;
 	}
 	if (this->clients.find(_events[i].data.fd) == this->clients.end() && this->clients[_events[i].data.fd] != 0)
@@ -251,8 +243,7 @@ void Server::funct_not_new_client(int i){
 	} */
 }
 
-void Server::handle_commands(int fd, const std::string &command){
-	(void)command;
+void Server::handle_commands(int fd){
 	/* std::istringstream commandStream(clients[fd]->get_buffer());
 	clients[fd]->clean_buffer();
     std::string line;
@@ -264,7 +255,8 @@ void Server::handle_commands(int fd, const std::string &command){
 	std::istringstream iss(line);
 	std::string cmd;
 	iss >> cmd;
-	std::cout << _RED << cmd << _END << std::endl;
+	std::cout << _RED << cmd << _END << std::endl << std::endl;
+	std::cout << _CYAN << clients[fd]->get_buffer() << _END << std::endl;
 	std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 	clients[fd]->ready_in = 1;
 	if (cmd == "AUTH")
@@ -396,7 +388,7 @@ int Server::_sendall(int destfd, std::string message)
 
 	while (total < (int)message.length())
 	{
-		b = send(destfd, message.c_str() + total, bytesleft, 0);
+		b = send(destfd, message.c_str() + total, bytesleft, MSG_NOSIGNAL);
 		if (b == -1) break;
 		total += b;
 		bytesleft -= b;
