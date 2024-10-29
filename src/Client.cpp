@@ -112,8 +112,7 @@ void Client::remove_channel(const std::string &channelName){
 }
 
 void Client::clean_buffer(){
-	_buffer = "\0";
-
+	_buffer.erase();
 }
 
 void Client::add_to_buffer(const char* append){

@@ -37,8 +37,6 @@ void Server::handleJoin(int fd, std::istringstream &command){
 			return ;
 		}
 
-
-
 		this->clients[fd]->add_channel(channelName, *this->channels[channelName]);
 		
 		this->channels[channelName]->add_user(get_client(fd));

@@ -77,10 +77,10 @@ void Server::binding(){
     	exit(EXIT_FAILURE);
 	}
 
-	_events[0].data.fd = _socket_Server;
-	_events[0].events = EPOLLIN | EPOLLET | EPOLLOUT;
+	_eve.data.fd = _socket_Server;
+	_eve.events = EPOLLIN | EPOLLERR | EPOLLOUT;
 	
-	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, _events) == -1){
+	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_eve) == -1){
 		std::cerr << "Error adding socket to epoll" << std::endl;
 		close(_socket_Server);
 		exit(EXIT_FAILURE);
@@ -95,8 +95,8 @@ void Server::loop(){
 	while(true){
 
 		std::cout << "Waiting for connections..." << std::endl;
-		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 1000);
-		//usleep(5000);
+		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 0);
+		usleep(5000);
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
@@ -152,7 +152,7 @@ void Server::funct_new_client(int i){
 	fcntl(newsocket, F_SETFL, O_NONBLOCK);
 
 	_events[i].data.fd = newsocket;
-	_events[i].events = EPOLLIN | EPOLLET | EPOLLOUT;
+	_events[i].events = EPOLLIN | EPOLLERR | EPOLLOUT;
 	this->clients.insert(std::make_pair(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
 
@@ -169,7 +169,7 @@ void Server::funct_not_new_client(int i){
 	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
 	/* std::cout << _CYAN << "EPOLLIN VALUE: " << EPOLLIN << _END << std::endl;
 	std::cout << _CYAN << "EPOLLOUT VALUE: " << EPOLLOUT << _END << std::endl;
-	std::cout << _CYAN << "EPOLLET VALUE: " << EPOLLET << _END << std::endl;
+	std::cout << _CYAN << "EPOLLERR VALUE: " << EPOLLERR << _END << std::endl;
 	std::cout << _PURPLE << _events[i].events << _END << std::endl; */
 
 	if (extra_bytes == -1)
