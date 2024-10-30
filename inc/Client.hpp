@@ -69,13 +69,8 @@ class Client {
 
 		void add_channel(const std::string &channelName, Channel &channel);
 		void remove_channel(const std::string &channelName);
-		void reset_bytes();
-		void reset_buffer();
 
 		bool empty_buffer();
-		bool has_timed_out(time_t current_time, time_t timeout);
-		void update_ping_time();
-
 };
 
 #endif

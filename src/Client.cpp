@@ -40,8 +40,12 @@ std::string const &Client::get_realname() const{ return _realname; }
 const std::string Client::get_buffer() const{ return _buffer; }
 
 const std::string Client::get_first_buffer() {
+
 	std::istringstream commandStream(_buffer);
 	std::string line;
+	if (_buffer.find("\n") == std::string::npos) {
+		return "";
+	}
 	std::getline(commandStream, line, '\n');
 	size_t pos = line.size();
 	_buffer.erase(0, pos + 1);
@@ -136,12 +140,4 @@ bool Client::empty_buffer() {
 	if (_buffer.empty())
 		return 1;
 	return 0;
-}
-
-void Client::update_ping_time() {
-	last_ping_time = time(NULL);
-}
-
-bool Client::has_timed_out(time_t current_time, time_t timeout) {
-	return difftime(current_time, last_ping_time) > timeout;
 }

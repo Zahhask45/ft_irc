@@ -92,8 +92,6 @@ void Server::binding() {
 }
 
 void Server::loop() {
-	time_t last_check_time = time(NULL);
-
 	while(true) {
 
 		// std::cout << "Waiting for connections..." << std::endl;
@@ -105,7 +103,6 @@ void Server::loop() {
 		}
 		// std::cout << _BOLD << _YELLOW << "AFTER THE EPOLL_CTL" << _END << std::endl;
 		
-		checkTimeout(&last_check_time);
 		for(int i = 0; i < _cur_online; i++) {
 			std::cout << "AAAAAAAAAAAAAAAAA: " << _events[i].events << " FROM FD: " << _events[i].data.fd << " AND IN THE FOR IS THE: " << i << " FROM A TOTAL OF: " << _cur_online << std::endl;
 			if (_events[i].events & EPOLLET)
@@ -124,7 +121,7 @@ void Server::loop() {
 					funct_new_client(i);
 					continue;
 				}
-				else if(clients.find(_events[i].data.fd) != clients.end() && clients[_events[i].data.fd]->empty_buffer()) {
+				else if(clients.find(_events[i].data.fd) != clients.end() && clients[_events[i].data.fd]->get_buffer().find("\r\n") == std::string::npos) {
 					std::cout << _PURPLE << "EPOLLIN (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
 					//std::cout << _RED << "DAMN FRICK(not new)" << _END << std::endl;	
 					//clients[_events[i].data.fd]->ready_in = 4;
@@ -157,7 +154,6 @@ void Server::funct_new_client(int i) {
 	_events[i].events = EPOLLIN | EPOLLERR | EPOLLOUT;
 	this->clients.insert(std::make_pair(newsocket, new Client(newsocket)));
 	clients[newsocket]->set_addr(client_addr);
-	clients[newsocket]->update_ping_time();
 
 	if (epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, newsocket, &_events[i]) == -1) {
 		std::cerr << "Error adding new socket to epoll: " << strerror(errno) << std::endl;
@@ -175,7 +171,6 @@ void Server::funct_not_new_client(int i) {
 	std::cout << _CYAN << "EPOLLERR VALUE: " << EPOLLERR << _END << std::endl;
 	std::cout << _PURPLE << _events[i].events << _END << std::endl; */
 	if (clients.find(_events[i].data.fd) != clients.end())
-		clients[_events[i].data.fd]->update_ping_time();
 	if (extra_bytes == -1) {
 		int err_code = 0;
 		socklen_t len = sizeof(err_code);
@@ -404,20 +399,4 @@ void Server::end_connection(int fd) {
 	delete clients[fd];
 	this->clients.erase(fd);
 	this->_cur_online--;
-}
-
-void Server::checkTimeout(time_t *last_time) {
-	time_t now = time(NULL);
-	if (difftime(now, *last_time) >= 60) {
-		std::cout << _RED << "TIMEOUT" << _END << std::endl;
-	} 
-	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end();) {
-		if (it->second->has_timed_out(now, 60)) {
-			std::cerr << _RED << "Client timed out (FD: " << it->first << "). Disconnecting..." << _END << std::endl;
-			std::istringstream iss("Ping timeout");
-			handleQuit(it->first, iss);
-		}
-		++it;
-	}
-	*last_time = now;
 }
