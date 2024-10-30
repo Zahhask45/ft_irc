@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-static std::string serverTimestamp(){
+static std::string serverTimestamp() {
 	time_t now = time(0);
 	struct tm tstruct;
 	char buf[80];
@@ -9,18 +9,18 @@ static std::string serverTimestamp(){
 	return buf;
 }
 
-int Server::checkAuth(int fd){
+int Server::checkAuth(int fd) {
 	std::string response = ": ";
 	int i = 0;
-	if (clients[fd]->get_pass().empty()){
+	if (clients[fd]->get_pass().empty()) {
 		response += "[ Pass: empty ] ";
 		i = 1;
 	}
-	if ((clients[fd]->get_user().empty())){
+	if ((clients[fd]->get_user().empty())) {
 		response += "[ User: empty ] ";
 		i = 1;
 	}
-	if (clients[fd]->get_nick().empty()){
+	if (clients[fd]->get_nick().empty()) {
 		response += "[ Nick: empty ] ";
 		i = 1;
 	}
@@ -29,14 +29,14 @@ int Server::checkAuth(int fd){
 	return i;
 }
 
-void Server::handleAuth(int fd){
+void Server::handleAuth(int fd) {
 	if (checkAuth(fd))
 		return;
-	if (clients[fd]->get_auth() == true){
+	if (clients[fd]->get_auth() == true) {
 		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reauth"); // ERR_ALREADYREGISTRED
 		return;
 	}
-	if (clients[fd]->get_pass().compare(_pass) == 0){
+	if (clients[fd]->get_pass().compare(_pass) == 0) {
 		sendCode(fd, "001", clients[fd]->get_nick(), ":Welcome to the 42Porto IRC Network " + clients[fd]->get_mask());
 		sendCode(fd, "002", clients[fd]->get_nick(), ":Your host is " + clients[fd]->get_host() + ", running version 1.0");
 		sendCode(fd, "003", clients[fd]->get_nick(), ":This server was created " + serverTimestamp());
@@ -61,7 +61,7 @@ void Server::handleAuth(int fd){
 		sendCode(fd, "372", clients[fd]->get_nick(), ": User is not Authenticated");
 }
 
-void Server::handlePass(int fd, std::istringstream &command){
+void Server::handlePass(int fd, std::istringstream &command) {
 	std::string pass;
 	command >> pass;
 	pass = extract_value(pass);
@@ -77,40 +77,40 @@ void Server::handlePass(int fd, std::istringstream &command){
 	}
 }
 
-void Server::handleNick(int fd, std::istringstream &command){
+void Server::handleNick(int fd, std::istringstream &command) {
 	std::string nick;
 	command >> nick;
 	
-	if (clients[fd]->get_pass().empty()){
+	if (clients[fd]->get_pass().empty()) {
 		sendCode(fd, "431", "", "No Password"); // ERR_NONICKNAMEGIVEN
 		clients[fd]->set_nick("\0");
 		return;
 	}
-	if (nick.empty()){
+	if (nick.empty()) {
 		sendCode(fd, "431", "", "No nickname given"); // ERR_NONICKNAMEGIVEN
 		clients[fd]->set_nick("\0");
 		return;
 	}
 	std::map<int, Client *>::iterator it;
-	for(it = clients.begin(); it != clients.end(); it++){
-		if (it->second->get_nick() == nick){
+	for(it = clients.begin(); it != clients.end(); it++) {
+		if (it->second->get_nick() == nick) {
 			sendCode(fd, "433", nick, ":" + nick + " Nickname is already in use");
 			//this->clients[fd]->set_nick(nick);
 			clients[fd]->set_flagNick(true);
 			return;
 		}
 	}
-	if(nick == bot->get_name()){
+	if(nick == bot->get_name()) {
 			sendCode(fd, "433", nick,":" + nick + " is a invalid nickname, it's the bot nickname");
 			clients[fd]->set_nick("\0");
 	}
-	else if(nick == "Terracotta"){
+	else if(nick == "Terracotta") {
 			sendCode(fd, "433", nick,":" + nick + " is a invalid nickname, it's the server host name");
 			clients[fd]->set_nick("\0");
 	}
 	if (this->clients[fd]->get_nick().empty() && this->clients[fd]->get_flagNick() == false)
 		this->clients[fd]->set_nick(nick);
-	else{
+	else {
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
 		std::string nickChangeMsg = this->clients[fd]->get_mask() + "NICK :" + nick + "\r\n";
 		print_client(fd, changeNick);
@@ -120,27 +120,27 @@ void Server::handleNick(int fd, std::istringstream &command){
 	clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 }
 
-void Server::handleUser(int fd, std::istringstream &command){
+void Server::handleUser(int fd, std::istringstream &command) {
 	std::string username, hostname, servername, realname;
 	command >> username >> hostname >> servername; 
 	std::getline(command, realname);
 
-	if (clients[fd]->get_pass().empty()){
+	if (clients[fd]->get_pass().empty()) {
 		sendCode(fd, "431", "", "No Password"); // ERR_NONICKNAMEGIVEN
 		clients[fd]->set_nick("\0");
 		return;
 	}
-	if (username.empty() || hostname.empty() || servername.empty() || realname.empty()){
+	if (username.empty() || hostname.empty() || servername.empty() || realname.empty()) {
 		sendCode(fd, "461", "", "Not enough parameters"); // ERR_NEEDMOREPARAMS
 		return;
 	}
-	if (clients[fd]->get_user().empty()){
+	if (clients[fd]->get_user().empty()) {
 		this->clients[fd]->set_user(username);
 		this->clients[fd]->set_realname(realname.substr(2, realname.size() - 3));
 		if (clients[fd]->get_nick() != "\0")
 			clients[fd]->set_mask(":" + clients[fd]->get_nick() + "!" + clients[fd]->get_user() + "@" + clients[fd]->get_host() + " ");
 	}
-	else{
+	else {
 		sendCode(fd, "462", clients[fd]->get_nick(), ": You may not reregister"); // ERR_ALREADYREGISTRED
 	}
 }

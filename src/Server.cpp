@@ -1,6 +1,6 @@
 #include "Server.hpp"
 
-Server::Server(){}
+Server::Server() {}
 
 Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(0) {
 	_epoll_fd = epoll_create1(0);
@@ -8,7 +8,7 @@ Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1),
 		std::cerr << _RED << "Error creating epoll file descriptor" << _END << std::endl;
 		exit(EXIT_FAILURE);
 	}
-	if (port < 1 || port > 65535){
+	if (port < 1 || port > 65535) {
 		std::cerr << _RED << "Invalid port: port needs to be between 1 and 65535" << _END << std::endl;
 		exit(EXIT_FAILURE);
 	}
@@ -27,7 +27,7 @@ Server::~Server() {
 	}
 	channels.clear();
 
-	if (bot){
+	if (bot) {
 		delete bot;
 	}
 }
@@ -36,7 +36,7 @@ int const &Server::get_socket() const{
 	return _socket_Server;
 }
 
-void Server::binding(){
+void Server::binding() {
 	struct addrinfo hints, *serverinfo, *tmp;
 	int status;
 
@@ -48,16 +48,16 @@ void Server::binding(){
 
 	int opt = 1;
 	status = getaddrinfo("0.0.0.0", toString(_port).c_str(), &hints, &serverinfo);
-	if (status != 0){
+	if (status != 0) {
 		std::cout << "ERROR ON GETTING ADDRESS INFO" << std::endl;
 		exit (-1);
 	}
-	for (tmp = serverinfo; tmp != NULL; tmp = tmp->ai_next){
+	for (tmp = serverinfo; tmp != NULL; tmp = tmp->ai_next) {
 		this->_socket_Server = socket(tmp->ai_family, tmp->ai_socktype | O_NONBLOCK, tmp->ai_protocol);
 		if (this->_socket_Server < 0)
 			continue;
 		setsockopt(this->_socket_Server, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt));
-		if (bind(_socket_Server, tmp->ai_addr, tmp->ai_addrlen) < 0){
+		if (bind(_socket_Server, tmp->ai_addr, tmp->ai_addrlen) < 0) {
 			close(this->_socket_Server);
 			continue;
 		}
@@ -73,14 +73,14 @@ void Server::binding(){
 	
 
 	if (listen(_socket_Server, MAX_CLIENTS) == -1) {
-    	std::cerr << "Error in listen()" << std::endl;
-    	exit(EXIT_FAILURE);
+		std::cerr << "Error in listen()" << std::endl;
+		exit(EXIT_FAILURE);
 	}
 
 	_eve.data.fd = _socket_Server;
 	_eve.events = EPOLLIN | EPOLLERR | EPOLLOUT;
 	
-	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_eve) == -1){
+	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_eve) == -1) {
 		std::cerr << "Error adding socket to epoll" << std::endl;
 		close(_socket_Server);
 		exit(EXIT_FAILURE);
@@ -91,10 +91,10 @@ void Server::binding(){
 	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
 }
 
-void Server::loop(){
+void Server::loop() {
 	time_t last_check_time = time(NULL);
 
-	while(true){
+	while(true) {
 
 		std::cout << "Waiting for connections..." << std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 0);
@@ -106,12 +106,12 @@ void Server::loop(){
 		std::cout << _BOLD << _YELLOW << "AFTER THE EPOLL_CTL" << _END << std::endl;
 		
 		checkTimeout(&last_check_time);
-		for(int i = 0; i < _cur_online; i++){
+		for(int i = 0; i < _cur_online; i++) {
 			std::cout << "AAAAAAAAAAAAAAAAA: " << _events[i].events << " FROM FD: " << _events[i].data.fd << " AND IN THE FOR IS THE: " << i << " FROM A TOTAL OF: " << _cur_online << std::endl;
 			if (_events[i].events & EPOLLET)
 				continue;
-			if (_events[i].events & EPOLLHUP){
-				if (clients.find(_events[i].data.fd) != clients.end()){
+			if (_events[i].events & EPOLLHUP) {
+				if (clients.find(_events[i].data.fd) != clients.end()) {
 					std::cerr << _RED << "Client disconnected (FROM THE EPOLLHUP WITH CLIENT NO: " << _events[i].data.fd << "). Current onlines: " << _cur_online << _END << std::endl;
 					std::istringstream iss("Unexpected disconnection by client");
 					handleQuit(_events[i].data.fd, iss);
@@ -119,12 +119,12 @@ void Server::loop(){
 				}
 			}
 			if ((_events[i].events & EPOLLIN)) {
-				if(_events[i].data.fd == _socket_Server){
+				if(_events[i].data.fd == _socket_Server) {
 					//std::cout << _RED << "DAMN FRICK(new)" << _END << std::endl;
 					funct_new_client(i);
 					continue;
 				}
-				else if(clients.find(_events[i].data.fd) != clients.end() && clients[_events[i].data.fd]->empty_buffer()){
+				else if(clients.find(_events[i].data.fd) != clients.end() && clients[_events[i].data.fd]->empty_buffer()) {
 					std::cout << _PURPLE << "EPOLLIN (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
 					//std::cout << _RED << "DAMN FRICK(not new)" << _END << std::endl;	
 					//clients[_events[i].data.fd]->ready_in = 4;
@@ -135,7 +135,7 @@ void Server::loop(){
 				}
 			}
 			if ((_events[i].events & EPOLLOUT)) {
-				if((clients.find(_events[i].data.fd) != clients.end() && !clients[_events[i].data.fd]->empty_buffer())){
+				if((clients.find(_events[i].data.fd) != clients.end() && !clients[_events[i].data.fd]->empty_buffer())) {
 					std::cout << _PURPLE << "EPOLLOUT (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
 					handle_commands(_events[i].data.fd);
 					continue;
@@ -145,7 +145,7 @@ void Server::loop(){
 	}
 }
 
-void Server::funct_new_client(int i){
+void Server::funct_new_client(int i) {
 	struct sockaddr_storage client_addr;
 	socklen_t client_len = sizeof(client_addr);
 	int newsocket = accept(_socket_Server, (struct sockaddr*)&client_addr, &client_len);
@@ -166,7 +166,7 @@ void Server::funct_new_client(int i){
 	this->_cur_online++;
 }
 
-void Server::funct_not_new_client(int i){
+void Server::funct_not_new_client(int i) {
 	int extra_bytes = 0;
 	char buffer_ptr[1024];
 	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
@@ -176,12 +176,11 @@ void Server::funct_not_new_client(int i){
 	std::cout << _PURPLE << _events[i].events << _END << std::endl; */
 	if (clients.find(_events[i].data.fd) != clients.end())
 		clients[_events[i].data.fd]->update_ping_time();
-	if (extra_bytes == -1)
-	{
+	if (extra_bytes == -1) {
 		int err_code = 0;
-    	socklen_t len = sizeof(err_code);
-		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1){
-        	std::cout << _RED << "Error on getsocket()" << _END << std::endl;
+		socklen_t len = sizeof(err_code);
+		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1) {
+			std::cout << _RED << "Error on getsocket()" << _END << std::endl;
 			if (this->clients.find(_events[i].data.fd) == this->clients.end()) {
 				return ;
 			}
@@ -189,21 +188,21 @@ void Server::funct_not_new_client(int i){
 		}
 		else if(err_code == EAGAIN || err_code == EWOULDBLOCK)
 				std::cout << _YELLOW << "Temporary recv() error" << _END << std::endl;
-        else if(err_code != 0){
+		else if(err_code != 0) {
 
-            errno = err_code;
+			errno = err_code;
 			if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 				std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
 				return;
 			}
-			else{
+			else {
 				close(_events[i].data.fd);
 				std::cerr << _RED << "Error in recv(). Current onlines: " << _cur_online  << " WITH ERROR NO: " << err_code << _END << std::endl;
 				end_connection(_events[i].data.fd);
 			}
 		}
 	}
-	if (extra_bytes > 0){
+	if (extra_bytes > 0) {
 		//_events[i].events = EPOLLOUT;
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
 		buffer_ptr[extra_bytes] = '\0';
@@ -211,14 +210,11 @@ void Server::funct_not_new_client(int i){
 		this->clients[_events[i].data.fd]->add_to_buffer(buffer_ptr);
 		//std::cout << _CYAN << "here" << _END << std::endl;
 	}
-	else if (extra_bytes == 0)
-	{
-		/* if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1)
-		{
+	else if (extra_bytes == 0) {
+		/* if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
 			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
 		}
-		else
-		{
+		else {
 			std::cerr << _RED << "Client disconnected (FROM THE NEW STUFF). Current onlines: " << _cur_online << _END << std::endl;
 			std::istringstream iss("Unexpected disconnection by client");
 			handleQuit(_events[i].data.fd, iss);
@@ -228,14 +224,12 @@ void Server::funct_not_new_client(int i){
 	if (this->clients.find(_events[i].data.fd) == this->clients.end() && this->clients[_events[i].data.fd] != 0)
 		return;
 	std::string command(this->clients[_events[i].data.fd]->get_buffer());
-	if (this->clients[_events[i].data.fd]->get_buffer().find("\n") == std::string::npos){
+	if (this->clients[_events[i].data.fd]->get_buffer().find("\n") == std::string::npos) {
 		std::cout << ">>" << this->clients[_events[i].data.fd]->get_buffer() << "<<" << std::endl;	
 		return;
 	}
 	if (!command.empty() && command[command.size() - 1] == '\r')
-	{
 		command.erase(command.end() - 1);
-	}
 	//handle_commands(_events[i].data.fd, command);
 	//clients[_events[i].data.fd]->add_to_buffer(command);
 	memset(buffer_ptr, 0, 1024);
@@ -246,15 +240,15 @@ void Server::funct_not_new_client(int i){
 	} */
 }
 
-void Server::handle_commands(int fd){
+void Server::handle_commands(int fd) {
 	/* std::istringstream commandStream(clients[fd]->get_buffer());
 	clients[fd]->clean_buffer();
-    std::string line;
-    while (std::getline(commandStream, line, '\n')) {
-        std::istringstream iss(line);
-        std::string cmd;
+	std::string line;
+	while (std::getline(commandStream, line, '\n')) {
+		std::istringstream iss(line);
+		std::string cmd;
 		iss >> cmd; */
-	//while (!clients[fd]->empty_buffer()){
+	//while (!clients[fd]->empty_buffer()) {
 		std::string line = clients[fd]->get_first_buffer();
 		std::istringstream iss(line);
 		std::string cmd;
@@ -298,13 +292,13 @@ void Server::handle_commands(int fd){
 	//}
 }
 
-void Server::create_channel(const std::string &channelName, int fd){
+void Server::create_channel(const std::string &channelName, int fd) {
 	std::map<std::string, Channel *>::iterator it = channels.find(channelName);
-	if (it == channels.end()){
+	if (it == channels.end()) {
 		Channel *channel = new Channel(channelName, this->clients[fd]);
 		channels.insert(std::make_pair(channelName, channel));
 		channels[channelName]->add_modes('t');
-		if (bot){
+		if (bot) {
 			std::cout << _RED <<"BEFORE"  << _END << std::endl;
 			this->bot->add_channel(channelName, *this->channels[channelName]);
 			std::cout << _RED <<"MIDDLE" << _END << std::endl;
@@ -322,23 +316,23 @@ Channel *Server::get_channel(const std::string name)  {
 	return NULL;
 }
 
-Client &Server::get_client(int fd){
+Client &Server::get_client(int fd) {
 	std::map<int, Client *>::iterator it = clients.find(fd);
 	return *it->second;
 }
 
-Bot &Server::get_bot(){
+Bot &Server::get_bot() {
 	return *bot;
 }
 
-void Server::_ToAll(int ori_fd, std::string message){
+void Server::_ToAll(int ori_fd, std::string message) {
 	std::set<std::string> channelList = findInChannel(ori_fd);
-	while (!channelList.empty()){
+	while (!channelList.empty()) {
 		std::string channelName = *channelList.begin();
 		std::map<int, Client *> all_users = channels[channelName]->get_users();
 		std::map<int, Client *>::iterator it = all_users.begin();
-		while (it != all_users.end()){
-			if (ori_fd != it->first){
+		while (it != all_users.end()) {
+			if (ori_fd != it->first) {
 				print_client(it->first, message);
 			}
 			it++;
@@ -347,12 +341,12 @@ void Server::_ToAll(int ori_fd, std::string message){
 	}
 }
 
-void Server::_ToAll(Channel *channel, int ori_fd, std::string message){
+void Server::_ToAll(Channel *channel, int ori_fd, std::string message) {
 	std::map<int, Client *> all_users = channel->get_users();
 	std::map<int, Client *>::iterator it = all_users.begin();
 	std::string rep = this->clients[ori_fd]->get_mask();
 	rep.append(message);
-	while (it != all_users.end()){
+	while (it != all_users.end()) {
 		if (ori_fd != it->first)
 			print_client(it->first, rep);
 		it++;
@@ -361,10 +355,10 @@ void Server::_ToAll(Channel *channel, int ori_fd, std::string message){
 
 // The purpose of this is to locate the user on a channel among all the channels stored on the server.
 // if so, it returns the list with the name of the channels, otherwise it returns null.
-std::set<std::string> Server::findInChannel(int fd){
+std::set<std::string> Server::findInChannel(int fd) {
 	std::set<std::string> channelList;
 	std::map<std::string, Channel *>::iterator it = channels.begin();
-	while (it != channels.end()){
+	while (it != channels.end()) {
 		std::map<int, Client *> users = it->second->get_users();
 		if (users.find(fd) != users.end()) {
 			channelList.insert(it->first);
@@ -374,24 +368,22 @@ std::set<std::string> Server::findInChannel(int fd){
 	return channelList;
 }
 
-void Server::print_client(int client_fd, std::string str){
+void Server::print_client(int client_fd, std::string str) {
 	send(client_fd, str.c_str(), str.size(), MSG_NOSIGNAL);
 }
  
-void Server::sendCode(int fd, std::string num, std::string nickname, std::string message){
+void Server::sendCode(int fd, std::string num, std::string nickname, std::string message) {
 	if (nickname.empty())
 		nickname = "*";
 	print_client(fd, ":server " + num + " " + nickname + " " + message + "\r\n");
 }
 
-int Server::_sendall(int destfd, std::string message)
-{
+int Server::_sendall(int destfd, std::string message){
 	int total = 0;
 	int bytesleft = message.length();
 	int b;
 
-	while (total < (int)message.length())
-	{
+	while (total < (int)message.length()) {
 		b = send(destfd, message.c_str() + total, bytesleft, MSG_NOSIGNAL);
 		if (b == -1) break;
 		total += b;
@@ -400,32 +392,32 @@ int Server::_sendall(int destfd, std::string message)
 	return (b == -1 ? -1 : 0);
 }
 
-bool Server::findNick(std::string nick){
-	for(std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++){
+bool Server::findNick(std::string nick) {
+	for(std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++) {
 		if (it->second->get_nick() == nick)
 			return true;
 	}
 	return false;
 }
 
-void Server::end_connection(int fd){
+void Server::end_connection(int fd) {
 	delete clients[fd];
 	this->clients.erase(fd);
 	this->_cur_online--;
 }
 
 void Server::checkTimeout(time_t *last_time) {
-    time_t now = time(NULL);
-    if (difftime(now, *last_time) >= 60) {
-        std::cout << _RED << "TIMEOUT" << _END << std::endl;
-    } 
-    for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); ) {
-        if (it->second->has_timed_out(now, 60)) {
-            std::cerr << _RED << "Client timed out (FD: " << it->first << "). Disconnecting..." << _END << std::endl;
-            std::istringstream iss("Ping timeout");
-            handleQuit(it->first, iss);
+	time_t now = time(NULL);
+	if (difftime(now, *last_time) >= 60) {
+		std::cout << _RED << "TIMEOUT" << _END << std::endl;
+	} 
+	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end();) {
+		if (it->second->has_timed_out(now, 60)) {
+			std::cerr << _RED << "Client timed out (FD: " << it->first << "). Disconnecting..." << _END << std::endl;
+			std::istringstream iss("Ping timeout");
+			handleQuit(it->first, iss);
 		}
 		++it;
-    }
-    *last_time = now;
+	}
+	*last_time = now;
 }

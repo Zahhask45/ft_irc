@@ -5,8 +5,7 @@
 class Client;
 class Bot;
 
-class Channel
-{
+class Channel {
 	private:
 
 		Client *    _creator;
@@ -45,7 +44,7 @@ class Channel
 
 		void add_user(Client &client);
 		void add_bot(Bot &bot);
-		void add_operator( Client &op );
+		void add_operator( Client &op);
 		
 		bool add_modes(char mode);
 		bool remove_modes(char mode);

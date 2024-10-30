@@ -12,8 +12,7 @@ class Client;
 class Channel;
 class Bot;
 
-class Server
-{
+class Server {
 	private:
 		int _socket_Server;
 		int _port;
@@ -81,7 +80,6 @@ class Server
 		
 		void handlePing(int fd, std::istringstream &command);
 
-		//checkMode
 		int checkMode(int fd, std::string &target, std::string &mode, std::string &arg);
 		void genericSendMode(int fd, std::string target, char mode, std::string arg, char sign);
 		bool findNick(std::string nick);

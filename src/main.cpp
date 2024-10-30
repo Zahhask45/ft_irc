@@ -8,9 +8,9 @@ void handle_signal(int signal) {
 		throw std::runtime_error("Signal ^C received. Closing server.");
 }
 
-int parsing_port(char *port){
+int parsing_port(char *port) {
 	int i = 0;
-	while (port[i]){
+	while (port[i]) {
 		if (!isdigit(port[i]))
 			return -1;
 		i++;
@@ -18,9 +18,12 @@ int parsing_port(char *port){
 	return atoi(port);
 }
 
-int main(int argc, char **argv){
-	if(argc == 3){	
-		try{
+int main(int argc, char **argv) {
+	if(argc != 3) {	
+		std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
+		return 1;
+	}
+	try {
 		struct sigaction sa;
 		sa.sa_flags = SA_RESTART;
 		sigemptyset(&sa.sa_mask);
@@ -31,18 +34,14 @@ int main(int argc, char **argv){
 		if (port == -1)
 			throw std::runtime_error("Invalid port number.");
 		Server serv(port, argv[2]);
-	
+
 		serv.binding();
 		serv.loop();
-		
+
 		close(serv.get_socket());
-		}
-		catch (std::exception &e) {
-			std::cerr << e.what() << std::endl;
-			return 0;
-		}
 	}
-	else
-		std::cerr << "Usage: ./ircserv <port> <password>" << std::endl;
-	return 1;
+	catch (std::exception &e) {
+		std::cerr << e.what() << std::endl;
+		return 0;
+	}
 }

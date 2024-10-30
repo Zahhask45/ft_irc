@@ -1,8 +1,8 @@
 #include "Channel.hpp"
 
-Channel::Channel(): _name(), users(){}
+Channel::Channel(): _name(), users() {}
 
-Channel::Channel(const std::string name): _name(name), users(){}
+Channel::Channel(const std::string name): _name(name), users() {}
 
 Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _name(name), users() {
 	this->add_operator(*Creator);
@@ -12,7 +12,7 @@ Channel::Channel(const std::string name, Client *Creator): _creator(Creator), _n
 	this->_creationTime = time(NULL);
 }
 
-Channel::~Channel(){}
+Channel::~Channel() {}
 
 Channel &Channel::operator=(const Channel &origin) {
 	if (this != &origin) {
@@ -23,25 +23,25 @@ Channel &Channel::operator=(const Channel &origin) {
 	return *this;
 }
 
-void Channel::add_user(Client &client){
+void Channel::add_user(Client &client) {
 	if (this->users.find(client.get_client_fd()) == this->users.end())
 			this->users.insert(std::make_pair(client.get_client_fd(), &client));
 }
 
-void Channel::add_bot(Bot &bot){
+void Channel::add_bot(Bot &bot) {
 	if (this->bots.find(bot.get_bot_fd()) == this->bots.end())
 			this->bots.insert(std::pair<int, Bot *>(bot.get_bot_fd(), &bot));
 }
 
-void Channel::add_operator( Client &op ){
+void Channel::add_operator( Client &op) {
 	if (this->operators.find(op.get_client_fd()) == this->operators.end())
 		this->operators.insert(std::make_pair(op.get_client_fd(), &op));
 }
 
-void Channel::remove_user(std::string user_name){
+void Channel::remove_user(std::string user_name) {
 	std::map<int, Client *>::iterator it = users.begin();
-	while (it != users.end()){
-		if (it->second->get_nick() == user_name){
+	while (it != users.end()) {
+		if (it->second->get_nick() == user_name) {
 			users.erase(it);
 			break;
 		}
@@ -49,10 +49,10 @@ void Channel::remove_user(std::string user_name){
 	}
 }
 
-void Channel::remove_oper(std::string oper){
+void Channel::remove_oper(std::string oper) {
 	std::map<int, Client *>::iterator it = operators.begin();
-	while (it != operators.end()){
-		if (it->second->get_nick() == oper){
+	while (it != operators.end()) {
+		if (it->second->get_nick() == oper) {
 			it->second->set_isOperator(false);
 			operators.erase(it);
 			break;
@@ -79,7 +79,7 @@ bool const &Channel::get_invite_channel() const {return _inviteChannel;}
 
 int Channel::get_by_name(std::string const &name) const {
 	std::map<int, Client *>::const_iterator it = users.begin();
-	while (it != users.end()){
+	while (it != users.end()) {
 		if (it->second->get_nick() == name)
 			return it->first;
 		it++;
@@ -107,7 +107,7 @@ void Channel::set_limit(int const &limit) {this->_limit = limit;}
 std::string		Channel::list_all_users() const {
 	std::string		AllUsers(":");
 	std::map<int, Client *>::const_iterator it = this->operators.begin();
-	while (it != this->operators.end()){
+	while (it != this->operators.end()) {
 		AllUsers.append("@" + it->second->get_nick() + " ");
 		it++;
 	}
@@ -125,33 +125,32 @@ void Channel::add_invite(int fd, Client *client) {
 		this->inviteList.insert(std::make_pair(fd, &client[fd]));
 }
 
-std::string Channel::get_modes(){
+std::string Channel::get_modes() {
 	std::string modes = "+";
 	char elem[6] = { 'i', 'k', 'l', 'o', 't'};
 
-	for (int i = 0; i < 6; i++){
-		for (std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
+	for (int i = 0; i < 6; i++) {
+		for (std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++) {
 			if (*it == elem[i])
 				modes += *it;
 		} 
 	}
-	if (_key != "")
-	{
-		if (modes.find('l') != std::string::npos){
+	if (_key != "")	{
+		if (modes.find('l') != std::string::npos) {
 			
 			modes += " " + _key + " :" + toString(_limit);
 		}
 		else
 			modes += " :" + _key;
 	}
-	else if (modes.find('l') != std::string::npos){
+	else if (modes.find('l') != std::string::npos) {
 		modes += " :" + toString(_limit);
 	}
 	return modes;
 }
 
-bool Channel::add_modes(char mode){
-	for(std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++){
+bool Channel::add_modes(char mode) {
+	for(std::vector<char>::iterator it = _modes.begin(); it != _modes.end(); it++) {
 		if (*it == mode)
 			return false;
 	}
@@ -159,9 +158,9 @@ bool Channel::add_modes(char mode){
 	return true;
 }
 
-bool Channel::remove_modes(char mode){
+bool Channel::remove_modes(char mode) {
 	std::vector<char>::iterator it = std::find(_modes.begin(), _modes.end(), mode);
-	if (it != _modes.end()){
+	if (it != _modes.end()) {
 		_modes.erase(it);
 		return true;
 	}

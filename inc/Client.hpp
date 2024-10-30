@@ -4,8 +4,7 @@
 #include "Server.hpp"
 
 
-class Client
-{
+class Client {
 	private:
 		int _client_fd;
 		std::string _user;

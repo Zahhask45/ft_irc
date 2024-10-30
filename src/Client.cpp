@@ -17,7 +17,7 @@ Client::Client(int fd): _client_fd(fd), _user(), _nick(), bytes_received(0) {
 
 }
 
-Client::~Client(){}
+Client::~Client() {}
 
 bool const &Client::get_auth() const{ return _auth; }
 
@@ -39,10 +39,10 @@ std::string const &Client::get_realname() const{ return _realname; }
 
 const std::string Client::get_buffer() const{ return _buffer; }
 
-const std::string Client::get_first_buffer(){
+const std::string Client::get_first_buffer() {
 	std::istringstream commandStream(_buffer);
-    std::string line;
-    std::getline(commandStream, line, '\n');
+	std::string line;
+	std::getline(commandStream, line, '\n');
 	size_t pos = line.size();
 	_buffer.erase(0, pos + 1);
 	std::cout << _YELLOW << _buffer << _END << std::endl;
@@ -53,78 +53,78 @@ int const &Client::get_bytes_received() const{ return bytes_received; }
 
 bool const &Client::get_flagNick() const{ return _flagNick; }
 
-void Client::set_addr(struct sockaddr_storage value){
+void Client::set_addr(struct sockaddr_storage value) {
 	_client_addr = value;
 }
 
-void Client::set_auth(bool value){
+void Client::set_auth(bool value) {
 	this->_auth = value;
 }
 
-void Client::set_isOperator(bool value){
+void Client::set_isOperator(bool value) {
 	this->_isOperator = value;
 }
 
-void Client::set_client_fd(int const &fd){
+void Client::set_client_fd(int const &fd) {
 	this->_client_fd = fd;
 }
 
-void Client::set_user(const std::string &user){
+void Client::set_user(const std::string &user) {
 	this->_user = user;
 }
 
-void Client::set_nick(const std::string &nick){
+void Client::set_nick(const std::string &nick) {
 	this->_nick = nick;
 }
 
-void Client::set_pass(const std::string &pass){
+void Client::set_pass(const std::string &pass) {
 	this->_pass = pass;
 }
 
-void Client::set_mask(const std::string &mask){
+void Client::set_mask(const std::string &mask) {
 	this->_mask = mask;
 }
 
-void Client::set_realname(std::string const &realname){
+void Client::set_realname(std::string const &realname) {
 	this->_realname = realname;
 }
 
-void Client::set_buffer(const char* buffer){
+void Client::set_buffer(const char* buffer) {
 	_buffer = buffer;
 }
 
-void Client::set_bytes_received(int value){
+void Client::set_bytes_received(int value) {
 	this->bytes_received = value;
 }
 
-void Client::set_flagNick(bool value){
+void Client::set_flagNick(bool value) {
 	this->_flagNick = value;
 }
 
-void Client::add_channel(const std::string &channelName, Channel &channel){
-	if (channels.find(channelName) == channels.end()){
+void Client::add_channel(const std::string &channelName, Channel &channel) {
+	if (channels.find(channelName) == channels.end()) {
 		channels.insert(std::make_pair(channelName, &channel));
 	}
 }
 
-void Client::remove_channel(const std::string &channelName){
-	if (channels.find(channelName) != channels.end()){
+void Client::remove_channel(const std::string &channelName) {
+	if (channels.find(channelName) != channels.end()) {
 		channels.erase(channelName);
 	}
 }
 
-void Client::clean_buffer(){
+void Client::clean_buffer() {
 	_buffer.erase();
 }
 
-void Client::add_to_buffer(const char* append){
+void Client::add_to_buffer(const char* append) {
 	_buffer += append;
 }
 
-void Client::add_to_buffer(const std::string append){
+void Client::add_to_buffer(const std::string append) {
 	std::istringstream appendStream(append);
-    std::string line;
-	while (std::getline(appendStream, line, '\n')){
+	std::string line;
+	while (std::getline(appendStream, line, '\n')) {
 		std::istringstream iss(line);
 		std::string cmd;
 		iss >> cmd;
@@ -132,16 +132,16 @@ void Client::add_to_buffer(const std::string append){
 	}
 }
 
-bool Client::empty_buffer(){
+bool Client::empty_buffer() {
 	if (_buffer.empty())
 		return 1;
 	return 0;
 }
 
 void Client::update_ping_time() {
-    last_ping_time = time(NULL);
+	last_ping_time = time(NULL);
 }
 
 bool Client::has_timed_out(time_t current_time, time_t timeout) {
-    return difftime(current_time, last_ping_time) > timeout;
+	return difftime(current_time, last_ping_time) > timeout;
 }
