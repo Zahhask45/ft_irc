@@ -96,14 +96,14 @@ void Server::loop() {
 
 	while(true) {
 
-		std::cout << "Waiting for connections..." << std::endl;
+		// std::cout << "Waiting for connections..." << std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 0);
 		usleep(5000);
 		if (_nfds == -1) {
 			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
 			exit(EXIT_FAILURE);
 		}
-		std::cout << _BOLD << _YELLOW << "AFTER THE EPOLL_CTL" << _END << std::endl;
+		// std::cout << _BOLD << _YELLOW << "AFTER THE EPOLL_CTL" << _END << std::endl;
 		
 		checkTimeout(&last_check_time);
 		for(int i = 0; i < _cur_online; i++) {

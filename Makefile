@@ -91,4 +91,6 @@ valgrind: re
 
 .SILENT:
 
+.PHONY: all clean fclean re run debug valgrind
+
 -include $(DEP)
