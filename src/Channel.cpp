@@ -84,7 +84,7 @@ int Channel::get_by_name(std::string const &name) const {
 			return it->first;
 		it++;
 	}
-	return 0;
+	return -1;
 }
 
 void Channel::set_name(std::string const &name) {this->_name = name;}

@@ -51,6 +51,10 @@ void	Server::genericSendMode(int fd, std::string target, char mode, std::string 
 void Server::handleMode(int fd, std::istringstream &command) {
 	std::string target, mode, arg;
 	command >> target >> mode >> arg;
+	if (arg == this->bot->get_name()){
+		sendCode(fd, "403", clients[fd]->get_nick(), target + " :MODE command cannot be used on bot");
+		return ;
+	}
 	if (checkMode(fd, target, mode, arg) == -1)
 		return ;
 	if (target[0] != '#') {
