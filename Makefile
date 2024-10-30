@@ -49,7 +49,6 @@ DEPS		=	$(SRCS:.cpp=.d)
 DEP			=	$(addprefix $(DEPS_DIR), $(DEPS))
 
 all:	$(NAME)
-# all:	debug
 
 $(NAME): $(OBJ)
 	printf "$(_GONE) $(_GREEN) All files compiled into $(OBJ_DIR), $(DEPS_DIR) $(_END)\n"
@@ -81,7 +80,7 @@ re: fclean all
 
 # run: valgrind
 run: debug
-	./$(NAME) 6667 unlock123
+	./$(NAME) 6667 banana123
 
 debug: CXXFLAGS += $(DEBUG)
 debug: re

@@ -8,6 +8,16 @@ void handle_signal(int signal) {
 		throw std::runtime_error("Signal ^C received. Closing server.");
 }
 
+int parsing_port(char *port){
+	int i = 0;
+	while (port[i]){
+		if (!isdigit(port[i]))
+			return -1;
+		i++;
+	}
+	return atoi(port);
+}
+
 int main(int argc, char **argv){
 	if(argc == 3){	
 		try{
@@ -17,8 +27,9 @@ int main(int argc, char **argv){
 		sa.sa_handler = handle_signal;
 		sigaction(SIGINT, &sa, NULL);
 		sigaction(SIGQUIT, &sa, NULL);
-	
-		int port = std::atoi(argv[1]);
+		int port = parsing_port(argv[1]);
+		if (port == -1)
+			throw std::runtime_error("Invalid port number.");
 		Server serv(port, argv[2]);
 	
 		serv.binding();
