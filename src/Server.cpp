@@ -5,12 +5,10 @@ Server::Server() {}
 Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(0) {
 	_epoll_fd = epoll_create1(0);
 	if (_epoll_fd == -1) {
-		std::cerr << _RED << "Error creating epoll file descriptor" << _END << std::endl;
-		exit(EXIT_FAILURE);
+		throw std::invalid_argument("Error creating epoll file descriptor");
 	}
 	if (port < 1 || port > 65535) {
-		std::cerr << _RED << "Invalid port: port needs to be between 1 and 65535" << _END << std::endl;
-		exit(EXIT_FAILURE);
+		throw std::invalid_argument("Invalid port: port needs to be between 1 and 65535");
 	}
 }
 
@@ -49,8 +47,8 @@ void Server::binding() {
 	int opt = 1;
 	status = getaddrinfo("0.0.0.0", toString(_port).c_str(), &hints, &serverinfo);
 	if (status != 0) {
-		std::cout << "ERROR ON GETTING ADDRESS INFO" << std::endl;
-		exit (-1);
+		throw std::runtime_error("getaddrinfo() error");
+
 	}
 	for (tmp = serverinfo; tmp != NULL; tmp = tmp->ai_next) {
 		this->_socket_Server = socket(tmp->ai_family, tmp->ai_socktype | O_NONBLOCK, tmp->ai_protocol);
@@ -67,44 +65,36 @@ void Server::binding() {
 	freeaddrinfo(serverinfo);
 
 	if (tmp == NULL) {
-		std::cerr << "Failed to bind to any address..." << std::endl;
-		exit(EXIT_FAILURE);
+		throw std::invalid_argument("Failed to bind to any address...");
 	}
 	
 
 	if (listen(_socket_Server, MAX_CLIENTS) == -1) {
-		std::cerr << "Error in listen()" << std::endl;
-		exit(EXIT_FAILURE);
+		throw std::invalid_argument("Error in listen()");
 	}
 
 	_eve.data.fd = _socket_Server;
 	_eve.events = EPOLLIN | EPOLLERR | EPOLLOUT;
 	
 	if(epoll_ctl(_epoll_fd, EPOLL_CTL_ADD, _socket_Server, &_eve) == -1) {
-		std::cerr << "Error adding socket to epoll" << std::endl;
 		close(_socket_Server);
-		exit(EXIT_FAILURE);
+		throw std::invalid_argument("Error adding socket to epoll");
 	}
 	_cur_online++;
 
 	bot = new Bot(1);
-	std::cout << _RED << "BOT FD: " << bot->get_bot_fd() << _END << std::endl;
 }
 
 void Server::loop() {
 	while(true) {
 
-		// std::cout << "Waiting for connections..." << std::endl;
 		_nfds = epoll_wait(_epoll_fd, _events, MAX_CLIENTS, 0);
 		usleep(5000);
 		if (_nfds == -1) {
-			std::cerr << "Error during epoll_wait: " << strerror(errno) << std::endl;
-			exit(EXIT_FAILURE);
+			throw std::invalid_argument("Error during epoll_wait: " + toString(strerror(errno)));
 		}
-		// std::cout << _BOLD << _YELLOW << "AFTER THE EPOLL_CTL" << _END << std::endl;
 		
 		for(int i = 0; i < _cur_online; i++) {
-			std::cout << "AAAAAAAAAAAAAAAAA: " << _events[i].events << " FROM FD: " << _events[i].data.fd << " AND IN THE FOR IS THE: " << i << " FROM A TOTAL OF: " << _cur_online << std::endl;
 			if (_events[i].events & EPOLLET)
 				continue;
 			if (_events[i].events & EPOLLHUP) {
@@ -117,14 +107,10 @@ void Server::loop() {
 			}
 			if ((_events[i].events & EPOLLIN)) {
 				if(_events[i].data.fd == _socket_Server) {
-					//std::cout << _RED << "DAMN FRICK(new)" << _END << std::endl;
 					funct_new_client(i);
 					continue;
 				}
 				else if(clients.find(_events[i].data.fd) != clients.end() && clients[_events[i].data.fd]->get_buffer().find("\r\n") == std::string::npos) {
-					std::cout << _PURPLE << "EPOLLIN (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
-					//std::cout << _RED << "DAMN FRICK(not new)" << _END << std::endl;	
-					//clients[_events[i].data.fd]->ready_in = 4;
 					funct_not_new_client(i);
 					if (!clients[_events[i].data.fd]->empty_buffer())
 						continue;
@@ -133,7 +119,6 @@ void Server::loop() {
 			}
 			if ((_events[i].events & EPOLLOUT)) {
 				if((clients.find(_events[i].data.fd) != clients.end() && !clients[_events[i].data.fd]->empty_buffer())) {
-					std::cout << _PURPLE << "EPOLLOUT (FROM CLIENT: " << clients[_events[i].data.fd]->get_client_fd() << ")" << _END << std::endl;
 					handle_commands(_events[i].data.fd);
 					continue;
 				}
@@ -166,20 +151,15 @@ void Server::funct_not_new_client(int i) {
 	int extra_bytes = 0;
 	char buffer_ptr[1024];
 	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
-	/* std::cout << _CYAN << "EPOLLIN VALUE: " << EPOLLIN << _END << std::endl;
-	std::cout << _CYAN << "EPOLLOUT VALUE: " << EPOLLOUT << _END << std::endl;
-	std::cout << _CYAN << "EPOLLERR VALUE: " << EPOLLERR << _END << std::endl;
-	std::cout << _PURPLE << _events[i].events << _END << std::endl; */
 	if (clients.find(_events[i].data.fd) != clients.end())
 	if (extra_bytes == -1) {
 		int err_code = 0;
 		socklen_t len = sizeof(err_code);
 		if (getsockopt(_events[i].data.fd, SOL_SOCKET, SO_ERROR, &err_code, &len) == -1) {
-			std::cout << _RED << "Error on getsocket()" << _END << std::endl;
 			if (this->clients.find(_events[i].data.fd) == this->clients.end()) {
 				return ;
 			}
-			throw std::invalid_argument("SOME ERROR");
+			throw std::invalid_argument("Error on getsocket()");
 		}
 		else if(err_code == EAGAIN || err_code == EWOULDBLOCK)
 				std::cout << _YELLOW << "Temporary recv() error" << _END << std::endl;
@@ -198,58 +178,29 @@ void Server::funct_not_new_client(int i) {
 		}
 	}
 	if (extra_bytes > 0) {
-		//_events[i].events = EPOLLOUT;
 		clients[_events[i].data.fd]->set_bytes_received(clients[_events[i].data.fd]->get_bytes_received() + extra_bytes);
 		buffer_ptr[extra_bytes] = '\0';
-		std::cout << _PURPLE << buffer_ptr << _END << std::endl;
 		this->clients[_events[i].data.fd]->add_to_buffer(buffer_ptr);
-		//std::cout << _CYAN << "here" << _END << std::endl;
 	}
 	else if (extra_bytes == 0) {
-		/* if (epoll_ctl(_epoll_fd, EPOLL_CTL_DEL, _events[i].data.fd, NULL) == -1) {
-			std::cerr << "Error removing socket from epoll(not new client): " << strerror(errno) << std::endl;
-		}
-		else {
-			std::cerr << _RED << "Client disconnected (FROM THE NEW STUFF). Current onlines: " << _cur_online << _END << std::endl;
-			std::istringstream iss("Unexpected disconnection by client");
-			handleQuit(_events[i].data.fd, iss);
-		} */
 		return;
 	}
 	if (this->clients.find(_events[i].data.fd) == this->clients.end() && this->clients[_events[i].data.fd] != 0)
 		return;
 	std::string command(this->clients[_events[i].data.fd]->get_buffer());
 	if (this->clients[_events[i].data.fd]->get_buffer().find("\n") == std::string::npos) {
-		std::cout << ">>" << this->clients[_events[i].data.fd]->get_buffer() << "<<" << std::endl;	
 		return;
 	}
 	if (!command.empty() && command[command.size() - 1] == '\r')
 		command.erase(command.end() - 1);
-	//handle_commands(_events[i].data.fd, command);
-	//clients[_events[i].data.fd]->add_to_buffer(command);
 	memset(buffer_ptr, 0, 1024);
-	/* std::cout << _RED << "COMMAND SENT BY CLIENT: " << _events[i].data.fd << " " << _END << _GREEN << command << _RED << "END OF COMMAND" << _END << std::endl;
-	if (this->clients.find(_events[i].data.fd) != this->clients.end() && this->clients[_events[i].data.fd] != 0) { 
-		this->clients[_events[i].data.fd]->set_bytes_received(0);
-		this->clients[_events[i].data.fd]->clean_buffer();
-	} */
 }
 
 void Server::handle_commands(int fd) {
-	/* std::istringstream commandStream(clients[fd]->get_buffer());
-	clients[fd]->clean_buffer();
-	std::string line;
-	while (std::getline(commandStream, line, '\n')) {
-		std::istringstream iss(line);
-		std::string cmd;
-		iss >> cmd; */
-	//while (!clients[fd]->empty_buffer()) {
 		std::string line = clients[fd]->get_first_buffer();
 		std::istringstream iss(line);
 		std::string cmd;
 		iss >> cmd;
-		std::cout << _RED << cmd << _END << std::endl << std::endl;
-		std::cout << _CYAN << clients[fd]->get_buffer() << _END << std::endl;
 		std::transform(cmd.begin(), cmd.end(), cmd.begin(), ::toupper);
 		clients[fd]->ready_in = 1;
 		if (cmd == "AUTH")
@@ -294,11 +245,8 @@ void Server::create_channel(const std::string &channelName, int fd) {
 		channels.insert(std::make_pair(channelName, channel));
 		channels[channelName]->add_modes('t');
 		if (bot) {
-			std::cout << _RED <<"BEFORE"  << _END << std::endl;
 			this->bot->add_channel(channelName, *this->channels[channelName]);
-			std::cout << _RED <<"MIDDLE" << _END << std::endl;
 			this->channels[channelName]->add_bot(get_bot());
-			std::cout << _RED <<"AFTER" << _END << std::endl;
 			print_client(bot->get_bot_fd(), bot->get_mask() + "JOIN :" + channelName + "\r\n");
 		}
 

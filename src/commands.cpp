@@ -77,7 +77,6 @@ void Server::handlePrivmsg(int fd, std::istringstream &command) {
 		if (bot->get_name() == target) {
 			print_client(bot->get_bot_fd(), clients[fd]->get_mask() + "PRIVMSG " + target + " " + message + "\n");
 			if (message.find("Terracotta") != std::string::npos || message.find("Banana") != std::string::npos || message.find("Terracota pie") != std::string::npos) {
-				std::cout << _CYAN << "DAMN I WAS HERE FAST" << _END << std::endl;
 				print_client(clients[fd]->get_client_fd(), bot->get_mask() + "PRIVMSG " + clients[fd]->get_nick() + " I like you funny words magic man\r\n");
 			}
 
@@ -160,9 +159,6 @@ void Server::handleQuit(int fd, std::istringstream &command) {
 	}
 	close(clients[fd]->get_client_fd());
 	end_connection(fd);
-	//this->_events[fd].data.fd = this->_events[this->_cur_online].data.fd;	
-	//close(_events[_cur_online].data.fd);
-	//this->_events[_cur_online].data.fd = this->_socket_Server;
 	print_client(fd, response);
 }
 
