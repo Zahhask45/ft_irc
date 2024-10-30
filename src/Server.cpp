@@ -4,6 +4,7 @@ Server::Server() {}
 
 Server::Server(int port, std::string pass) : _port(port), _pass(pass), _nfds(1), _cur_online(0) {
 	_epoll_fd = epoll_create1(0);
+	bot = NULL;
 	if (_epoll_fd == -1) {
 		throw std::invalid_argument("Error creating epoll file descriptor");
 	}
@@ -151,7 +152,6 @@ void Server::funct_not_new_client(int i) {
 	int extra_bytes = 0;
 	char buffer_ptr[1024];
 	extra_bytes = recv(_events[i].data.fd,  buffer_ptr, sizeof(buffer_ptr), 0);
-	if (clients.find(_events[i].data.fd) != clients.end())
 	if (extra_bytes == -1) {
 		int err_code = 0;
 		socklen_t len = sizeof(err_code);
