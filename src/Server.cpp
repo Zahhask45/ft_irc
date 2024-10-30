@@ -251,7 +251,7 @@ void Server::handle_commands(int fd){
         std::istringstream iss(line);
         std::string cmd;
 		iss >> cmd; */
-	while (!clients[fd]->empty_buffer()){
+	//while (!clients[fd]->empty_buffer()){
 		std::string line = clients[fd]->get_first_buffer();
 		std::istringstream iss(line);
 		std::string cmd;
@@ -292,7 +292,6 @@ void Server::handle_commands(int fd){
 			handleWhois(fd, iss);
 		else if (cmd == "LIST")
 			handleList(fd);
-	}
 	//}
 }
 

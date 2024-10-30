@@ -95,7 +95,8 @@ void Server::handleNick(int fd, std::istringstream &command){
 	for(it = clients.begin(); it != clients.end(); it++){
 		if (it->second->get_nick() == nick){
 			sendCode(fd, "433", nick, ":" + nick + " Nickname is already in use");
-			this->clients[fd]->set_nick(nick);
+			//this->clients[fd]->set_nick(nick);
+			clients[fd]->set_flagNick(true);
 			return;
 		}
 	}
@@ -107,7 +108,7 @@ void Server::handleNick(int fd, std::istringstream &command){
 			sendCode(fd, "433", nick,":" + nick + " is a invalid nickname, it's the server host name");
 			clients[fd]->set_nick("\0");
 	}
-	if (this->clients[fd]->get_nick().empty())
+	if (this->clients[fd]->get_nick().empty() && this->clients[fd]->get_flagNick() == false)
 		this->clients[fd]->set_nick(nick);
 	else{
 		std::string changeNick = ":" + this->clients[fd]->get_nick() + " NICK " + nick + "\r\n";
