@@ -86,6 +86,7 @@ class Server
 		void genericSendMode(int fd, std::string target, char mode, std::string arg, char sign);
 		bool findNick(std::string nick);
 		int getClientByNick(std::string nick);
+		void checkTimeout(time_t *last_time);
 };
 
 #include "Client.hpp"

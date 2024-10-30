@@ -137,3 +137,11 @@ bool Client::empty_buffer(){
 		return 1;
 	return 0;
 }
+
+void Client::update_ping_time() {
+    last_ping_time = time(NULL);
+}
+
+bool Client::has_timed_out(time_t current_time, time_t timeout) {
+    return difftime(current_time, last_ping_time) > timeout;
+}
